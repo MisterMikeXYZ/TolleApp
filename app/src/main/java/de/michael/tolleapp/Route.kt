@@ -1,0 +1,12 @@
+package de.michael.tolleapp
+
+import kotlinx.serialization.Serializable
+
+sealed interface Route {
+    @Serializable
+    data object Main : Route
+
+    @Serializable
+    data object Skyjo : Route
+
+}
