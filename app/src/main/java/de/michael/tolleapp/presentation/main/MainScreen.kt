@@ -25,6 +25,7 @@ fun MainScreen(
     val state by viewModel.state.collectAsState()
     Column(
         verticalArrangement = Arrangement.Center,
+
         modifier = Modifier.fillMaxSize()
     ) {
         Text("main")
