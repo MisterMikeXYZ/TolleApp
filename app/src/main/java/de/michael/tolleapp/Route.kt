@@ -9,4 +9,6 @@ sealed interface Route {
     @Serializable
     data object Skyjo : Route
 
+    @Serializable
+    data object SkyjoGame : Route
 }

@@ -11,7 +11,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.*
 
-class SkyjoViewModel(private val repository: PlayerRepository) : ViewModel() {
+class SkyjoViewModel(
+    private val repository: PlayerRepository,
+) : ViewModel() {
     private val _state = MutableStateFlow(SkyjoState())
     val state: StateFlow<SkyjoState> = _state.asStateFlow()
 
@@ -61,5 +63,33 @@ class SkyjoViewModel(private val repository: PlayerRepository) : ViewModel() {
             }
             state.copy(selectedPlayerIds = updated)
         }
+    }
+
+    fun startGame() {
+        // Logic to start the game, e.g., navigating to the game screen
+        // Create a new game ID
+        val newGameId = UUID.randomUUID().toString()
+        _state.update { state ->
+            state.copy(
+                currentGameId = newGameId,
+                selectedPlayerIds = state.selectedPlayerIds.filterNotNull()
+            )
+        }
+    }
+
+    fun recordRound(playerId: String, roundScore: Int) {
+        // Logic to record a round score for a player
+        viewModelScope.launch {
+            repository.recordRound(_state.value.currentGameId, playerId, roundScore)
+        }
+    }
+
+    fun endGame() {
+        // Logic to end the game, e.g., saving results
+        viewModelScope.launch {
+            repository.endGame(_state.value.currentGameId)
+        }
+        // Reset state if needed
+        _state.update { it.copy(currentGameId = "", selectedPlayerIds = listOf(null, null)) }
     }
 }

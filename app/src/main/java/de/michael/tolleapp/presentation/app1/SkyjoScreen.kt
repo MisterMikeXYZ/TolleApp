@@ -1,5 +1,6 @@
 package de.michael.tolleapp.presentation.app1
 
+import android.R.attr.onClick
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -64,6 +65,14 @@ fun SkyjoScreen(
                         expanded = expanded,
                         onDismissRequest = { expanded = false }
                     ) {
+                        DropdownMenuItem(
+                            text = { Text("Neuen Spieler erstellen…") },
+                            onClick = {
+                                expanded = false
+                                pendingRowIndex = index
+                                showDialog = true
+                            }
+                        )
                         state.players.forEach { player ->
                             DropdownMenuItem(
                                 text = { Text(player.name) },
@@ -73,17 +82,11 @@ fun SkyjoScreen(
                                 }
                             )
                         }
-                        DropdownMenuItem(
-                            text = { Text("Neuen Spieler erstellen…") },
-                            onClick = {
-                                expanded = false
-                                pendingRowIndex = index
-                                showDialog = true
-                            }
-                        )
+
                     }
                 }
 
+                //X Button to remove player
                 if (index >= 2) {
                     IconButton(
                         onClick = { viewModel.removePlayer(index) }
@@ -99,10 +102,12 @@ fun SkyjoScreen(
         val distinctSelected =
             state.selectedPlayerIds.filterNotNull().distinct().size >= 2
 
+        //Button to start the game
         Button(
             onClick = {
-                // later will navigate to game screen
-            },
+                viewModel.startGame()
+                navigateTo(Route.SkyjoGame)
+                      },
             enabled = distinctSelected,
             modifier = Modifier.fillMaxWidth()
         ) {

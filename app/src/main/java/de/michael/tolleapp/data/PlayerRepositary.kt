@@ -20,7 +20,7 @@ class PlayerRepository(
         val round = RoundResult(playerId = playerId, gameId = gameId, roundScore = roundScore)
         roundResultDao.insertRoundResult(round)
 
-        // recalc aggregates
+        // recalculate aggregates
         val rounds = roundResultDao.getRoundsForPlayer(gameId, playerId)
         val bestRound = rounds.minOfOrNull { it.roundScore } ?: roundScore
         val worstRound = rounds.maxOfOrNull { it.roundScore } ?: roundScore
@@ -38,6 +38,12 @@ class PlayerRepository(
         playerDao.updatePlayer(updated)
     }
 
+    // End the game and update player statistics
+    // This function assumes that the gameId is unique for each game session
+    // and that all rounds for a player in that game are recorded.
+    // It calculates the end score for each player based on their rounds in the game.
+    // It updates the player's best and worst end scores, total games played, and total end score.
+    // It uses Flow to collect all players and update their statistics accordingly.
     suspend fun endGame(gameId: String) {
         val players = playerDao.getAllPlayers() // fetch all players as Flow
         players.collect { playerList ->
