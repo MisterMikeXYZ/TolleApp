@@ -7,13 +7,34 @@ class PlayerRepository(
     private val roundResultDao: RoundResultDao
 ) {
 
-    fun getPlayers(): Flow<List<Player>> = playerDao.getAllPlayers()
+    fun getPlayers(): Flow<List<SkyjoPlayer>> = playerDao.getAllPlayers()
 
-    suspend fun addPlayer(player: Player): Boolean {
+    suspend fun resetAllGameStats() {
+        // Reset all game statistics for all players
+        val players = playerDao.getAllPlayers()
+        players.collect { playerList ->
+            playerList.forEach { player ->
+                val updated = player.copy(
+                    bestEndScoreSkyjo = null,
+                    worstEndScoreSkyjo = null,
+                    totalGamesPlayedSkyjo = 0,
+                    totalEndScoreSkyjo = 0,
+                    bestRoundScoreSkyjo = null,
+                    worstRoundScoreSkyjo = null,
+                    roundsPlayedSkyjo = 0,
+                    totalRoundScoreSkyjo = 0
+                )
+                playerDao.updatePlayer(updated)
+            }
+        }
+    }
+
+    suspend fun addPlayer(player: SkyjoPlayer): Boolean {
         if (playerDao.getPlayerByName(player.name) != null) return false
         playerDao.insertPlayer(player)
         return true
     }
+
 
     suspend fun recordRound(gameId: String, playerId: String, roundScore: Int) {
         // insert round
@@ -27,13 +48,13 @@ class PlayerRepository(
         val totalRounds = rounds.size
         val totalRoundScore = rounds.sumOf { it.roundScore }
 
-        // FIX: previously used getPlayerByName(playerId) which is incorrect; use getPlayerById
         val player = playerDao.getPlayerById(playerId) ?: return
         val updated = player.copy(
             bestRoundScoreSkyjo = minOf(player.bestRoundScoreSkyjo ?: Int.MAX_VALUE, bestRound),
             worstRoundScoreSkyjo = maxOf(player.worstRoundScoreSkyjo ?: Int.MIN_VALUE, worstRound),
             roundsPlayedSkyjo = totalRounds,
             totalRoundScoreSkyjo = player.totalRoundScoreSkyjo + roundScore
+
         )
         playerDao.updatePlayer(updated)
     }

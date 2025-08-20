@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import de.michael.tolleapp.Route
 import org.koin.compose.viewmodel.koinViewModel
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 
 /**
  * MainScreen is the entry point of the app.
@@ -25,13 +26,17 @@ fun MainScreen(
     val state by viewModel.state.collectAsState()
     Column(
         verticalArrangement = Arrangement.Center,
-
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
     ) {
         Text("main")
         Button(
             onClick = { navigateTo(Route.Skyjo) },
         ) { Text("Go to Skyjo") }
+        Button(
+            onClick = { navigateTo(Route.Statistics) },
+        ) { Text("Statistik") }
+
     }
 
 }

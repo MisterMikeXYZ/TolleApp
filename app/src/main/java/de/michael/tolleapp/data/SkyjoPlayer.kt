@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 import java.util.*
 
 @Entity(tableName = "players")
-data class Player(
+data class SkyjoPlayer(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val name: String,
     val bestRoundScoreSkyjo: Int? = null,

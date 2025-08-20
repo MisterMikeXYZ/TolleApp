@@ -1,6 +1,5 @@
 package de.michael.tolleapp.presentation.app1
 
-import android.R.attr.onClick
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -11,7 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import de.michael.tolleapp.Route
 import org.koin.compose.viewmodel.koinViewModel
 

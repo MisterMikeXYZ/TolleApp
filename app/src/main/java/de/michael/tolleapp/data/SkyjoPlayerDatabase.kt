@@ -9,19 +9,19 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface PlayerDao {
     @Query("SELECT * FROM players")
-    fun getAllPlayers(): Flow<List<Player>>
+    fun getAllPlayers(): Flow<List<SkyjoPlayer>>
 
     @Insert
-    suspend fun insertPlayer(player: Player)
+    suspend fun insertPlayer(player: SkyjoPlayer)
 
     @Update
-    suspend fun updatePlayer(player: Player)
+    suspend fun updatePlayer(player: SkyjoPlayer)
 
     @Query("SELECT * FROM players WHERE name = :name LIMIT 1")
-    suspend fun getPlayerByName(name: String): Player?
+    suspend fun getPlayerByName(name: String): SkyjoPlayer?
 
     @Query("SELECT * FROM players WHERE id = :id LIMIT 1")
-    suspend fun getPlayerById(id: String): Player?
+    suspend fun getPlayerById(id: String): SkyjoPlayer?
 }
 
 @Dao

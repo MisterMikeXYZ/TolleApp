@@ -1,12 +1,16 @@
 package de.michael.tolleapp.presentation.app1
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
 import de.michael.tolleapp.data.RoundResult
@@ -67,7 +71,7 @@ fun SkyjoGameScreen(
                     .fillMaxWidth()
                     .padding(vertical = 1.dp)
             ) {
-                // Name (readonly)
+                // Name
                 OutlinedTextField(
                     value = player.name,
                     onValueChange = {},
@@ -78,7 +82,7 @@ fun SkyjoGameScreen(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Points input (numeric)
+                // Points input
                 OutlinedTextField(
                     value = points[playerId] ?: "",
                     onValueChange = { new ->
@@ -97,7 +101,7 @@ fun SkyjoGameScreen(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Total display (readonly)
+                // Total display
                 OutlinedTextField(
                     value = (totalPoints[playerId] ?: 0).toString(),
                     onValueChange = {},
@@ -134,7 +138,13 @@ fun SkyjoGameScreen(
                     if ((totalPoints[playerId] ?: 0) >= 100) {
                         viewModel.endGame()
                     }
+
                 }
+                //state.selectedPlayerIds.filterNotNull().forEach { playerId ->
+
+                //}
+
+
 
                 // Grow visible rows in steps of 5 when needed
                 if (anyRoundAdded) {
@@ -157,7 +167,9 @@ fun SkyjoGameScreen(
 
         // === ROUNDS GRID ===
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
         ) {
             // Header row
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -195,7 +207,7 @@ fun SkyjoGameScreen(
                         Text(roundIndex.toString())
                     }
 
-                    // Player score cells
+                    // SkyjoPlayer score cells
                     state.selectedPlayerIds.filterNotNull().forEach { playerId ->
                         val list = perPlayerRounds[playerId]
                         val value = list?.getOrNull(roundIndex - 1)?.toString() ?: ""

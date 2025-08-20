@@ -1,4 +1,3 @@
-import android.annotation.SuppressLint
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,10 +21,10 @@ import androidx.navigation.compose.rememberNavController
 import de.michael.tolleapp.Route
 import de.michael.tolleapp.presentation.app1.SkyjoGameScreen
 import de.michael.tolleapp.presentation.app1.SkyjoScreen
-import de.michael.tolleapp.presentation.app1.SkyjoState
 import de.michael.tolleapp.presentation.app1.SkyjoViewModel
 import de.michael.tolleapp.presentation.main.MainScreen
-import de.michael.tolleapp.presentation.main.MainViewModel
+import de.michael.tolleapp.presentation.statistics.StatScreen
+import de.michael.tolleapp.presentation.statistics.StatViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,9 +33,9 @@ fun NavGraph(
     navController: NavHostController = rememberNavController(),
     pad : PaddingValues,
 ) {
-    // Get the SkyjoViewModel
+    // Get the ViewModel
     val skyjoViewModel = koinViewModel<SkyjoViewModel>()
-    val state = skyjoViewModel.state.collectAsState().value
+    val statViewModel = koinViewModel<StatViewModel>()
     NavHost(
         navController = navController,
         startDestination = Route.Main,
@@ -63,7 +62,7 @@ fun NavGraph(
                         title = { Text("Skyjo") },
                         navigationIcon = {
                             IconButton(onClick = { navController.popBackStack() }) {
-                                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                             }
                         }
                     )
@@ -87,7 +86,10 @@ fun NavGraph(
                         title = { Text("Skyjo") },
                         navigationIcon = {
                             IconButton(onClick = { navController.popBackStack() }) {
-                                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back"
+                                )
                             }
                         }
                     )
@@ -99,6 +101,33 @@ fun NavGraph(
                     },
                     modifier = Modifier.padding(innerPadding),
                     viewModel = skyjoViewModel
+                )
+            }
+        }
+
+        // Statistics Screen
+        composable<Route.Statistics> {
+            Scaffold(
+                topBar = {
+                    CenterAlignedTopAppBar(
+                        title = { Text("Statistik") },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back"
+                                )
+                            }
+                        }
+                    )
+                }
+            ) { innerPadding ->
+                StatScreen(
+                    navigateTo = { route ->
+                        navController.navigate(route)
+                    },
+                    modifier = Modifier.padding(innerPadding),
+                    viewModel = statViewModel
                 )
             }
         }

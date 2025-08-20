@@ -2,7 +2,7 @@ package de.michael.tolleapp.presentation.app1
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.michael.tolleapp.data.Player
+import de.michael.tolleapp.data.SkyjoPlayer
 import de.michael.tolleapp.data.PlayerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +26,7 @@ class SkyjoViewModel(
     }
 
     fun addPlayer(name: String, rowIndex: Int) = viewModelScope.launch {
-        val newPlayer = Player(name = name)
+        val newPlayer = SkyjoPlayer(name = name)
         val added = repository.addPlayer(newPlayer)
         if (added) {
             selectPlayer(rowIndex, newPlayer.id)
@@ -83,13 +83,18 @@ class SkyjoViewModel(
             repository.recordRound(_state.value.currentGameId, playerId, roundScore)
         }
     }
-
     fun endGame() {
         // Logic to end the game, e.g., saving results
         viewModelScope.launch {
             repository.endGame(_state.value.currentGameId)
         }
         // Reset state if needed
-        _state.update { it.copy(currentGameId = "", selectedPlayerIds = listOf(null, null)) }
+        _state.update {
+            it.copy(
+                currentGameId = "",
+                selectedPlayerIds = listOf(null, null)
+            )
+        }
     }
 }
+
