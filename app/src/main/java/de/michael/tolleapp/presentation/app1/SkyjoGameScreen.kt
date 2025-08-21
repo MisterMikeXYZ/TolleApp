@@ -1,6 +1,5 @@
 package de.michael.tolleapp.presentation.app1
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -10,7 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
 import de.michael.tolleapp.data.RoundResult
@@ -28,29 +26,28 @@ fun SkyjoGameScreen(
     // Local UI state to hold per-player current round input
     val points = remember { mutableStateMapOf<String, String>() }
 
-    // Local state: list of round scores per player (do NOT persist to DB)
-    val perPlayerRounds = remember { mutableStateMapOf<String, MutableList<Int>>() }
+    val perPlayerRounds = state.perPlayerRounds
+    val totalPoints = state.totalPoints
+    val visibleRoundRows = state.visibleRoundRows
 
-    // Local totals (derived from perPlayerRounds, but kept here for quick UI updates)
-    val totalPoints = remember { mutableStateMapOf<String, Int>() }
-
-    // Visible row cap for the rounds grid: starts at 5 and grows in steps of 5 as needed
-    var visibleRoundRows by remember { mutableIntStateOf(5) }
-
-    // Keep state maps in sync with selected players (fixed after startGame, but safe to handle)
+    // Keep only the per-round input fields in sync with the selected players.
+    // Do NOT touch perPlayerRounds/totalPoints here; read them from state.
     LaunchedEffect(state.selectedPlayerIds) {
         val selected = state.selectedPlayerIds.filterNotNull().toSet()
 
-        // Remove no-longer-selected players
-        (points.keys - selected).forEach { points.remove(it) }
-        (perPlayerRounds.keys - selected).forEach { perPlayerRounds.remove(it) }
-        (totalPoints.keys - selected).forEach { totalPoints.remove(it) }
+        // Remove inputs for de-selected players
+        val stale = (points.keys - selected).toList()
+        stale.forEach { points.remove(it) }
 
-        // Ensure all selected players have entries
+        // Ensure an input entry exists for every selected player
         selected.forEach { id ->
-            points.putIfAbsent(id, "")
-            perPlayerRounds.putIfAbsent(id, mutableListOf())
-            totalPoints.putIfAbsent(id, 0)
+            points.getOrPut(id) { "" }
+        }
+    }
+
+    LaunchedEffect(state.isGameEnded) {
+        if (state.isGameEnded) {
+            navigateTo(Route.SkyjoEnd)
         }
     }
 
@@ -114,49 +111,15 @@ fun SkyjoGameScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // End round button
+
         Button(
             onClick = {
-                // Append current inputs as a new round for each player
-                var anyRoundAdded = false
-                state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                    val score = points[playerId]?.toIntOrNull() ?: 0
-                    perPlayerRounds[playerId]?.add(score)
-                    totalPoints[playerId] = (totalPoints[playerId] ?: 0) + score
-                    anyRoundAdded = true
+                viewModel.endRound(points)
+                points.keys.toList().forEach { id -> points[id] = "" } // clear inputs
 
-                    // Persist aggregates as before; DB round row is created here,
-                    // but the grid display is purely local state (perPlayerRounds).
-                    RoundResult(
-                        playerId = playerId,
-                        gameId = state.currentGameId,
-                        roundScore = score
-                    )
-                    viewModel.recordRound(playerId, score)
-
-                    // End game when a player reaches >= 100
-                    if ((totalPoints[playerId] ?: 0) >= 100) {
-                        viewModel.endGame()
-                    }
-
+                if (state.isGameEnded) {
+                    navigateTo(Route.SkyjoEnd)
                 }
-                //state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-
-                //}
-
-
-
-                // Grow visible rows in steps of 5 when needed
-                if (anyRoundAdded) {
-                    val maxRoundsNow =
-                        perPlayerRounds.values.maxOfOrNull { it.size } ?: 0
-                    while (maxRoundsNow > visibleRoundRows) {
-                        visibleRoundRows += 5
-                    }
-                }
-
-                // Clear inputs after submission
-                points.keys.toList().forEach { id -> points[id] = "" }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -222,6 +185,17 @@ fun SkyjoGameScreen(
                     }
                 }
             }
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = {
+                // End the game and navigate to the end screen
+                viewModel.endGame()
+                navigateTo(Route.SkyjoEnd)
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Spiel beenden")
         }
     }
 }

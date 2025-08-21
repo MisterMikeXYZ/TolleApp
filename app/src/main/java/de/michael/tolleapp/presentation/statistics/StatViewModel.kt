@@ -28,8 +28,4 @@ class StatViewModel(
             repository.resetAllGameStats()
         }
     }
-    fun doNothing() {
-        // This function is a placeholder for future functionality
-        // Currently, it does nothing but can be expanded later
-    }
 }

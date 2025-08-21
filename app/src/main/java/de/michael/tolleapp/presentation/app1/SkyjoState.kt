@@ -1,5 +1,7 @@
 package de.michael.tolleapp.presentation.app1
 
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import de.michael.tolleapp.data.SkyjoPlayer
 
 data class SkyjoState(
@@ -7,6 +9,10 @@ data class SkyjoState(
     val currentGameId: String = "",
     val currentGameRounds: Int = 1,
     val selectedPlayerIds: List<String?> = listOf(null, null), // at least two slots
-    // Map which stores all rounds per player ID
-    //val playerRounds: Map<String, List<Int>> = emptyMap()
+    val perPlayerRounds: Map<String, List<Int>> = emptyMap(),
+    val totalPoints: Map<String, Int> = emptyMap(),
+    val visibleRoundRows: Int = 5,
+    val winnerId: String? = null,
+    val ranking: List<String> = emptyList(), // sorted playerIds by score
+    val isGameEnded: Boolean = false,
 )

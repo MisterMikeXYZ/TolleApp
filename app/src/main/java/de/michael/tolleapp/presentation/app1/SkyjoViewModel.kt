@@ -2,6 +2,7 @@ package de.michael.tolleapp.presentation.app1
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import de.michael.tolleapp.Route
 import de.michael.tolleapp.data.SkyjoPlayer
 import de.michael.tolleapp.data.PlayerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,54 @@ class SkyjoViewModel(
         viewModelScope.launch {
             repository.getPlayers().collect { players ->
                 _state.update { it.copy(players = players) }
+            }
+        }
+    }
+
+    fun endRound(points: Map<String, String>) {
+        _state.update { state ->
+            val updatedRounds = state.perPlayerRounds.toMutableMap()
+            val updatedTotals = state.totalPoints.toMutableMap()
+
+            state.selectedPlayerIds.filterNotNull().forEach { playerId ->
+                val score = points[playerId]?.toIntOrNull() ?: 0
+                val currentRounds = updatedRounds[playerId]?.toMutableList() ?: mutableListOf()
+                currentRounds.add(score)
+                updatedRounds[playerId] = currentRounds
+                updatedTotals[playerId] = (updatedTotals[playerId] ?: 0) + score
+
+                // Persist in DB
+                viewModelScope.launch {
+                    repository.recordRound(state.currentGameId, playerId, score)
+                }
+            }
+
+            val maxRounds = updatedRounds.values.maxOfOrNull { it.size } ?: 0
+            var visible = state.visibleRoundRows
+            while (maxRounds > visible) visible += 5
+
+            state.copy(
+                perPlayerRounds = updatedRounds,
+                totalPoints = updatedTotals,
+                visibleRoundRows = visible
+            )
+        }
+
+        // Check if someone reached 100
+        checkEndCondition()
+    }
+
+    private fun checkEndCondition() {
+        val totals = _state.value.totalPoints
+        val hasLoser = totals.values.any { it >= 100 }
+        if (hasLoser) {
+            val ranking = totals.entries.sortedBy { it.value }.map { it.key }
+            _state.update {
+                it.copy(
+                    isGameEnded = true,
+                    winnerId = ranking.first(),
+                    ranking = ranking
+                )
             }
         }
     }
