@@ -23,5 +23,6 @@ data class RoundResult(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val playerId: String,
     val gameId: String,
-    val roundScore: Int
+    val roundScore: Int,
+    //var isGameCounted: Boolean = false
 )

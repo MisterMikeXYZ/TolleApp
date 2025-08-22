@@ -28,7 +28,9 @@ fun StatScreen(
             .horizontalScroll(rememberScrollState())
     ) {
         //get the player List from the database according to the game that is selected
-        val players = viewModel.getPlayers()
+        LaunchedEffect(Unit) {
+            viewModel.getPlayers()
+        }
         val state by viewModel.state.collectAsState()
 
 

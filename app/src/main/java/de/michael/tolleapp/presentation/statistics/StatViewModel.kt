@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 class StatViewModel(
     private val repository: PlayerRepository
 ) : ViewModel() {
-    val _state : MutableStateFlow<StatState> = MutableStateFlow(StatState())
+    private val _state : MutableStateFlow<StatState> = MutableStateFlow(StatState())
     val state: StateFlow<StatState> = _state.asStateFlow()
 
     fun getPlayers() {

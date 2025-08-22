@@ -1,85 +1,94 @@
 package de.michael.tolleapp.data
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
 class PlayerRepository(
     private val playerDao: PlayerDao,
-    private val roundResultDao: RoundResultDao
+    private val roundResultDao: RoundResultDao,
 ) {
 
     fun getPlayers(): Flow<List<SkyjoPlayer>> = playerDao.getAllPlayers()
 
-    suspend fun resetAllGameStats() {
-        // Reset all game statistics for all players
-        val players = playerDao.getAllPlayers()
-        players.collect { playerList ->
-            playerList.forEach { player ->
-                val updated = player.copy(
-                    bestEndScoreSkyjo = null,
-                    worstEndScoreSkyjo = null,
-                    totalGamesPlayedSkyjo = 0,
-                    totalEndScoreSkyjo = 0,
-                    bestRoundScoreSkyjo = null,
-                    worstRoundScoreSkyjo = null,
-                    roundsPlayedSkyjo = 0,
-                    totalRoundScoreSkyjo = 0
-                )
-                playerDao.updatePlayer(updated)
-            }
-        }
-    }
-
     suspend fun addPlayer(player: SkyjoPlayer): Boolean {
-        if (playerDao.getPlayerByName(player.name) != null) return false
+        val existing = playerDao.getPlayerByName(player.name)
+        if (existing != null) return false
         playerDao.insertPlayer(player)
         return true
     }
 
+    suspend fun recordRound(gameId: String, playerId: String, score: Int) {
+        roundResultDao.insertRoundResult(
+            RoundResult(
+                gameId = gameId,
+                playerId = playerId,
+                roundScore = score
+            )
+        )
+        updateRoundStats(playerId, score)
+    }
 
-    suspend fun recordRound(gameId: String, playerId: String, roundScore: Int) {
-        // insert round
-        val round = RoundResult(playerId = playerId, gameId = gameId, roundScore = roundScore)
-        roundResultDao.insertRoundResult(round)
+    suspend fun endGame(gameId: String) {
+        val players = getPlayersOnce()
+        players.forEach { player ->
+            val rounds = roundResultDao.getRoundsForPlayer(gameId, player.id)
+            if (rounds.isNotEmpty()) {
+                val total = rounds.sumOf { it.roundScore }
+                updateEndStats(player.id, total)
+            }
+        }
+    }
 
-        // recalculate aggregates
-        val rounds = roundResultDao.getRoundsForPlayer(gameId, playerId)
-        val bestRound = rounds.minOfOrNull { it.roundScore } ?: roundScore
-        val worstRound = rounds.maxOfOrNull { it.roundScore } ?: roundScore
-        val totalRounds = rounds.size
-        val totalRoundScore = rounds.sumOf { it.roundScore }
+    private suspend fun getPlayersOnce(): List<SkyjoPlayer> {
+        return playerDao.getAllPlayers()
+            .first() // requires kotlinx.coroutines.flow.first()
+    }
 
+    suspend fun updateRoundStats(playerId: String, roundScore: Int) {
         val player = playerDao.getPlayerById(playerId) ?: return
-        val updated = player.copy(
-            bestRoundScoreSkyjo = minOf(player.bestRoundScoreSkyjo ?: Int.MAX_VALUE, bestRound),
-            worstRoundScoreSkyjo = maxOf(player.worstRoundScoreSkyjo ?: Int.MIN_VALUE, worstRound),
-            roundsPlayedSkyjo = totalRounds,
-            totalRoundScoreSkyjo = player.totalRoundScoreSkyjo + roundScore
 
+        val bestRound = if (player.bestRoundScoreSkyjo == null || roundScore < player.bestRoundScoreSkyjo!!) roundScore else player.bestRoundScoreSkyjo!!
+        val worstRound = if (player.worstRoundScoreSkyjo == null || roundScore > player.worstRoundScoreSkyjo!!) roundScore else player.worstRoundScoreSkyjo!!
+
+        val updated = player.copy(
+            bestRoundScoreSkyjo = bestRound,
+            worstRoundScoreSkyjo = worstRound,
+            roundsPlayedSkyjo = player.roundsPlayedSkyjo + 1,
+            totalEndScoreSkyjo = player.totalEndScoreSkyjo + roundScore
         )
         playerDao.updatePlayer(updated)
     }
 
-    // End the game and update player statistics
-    // This function assumes that the gameId is unique for each game session
-    // and that all rounds for a player in that game are recorded.
-    // It calculates the end score for each player based on their rounds in the game.
-    // It updates the player's best and worst end scores, total games played, and total end score.
-    // It uses Flow to collect all players and update their statistics accordingly.
-    suspend fun endGame(gameId: String) {
-        val players = playerDao.getAllPlayers() // fetch all players as Flow
-        players.collect { playerList ->
-            playerList.forEach { player ->
-                val rounds = roundResultDao.getRoundsForPlayer(gameId, player.id)
-                if (rounds.isEmpty()) return@forEach
-                val endScore = rounds.sumOf { it.roundScore }
-                val updated = player.copy(
-                    bestEndScoreSkyjo = minOf(player.bestEndScoreSkyjo ?: Int.MAX_VALUE, endScore),
-                    worstEndScoreSkyjo = maxOf(player.worstEndScoreSkyjo ?: Int.MIN_VALUE, endScore),
-                    totalGamesPlayedSkyjo = player.totalGamesPlayedSkyjo + 1,
-                    totalEndScoreSkyjo = player.totalEndScoreSkyjo + endScore
-                )
-                playerDao.updatePlayer(updated)
-            }
+    suspend fun updateEndStats(playerId: String, endScore: Int) {
+        val player = playerDao.getPlayerById(playerId) ?: return
+
+        val bestEnd = if (player.bestEndScoreSkyjo == null || endScore < player.bestEndScoreSkyjo!!) endScore else player.bestEndScoreSkyjo!!
+        val worstEnd = if (player.worstEndScoreSkyjo == null || endScore > player.worstEndScoreSkyjo!!) endScore else player.worstEndScoreSkyjo!!
+
+        val updated = player.copy(
+            bestEndScoreSkyjo = bestEnd,
+            worstEndScoreSkyjo = worstEnd,
+            totalGamesPlayedSkyjo = player.totalGamesPlayedSkyjo + 1
+        )
+        playerDao.updatePlayer(updated)
+    }
+
+    suspend fun resetAllGameStats()
+    {
+        val players = getPlayersOnce()
+        players.forEach { player ->
+            val resetPlayer = player.copy(
+                bestRoundScoreSkyjo = null,
+                worstRoundScoreSkyjo = null,
+                bestEndScoreSkyjo = null,
+                worstEndScoreSkyjo = null,
+                roundsPlayedSkyjo = 0,
+                totalGamesPlayedSkyjo = 0,
+                totalRoundScoreSkyjo = 0,
+                totalEndScoreSkyjo = 0
+            )
+            playerDao.updatePlayer(resetPlayer)
         }
     }
 }
+

@@ -38,9 +38,12 @@ class SkyjoViewModel(
                 updatedRounds[playerId] = currentRounds
                 updatedTotals[playerId] = (updatedTotals[playerId] ?: 0) + score
 
-                // Persist in DB
+                // Persist in DB and update player stats
                 viewModelScope.launch {
                     repository.recordRound(state.currentGameId, playerId, score)
+
+                    // === NEW: update statistics ===
+                    //repository.updateRoundStats(playerId, score)
                 }
             }
 
@@ -132,18 +135,16 @@ class SkyjoViewModel(
             repository.recordRound(_state.value.currentGameId, playerId, roundScore)
         }
     }
+
     fun endGame() {
-        // Logic to end the game, e.g., saving results
+        val gameId = _state.value.currentGameId
+
         viewModelScope.launch {
-            repository.endGame(_state.value.currentGameId)
+            repository.endGame(gameId)
         }
-        // Reset state if needed
-        _state.update {
-            it.copy(
-                currentGameId = "",
-                selectedPlayerIds = listOf(null, null)
-            )
-        }
+
+        // Reset whole state to default
+        _state.value = SkyjoState()
     }
 }
 

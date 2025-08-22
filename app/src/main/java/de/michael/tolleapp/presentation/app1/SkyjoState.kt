@@ -1,7 +1,5 @@
 package de.michael.tolleapp.presentation.app1
 
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.remember
 import de.michael.tolleapp.data.SkyjoPlayer
 
 data class SkyjoState(
