@@ -33,7 +33,6 @@ fun StatScreen(
         }
         val state by viewModel.state.collectAsState()
 
-
         if (state.players.isEmpty()) {
             Text("Keine Spieler vorhanden")
         } else {
