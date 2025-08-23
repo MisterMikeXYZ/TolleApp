@@ -1,17 +1,40 @@
 package de.michael.tolleapp.presentation.app1
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
-import de.michael.tolleapp.data.RoundResult
+import de.michael.tolleapp.presentation.components.BetterOutlinedTextField
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -22,6 +45,8 @@ fun SkyjoGameScreen(
     viewModel: SkyjoViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    val keyboardManager = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
 
     // Local UI state to hold per-player current round input
     val points = remember { mutableStateMapOf<String, String>() }
@@ -47,6 +72,7 @@ fun SkyjoGameScreen(
 
     LaunchedEffect(state.isGameEnded) {
         if (state.isGameEnded) {
+            viewModel.navigateToEndScreen()
             navigateTo(Route.SkyjoEnd)
         }
     }
@@ -60,27 +86,23 @@ fun SkyjoGameScreen(
         Spacer(modifier = Modifier.height(1.dp))
 
         // Input row per player
-        state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-            val player = state.players.firstOrNull { it.id == playerId } ?: return@forEach
+        state.selectedPlayerIds.filterNotNull().forEachIndexed { index, playerId ->
+            val player = state.players.firstOrNull { it.id == playerId } ?: return@forEachIndexed
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
+                    .padding(top = 8.dp)
                     .fillMaxWidth()
-                    .padding(vertical = 1.dp)
             ) {
                 // Name
-                OutlinedTextField(
+                BetterOutlinedTextField(
                     value = player.name,
-                    onValueChange = {},
-                    readOnly = true,
                     label = { Text("Spieler") },
                     modifier = Modifier.weight(1f)
                 )
-
                 Spacer(modifier = Modifier.width(12.dp))
-
                 // Points input
-                OutlinedTextField(
+                BetterOutlinedTextField(
                     value = points[playerId] ?: "",
                     onValueChange = { new ->
                         if (new.isEmpty() || new == "-" || new.toIntOrNull() in -17..140) {
@@ -88,21 +110,25 @@ fun SkyjoGameScreen(
                         }
                     },
                     label = { Text("Punkte") },
-                    singleLine = true,
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Phone,
-                        imeAction = ImeAction.Done
+                        imeAction = if (index == state.selectedPlayerIds.filterNotNull().size - 1) ImeAction.Done
+                            else ImeAction.Next
                     ),
-                    modifier = Modifier.weight(1f)
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            keyboardManager?.hide()
+                        },
+                        onNext = {
+                            focusManager.moveFocus(FocusDirection.Down)
+                        }
+                    ),
+                    modifier = Modifier.weight(1f),
                 )
-
                 Spacer(modifier = Modifier.width(12.dp))
-
                 // Total display
-                OutlinedTextField(
+                BetterOutlinedTextField(
                     value = (totalPoints[playerId] ?: 0).toString(),
-                    onValueChange = {},
-                    readOnly = true,
                     label = { Text("Gesamt") },
                     modifier = Modifier.weight(1f)
                 )
@@ -129,73 +155,85 @@ fun SkyjoGameScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         // === ROUNDS GRID ===
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-        ) {
-            // Header row
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(4.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Runde", style = MaterialTheme.typography.labelLarge)
-                }
-                state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                    val player = state.players.firstOrNull { it.id == playerId } ?: return@forEach
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(player.name.take(2), style = MaterialTheme.typography.labelLarge)
-                    }
-                }
+        val scrollState = rememberScrollState()
+
+        LaunchedEffect(visibleRoundRows) {
+            scrollState.animateScrollTo(
+                scrollState.maxValue,
+                animationSpec = tween(
+                    durationMillis = 300,
+                    easing = LinearEasing
+                )
+            )
+        }
+
+        Row {
+            Column {
+
             }
-
-            // Round rows
-            for (roundIndex in 1..visibleRoundRows) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(scrollState)
+            ) {
+                // Header row
                 Row(modifier = Modifier.fillMaxWidth()) {
-                    // Round number cell
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .padding(4.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(roundIndex.toString())
+                        Text(
+                            "Runde",
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
-
-                    // SkyjoPlayer score cells
                     state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                        val list = perPlayerRounds[playerId]
-                        val value = list?.getOrNull(roundIndex - 1)?.toString() ?: ""
+                        val player = state.players.firstOrNull { it.id == playerId } ?: return@forEach
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(4.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(value)
+                            Text(player.name.take(2), style = MaterialTheme.typography.labelLarge)
+                        }
+                    }
+                }
+
+                // Round rows
+                for (roundIndex in 1..visibleRoundRows) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        // Round number cell
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(roundIndex.toString())
+                        }
+
+                        // SkyjoPlayer score cells
+                        state.selectedPlayerIds.filterNotNull().forEach { playerId ->
+                            val list = perPlayerRounds[playerId]
+                            val value = list?.getOrNull(roundIndex - 1)?.toString() ?: ""
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(value)
+                            }
                         }
                     }
                 }
             }
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = {
-                // End the game and navigate to the end screen
-                viewModel.endGame()
-                navigateTo(Route.SkyjoEnd)
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Spiel beenden")
         }
     }
 }

@@ -2,15 +2,14 @@ package de.michael.tolleapp.presentation.app1
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.michael.tolleapp.Route
-import de.michael.tolleapp.data.SkyjoPlayer
 import de.michael.tolleapp.data.PlayerRepository
+import de.michael.tolleapp.data.SkyjoPlayer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.UUID
 
 class SkyjoViewModel(
     private val repository: PlayerRepository,
@@ -49,7 +48,7 @@ class SkyjoViewModel(
 
             val maxRounds = updatedRounds.values.maxOfOrNull { it.size } ?: 0
             var visible = state.visibleRoundRows
-            while (maxRounds > visible) visible += 5
+            while (maxRounds > visible) visible += 1
 
             state.copy(
                 perPlayerRounds = updatedRounds,
@@ -136,13 +135,13 @@ class SkyjoViewModel(
         }
     }
 
-    fun endGame() {
-        val gameId = _state.value.currentGameId
-
+    fun navigateToEndScreen() {
         viewModelScope.launch {
-            repository.endGame(gameId)
+            repository.endGame(_state.value.currentGameId)
         }
+    }
 
+    fun endGame() {
         // Reset whole state to default
         _state.value = SkyjoState()
     }

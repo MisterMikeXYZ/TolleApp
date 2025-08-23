@@ -1,173 +1,174 @@
 package de.michael.tolleapp.presentation.statistics
 
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Arrangement.Absolute.spacedBy
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
+import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatScreen(
-    modifier: Modifier = Modifier,
     viewModel: StatViewModel = koinViewModel(),
     navigateTo: (Route) -> Unit,
 ) {
-    Column(
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-            .fillMaxSize()
-            .horizontalScroll(rememberScrollState())
-    ) {
-        //get the player List from the database according to the game that is selected
-        LaunchedEffect(Unit) {
-            viewModel.getPlayers()
-        }
-        val state by viewModel.state.collectAsState()
-
-        if (state.players.isEmpty()) {
-            Text("Keine Spieler vorhanden")
-        } else {
-            Row(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.Start,
-                modifier = Modifier.verticalScroll(rememberScrollState())
-            ) {
-                Column(
-
-                ) {
-                    Box ( ) {
-                        Text(
-                            text = "Spieler:",
-                            style = MaterialTheme.typography.titleMedium
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Statistik") },
+                navigationIcon = {
+                    IconButton(onClick = { navigateTo(Route.Main) }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
                         )
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Box ( ) {
-                        Text(
-                            text = "Beste Runde:",
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                },
+                actions = {
+                    var resetPressed by remember { mutableStateOf(false) }
+                    LaunchedEffect(resetPressed) {
+                        if (resetPressed) {
+                            delay(2000)
+                            resetPressed = false
+                        }
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Box ( ) {
-                        Text(
-                            text = ("Schlechteste" + "\n" + "Runde:"),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Box ( ) {
-                        Text(
-                            text = "Bestes Ende:",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Box ( ) {
-                        Text(
-                            text = ("Schlechtestes" + "\n" + "Ende:"),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Box ( ) {
-                        Text(
-                            text = "Runden ges.:",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Box ( ) {
-                        Text(
-                            text = "Spiele ges.:",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Box ( ) {
-                        Text(
-                            text = "Ergebnisse ges.:",
-                            style = MaterialTheme.typography.titleMedium
+                    IconButton(
+                        onClick = {
+                            if (!resetPressed) resetPressed = true
+                            else {
+                                viewModel.resetAllGameStats()
+                                resetPressed = false
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (!resetPressed) Icons.Default.Delete
+                                else Icons.Default.DeleteForever,
+                            contentDescription = null,
+                            tint = if (!resetPressed) MaterialTheme.colorScheme.onSurface
+                                else MaterialTheme.colorScheme.error
                         )
                     }
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                state.players.forEach { player ->
-                    Column ()
-                    {
-                        Box ( ) {
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start,
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(start = 8.dp)
+                .fillMaxSize()
+        ) {
+            //get the player List from the database according to the game that is selected
+            LaunchedEffect(Unit) {
+                viewModel.getPlayers()
+            }
+            val state by viewModel.state.collectAsState()
+
+
+            if (state.players.isEmpty()) {
+                Text("Keine Spieler vorhanden")
+            } else {
+                Row(
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.Start,
+                ) {
+                    Column(
+                        verticalArrangement = spacedBy(8.dp)
+                    ) {
+                        listOf(
+                            "",
+                            "Beste Runde",
+                            "Schlechteste\nRunde",
+                            "Bestes Ende",
+                            "Schlechtestes\nEnde",
+                            "∑ Runden",
+                            "∑ Spiele",
+                            "∑ Ergebnisse"
+                        ).forEach { name ->
                             Text(
-                                text = player.name,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Box ( ) {
-                            Text(
-                                text = player.bestRoundScoreSkyjo.toString(),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Box ( ) {
-                            Text(
-                                text = "\n" + player.worstRoundScoreSkyjo.toString(),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Box ( ) {
-                            Text(
-                                text = player.bestEndScoreSkyjo.toString(),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Box ( ) {
-                            Text(
-                                text = "\n" + player.worstEndScoreSkyjo.toString(),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Box ( ) {
-                            Text(
-                                text = player.roundsPlayedSkyjo.toString(),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Box ( ) {
-                            Text(
-                                text = player.totalGamesPlayedSkyjo.toString(),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Box ( ) {
-                            Text(
-                                text = player.totalEndScoreSkyjo.toString(),
-                                style = MaterialTheme.typography.titleMedium
+                                text = if (name.isBlank()) "" else "$name:",
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier
+                                    .height(if (name.contains("\n")) 42.dp else 18.dp)
                             )
                         }
                     }
                     Spacer(modifier = Modifier.width(8.dp))
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState())
+                    ) {
+                        state.players.forEach { player ->
+                            Column(
+                                verticalArrangement = spacedBy(8.dp)
+                            ) {
+                                listOf(
+                                    player.name,
+                                    player.bestRoundScoreSkyjo,
+                                    player.worstRoundScoreSkyjo?.let { "\n$it" } ?: "\n—",
+                                    player.bestEndScoreSkyjo,
+                                    player.worstEndScoreSkyjo?.let { "\n$it" } ?: "\n—",
+                                    player.roundsPlayedSkyjo,
+                                    player.totalGamesPlayedSkyjo,
+                                    player.totalEndScoreSkyjo
+                                ).forEachIndexed { index, value ->
+                                    val multiline = value?.toString()?.contains("\n") == true
+                                    Text(
+                                        text = value?.toString() ?: "—",
+                                        maxLines = if (multiline) 2 else 1,
+                                        overflow = TextOverflow.Clip,
+                                        style = if (index == 0) MaterialTheme.typography.labelLarge
+                                        else MaterialTheme.typography.bodyMedium,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier
+                                            .padding(horizontal = 4.dp)
+                                            .height(
+                                                if (multiline) 42.dp
+                                                else 18.dp
+                                            )
+                                            .width(60.dp),
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                    }
                 }
             }
-        }
-        Button (
-            onClick = { viewModel.resetAllGameStats() })
-        {
-            Text("Zurücksetzen")
         }
     }
 }

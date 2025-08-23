@@ -56,29 +56,13 @@ fun NavGraph(
 
         // Skyjo Screen
         composable<Route.Skyjo> {
-            Scaffold(
-                topBar = {
-                    CenterAlignedTopAppBar(
-                        title = { Text("Skyjo") },
-                        navigationIcon = {
-                            IconButton(onClick = { navController.popBackStack() }) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back"
-                                )
-                            }
-                        }
-                    )
-                }
-            ) { innerPadding ->
-                SkyjoScreen(
-                    navigateTo = { route ->
-                        navController.navigate(route)
-                    },
-                    modifier = Modifier.padding(innerPadding),
-                    viewModel = skyjoViewModel
-                )
-            }
+            SkyjoScreen(
+                navigateTo = { route ->
+                    navController.navigate(route)
+                },
+                navigateBack = { navController.popBackStack() },
+                viewModel = skyjoViewModel
+            )
         }
 
         // Skyjo Game Screen
@@ -132,29 +116,12 @@ fun NavGraph(
 
         // Statistics Screen
             composable<Route.Statistics> {
-                Scaffold(
-                    topBar = {
-                        CenterAlignedTopAppBar(
-                            title = { Text("Statistik") },
-                            navigationIcon = {
-                                IconButton(onClick = { navController.navigate(Route.Main) }) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Back"
-                                    )
-                                }
-                            }
-                        )
-                    }
-                ) { innerPadding ->
-                    StatScreen(
-                        navigateTo = { route ->
-                            navController.navigate(route)
-                        },
-                        modifier = Modifier.padding(innerPadding),
-                        viewModel = statViewModel
-                    )
-                }
+                StatScreen(
+                    navigateTo = { route ->
+                        navController.navigate(route)
+                    },
+                    viewModel = statViewModel
+                )
             }
         }
     }

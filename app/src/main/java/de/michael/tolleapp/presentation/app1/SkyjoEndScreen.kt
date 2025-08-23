@@ -1,5 +1,7 @@
 package de.michael.tolleapp.presentation.app1
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
-import de.michael.tolleapp.presentation.app1.SkyjoViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import androidx.compose.runtime.*
 
@@ -30,12 +32,23 @@ fun SkyjoEndScreen(
     viewModel: SkyjoViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    val scrollState = rememberScrollState()
+
+    LaunchedEffect(Unit) {
+        scrollState.animateScrollTo(
+            scrollState.maxValue,
+            animationSpec = tween (
+                durationMillis = 1000,
+                easing = LinearEasing
+            )
+        )
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
     ) {
         Text("Spiel beendet!", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(12.dp))
@@ -94,7 +107,7 @@ fun SkyjoEndScreen(
                     }
                 }
             }
-
+            HorizontalDivider()
             // Totals row
             Row(modifier = Modifier.fillMaxWidth()) {
                 Box(
@@ -137,8 +150,10 @@ fun SkyjoEndScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
         Button (
-            onClick = {navigateTo(Route.Main)
-            viewModel.endGame()}
+            onClick = {
+                navigateTo(Route.Main)
+                viewModel.endGame()
+            }
         )
         {
             Text("Zurück zum Hauptmenü")
