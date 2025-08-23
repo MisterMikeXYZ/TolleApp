@@ -75,7 +75,7 @@ fun StatScreen(
                     ) {
                         Icon(
                             imageVector = if (!resetPressed) Icons.Default.Delete
-                                else Icons.Default.DeleteForever,
+                            else Icons.Default.DeleteForever,
                             contentDescription = null,
                             tint = if (!resetPressed) MaterialTheme.colorScheme.onSurface
                                 else MaterialTheme.colorScheme.error

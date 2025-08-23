@@ -56,7 +56,6 @@ fun SkyjoGameScreen(
     val visibleRoundRows = state.visibleRoundRows
 
     // Keep only the per-round input fields in sync with the selected players.
-    // Do NOT touch perPlayerRounds/totalPoints here; read them from state.
     LaunchedEffect(state.selectedPlayerIds) {
         val selected = state.selectedPlayerIds.filterNotNull().toSet()
 
@@ -81,6 +80,7 @@ fun SkyjoGameScreen(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         Text("Spieler:", style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(1.dp))
@@ -113,7 +113,7 @@ fun SkyjoGameScreen(
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Phone,
                         imeAction = if (index == state.selectedPlayerIds.filterNotNull().size - 1) ImeAction.Done
-                            else ImeAction.Next
+                        else ImeAction.Next
                     ),
                     keyboardActions = KeyboardActions(
                         onDone = {
@@ -166,69 +166,71 @@ fun SkyjoGameScreen(
                 )
             )
         }
-
         Row {
             Column {
-
-            }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(scrollState)
-            ) {
-                // Header row
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "Runde",
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-                    state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                        val player = state.players.firstOrNull { it.id == playerId } ?: return@forEach
+                Row {
+                    Column {
                         Box(
                             modifier = Modifier
-                                .weight(1f)
+                                //.weight(1f)
                                 .padding(4.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(player.name.take(2), style = MaterialTheme.typography.labelLarge)
+                            Text("")
                         }
+                        for (roundIndex in 1..visibleRoundRows)
+                            //Row {
+                                // Round number cell
+                                Box(
+                                    modifier = Modifier
+                                        .padding(4.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(roundIndex.toString())
+                                }
+                            //}
                     }
-                }
 
-                // Round rows
-                for (roundIndex in 1..visibleRoundRows) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                    ) {
-                        // Round number cell
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(4.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(roundIndex.toString())
+                    Column {
+                        // Header row
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            state.selectedPlayerIds.filterNotNull().forEach { playerId ->
+                                val player =
+                                    state.players.firstOrNull { it.id == playerId } ?: return@forEach
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(4.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        player.name.take(2),
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                }
+                            }
                         }
+                        Spacer (modifier = Modifier.height(4.dp))
 
-                        // SkyjoPlayer score cells
-                        state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                            val list = perPlayerRounds[playerId]
-                            val value = list?.getOrNull(roundIndex - 1)?.toString() ?: ""
-                            Box(
+                        // Round rows
+                        for (roundIndex in 1..visibleRoundRows) {
+                            Row(
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .padding(4.dp),
-                                contentAlignment = Alignment.Center
+                                    .fillMaxWidth()
                             ) {
-                                Text(value)
+                                // SkyjoPlayer score cells
+                                state.selectedPlayerIds.filterNotNull().forEach { playerId ->
+                                    val list = perPlayerRounds[playerId]
+                                    val value = list?.getOrNull(roundIndex - 1)?.toString() ?: ""
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(4.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(value)
+                                    }
+                                }
                             }
                         }
                     }
