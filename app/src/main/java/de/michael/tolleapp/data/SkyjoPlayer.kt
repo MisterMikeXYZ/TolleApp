@@ -24,5 +24,4 @@ data class RoundResult(
     val playerId: String,
     val gameId: String,
     val roundScore: Int,
-    //var isGameCounted: Boolean = false
 )

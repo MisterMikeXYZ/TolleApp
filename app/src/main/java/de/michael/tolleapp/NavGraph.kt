@@ -67,30 +67,13 @@ fun NavGraph(
 
         // Skyjo Game Screen
         composable<Route.SkyjoGame> {
-            Scaffold(
-                topBar = {
-                    CenterAlignedTopAppBar(
-                        title = { Text("Skyjo") },
-                        navigationIcon = {
-                            IconButton(onClick = { navController.popBackStack() }) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back"
-                                )
-                            }
-                        }
-                    )
-                }
-            ) { innerPadding ->
-                SkyjoGameScreen(
-                    navigateTo = { route ->
-                        navController.navigate(route)
-                    },
-                    modifier = Modifier.padding(innerPadding),
-                    viewModel = skyjoViewModel,
-
-                )
-            }
+            SkyjoGameScreen(
+                navigateTo = { route ->
+                    navController.navigate(route)
+                },
+                //navigateBack = { navController.popBackStack() },
+                viewModel = skyjoViewModel,
+            )
         }
 
         // Skyjo End Game Screen

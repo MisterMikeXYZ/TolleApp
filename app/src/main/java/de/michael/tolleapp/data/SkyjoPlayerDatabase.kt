@@ -31,7 +31,4 @@ interface RoundResultDao {
 
     @Query("SELECT * FROM round_results WHERE gameId = :gameId AND playerId = :playerId")
     suspend fun getRoundsForPlayer(gameId: String, playerId: String): List<RoundResult>
-
-    //@Update
-    //suspend fun updateRoundResults(rounds: List<RoundResult>)
 }
