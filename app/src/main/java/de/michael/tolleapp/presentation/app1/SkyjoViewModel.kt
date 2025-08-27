@@ -52,15 +52,18 @@ class SkyjoViewModel(
                 .mapValues { entry -> entry.value.sortedBy { it.roundIndex }.map { it.roundScore } }
 
             val totals = grouped.mapValues { e -> e.value.sum() }.toMutableMap()
-            val players = grouped.keys.toMutableList<String?>()
+            val players = if (grouped.isNotEmpty()) {
+                grouped.keys.toMutableList<String?>()
+            } else {
+                _state.value.selectedPlayerIds.filterNotNull().toMutableList<String?>()
+            }
+            //val players = grouped.keys.toMutableList<String?>()
 
             val maxRounds = maxOf(grouped.values.maxOfOrNull { it.size } ?: 0, 5)
 
-            // 👇 ensure trailing null for UI consistency
             if (players.isEmpty() || players.lastOrNull() != null) {
                 players.add(null)
             }
-
             _state.update {
                 it.copy(
                     currentGameId = gameId,

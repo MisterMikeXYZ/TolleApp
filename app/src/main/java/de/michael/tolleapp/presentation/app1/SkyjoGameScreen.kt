@@ -134,6 +134,7 @@ fun SkyjoGameScreen(
                         )
                     }
                     var resetPressedSave by remember { mutableStateOf(false) }
+                    val hasAtLeastOneRound = state.perPlayerRounds.values.any { it.isNotEmpty() }
                     LaunchedEffect(resetPressedSave) {
                         if (resetPressedSave) {
                             delay(2000)
@@ -148,20 +149,25 @@ fun SkyjoGameScreen(
                                 navigateTo(Route.Main)
                                 resetPressedSave = false
                             }
-                        }
+                        },
+                        enabled = !state.isGameEnded && hasAtLeastOneRound
                     ) {
                         Icon(
                             imageVector = if (!resetPressedSave) Icons.Default.Save
                             else Icons.Default.SaveAs,
                             contentDescription = null,
-                            tint = if (!resetPressedSave) MaterialTheme.colorScheme.onSurface
-                            else MaterialTheme.colorScheme.primary
+                            tint = if (!hasAtLeastOneRound)
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f) // greyed out
+                            else if (!resetPressedSave)
+                                MaterialTheme.colorScheme.onSurface
+                            else
+                                MaterialTheme.colorScheme.primary
                         )
                     }
 
                 }
             )
-        }
+        },
     ) { innerPadding ->
         Column(
             modifier = modifier
@@ -261,6 +267,28 @@ fun SkyjoGameScreen(
                 )
             }
 
+            // Header Row for the names that is not scrollable
+            Row {
+                Spacer(modifier = Modifier.width(17.dp))
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    state.selectedPlayerIds.filterNotNull().forEach { playerId ->
+                        val player =
+                            state.players.firstOrNull { it.id == playerId }
+                                ?: return@forEach
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                player.name.take(2),
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+                    }
+                }
+            }
             Column (
                 modifier = Modifier
                     .fillMaxWidth()
@@ -268,75 +296,42 @@ fun SkyjoGameScreen(
                     .verticalScroll(scrollState)
             ) {
                 Row {
+                    //Column with the index of every played round starting with 5
                     Column {
-                        Row {
-                            Column (
+                        for (roundIndex in 1..visibleRoundRows)
+                        // Round number cell
+                            Box(
+                                modifier = Modifier
+                                    .padding(4.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        //.weight(1f)
-                                        .padding(4.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text("")
-                                }
-                                for (roundIndex in 1..visibleRoundRows)
-                                // Round number cell
-                                    Box(
-                                        modifier = Modifier
-                                            .padding(4.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(roundIndex.toString())
-                                    }
+                                Text(roundIndex.toString())
                             }
+                    }
 
-                            Column {
-                                // Header row
-                                Row(modifier = Modifier.fillMaxWidth()) {
-                                    state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                                        val player =
-                                            state.players.firstOrNull { it.id == playerId }
-                                                ?: return@forEach
+                    Column {
+                        // Round rows
+                        for (roundIndex in 1..visibleRoundRows) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                            ) {
+                                // SkyjoPlayer score cells
+                                state.selectedPlayerIds.filterNotNull()
+                                    .forEach { playerId ->
+                                        val list = perPlayerRounds[playerId]
+                                        val value =
+                                            list?.getOrNull(roundIndex - 1)?.toString()
+                                                ?: ""
                                         Box(
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .padding(4.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Text(
-                                                player.name.take(2),
-                                                style = MaterialTheme.typography.labelLarge
-                                            )
+                                            Text(value)
                                         }
                                     }
-                                }
-                                Spacer(modifier = Modifier.height(4.dp))
-
-                                // Round rows
-                                for (roundIndex in 1..visibleRoundRows) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                    ) {
-                                        // SkyjoPlayer score cells
-                                        state.selectedPlayerIds.filterNotNull()
-                                            .forEach { playerId ->
-                                                val list = perPlayerRounds[playerId]
-                                                val value =
-                                                    list?.getOrNull(roundIndex - 1)?.toString()
-                                                        ?: ""
-                                                Box(
-                                                    modifier = Modifier
-                                                        .weight(1f)
-                                                        .padding(4.dp),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Text(value)
-                                                }
-                                            }
-                                    }
-                                }
                             }
                         }
                     }

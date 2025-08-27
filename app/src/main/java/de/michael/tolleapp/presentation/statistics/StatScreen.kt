@@ -112,12 +112,12 @@ fun StatScreen(
                     ) {
                         listOf(
                             "",
+                            "∑ Spiele",
+                            "∑ Runden",
                             "Beste Runde",
                             "Schlechteste\nRunde",
                             "Bestes Ende",
                             "Schlechtestes\nEnde",
-                            "∑ Runden",
-                            "∑ Spiele",
                             "∑ Ergebnisse"
                         ).forEach { name ->
                             Text(
@@ -138,12 +138,12 @@ fun StatScreen(
                             ) {
                                 listOf(
                                     player.name,
+                                    player.totalGamesPlayedSkyjo,
+                                    player.roundsPlayedSkyjo,
                                     player.bestRoundScoreSkyjo,
                                     player.worstRoundScoreSkyjo?.let { "\n$it" } ?: "\n—",
                                     player.bestEndScoreSkyjo,
                                     player.worstEndScoreSkyjo?.let { "\n$it" } ?: "\n—",
-                                    player.roundsPlayedSkyjo,
-                                    player.totalGamesPlayedSkyjo,
                                     player.totalEndScoreSkyjo
                                 ).forEachIndexed { index, value ->
                                     val multiline = value?.toString()?.contains("\n") == true
