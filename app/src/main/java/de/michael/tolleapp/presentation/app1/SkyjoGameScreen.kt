@@ -18,9 +18,10 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,7 +48,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
-import de.michael.tolleapp.Route.Main
 import de.michael.tolleapp.presentation.components.BetterOutlinedTextField
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
@@ -58,7 +58,6 @@ fun SkyjoGameScreen(
     modifier: Modifier = Modifier,
     navigateTo: (Route) -> Unit,
     viewModel: SkyjoViewModel = koinViewModel(),
-    //navigateBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
     val keyboardManager = LocalSoftwareKeyboardController.current
@@ -79,10 +78,8 @@ fun SkyjoGameScreen(
         }
     }
 
-
     // Disable back button while in game
     BackHandler {
-        // do nothing or maybe show a dialog "Quit game?"
     }
 
     // Keep only the per-round input fields in sync with the selected players.
@@ -111,31 +108,57 @@ fun SkyjoGameScreen(
             CenterAlignedTopAppBar(
                 title = { Text("Skyjo") },
                 actions = {
-                    var resetPressed by remember { mutableStateOf(false) }
-                    LaunchedEffect(resetPressed) {
-                        if (resetPressed) {
+                    var resetPressedDelete by remember { mutableStateOf(false) }
+                    LaunchedEffect(resetPressedDelete) {
+                        if (resetPressedDelete) {
                             delay(2000)
-                            resetPressed = false
+                            resetPressedDelete = false
                         }
                     }
                     IconButton(
                         onClick = {
-                            if (!resetPressed) resetPressed = true
+                            if (!resetPressedDelete) resetPressedDelete = true
                             else {
-                                viewModel.endGame()
+                                viewModel.deleteGame()
                                 navigateTo(Route.Main)
-                                resetPressed = false
+                                resetPressedDelete = false
                             }
                         }
                     ) {
                         Icon(
-                            imageVector = if (!resetPressed) Icons.Default.Delete
+                            imageVector = if (!resetPressedDelete) Icons.Default.Delete
                             else Icons.Default.DeleteForever,
                             contentDescription = null,
-                            tint = if (!resetPressed) MaterialTheme.colorScheme.onSurface
+                            tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
                             else MaterialTheme.colorScheme.error
                         )
                     }
+                    var resetPressedSave by remember { mutableStateOf(false) }
+                    LaunchedEffect(resetPressedSave) {
+                        if (resetPressedSave) {
+                            delay(2000)
+                            resetPressedSave = false
+                        }
+                    }
+                    IconButton(
+                        onClick = {
+                            if (!resetPressedSave) resetPressedSave = true
+                            else {
+                                viewModel.pauseCurrentGame()
+                                navigateTo(Route.Main)
+                                resetPressedSave = false
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (!resetPressedSave) Icons.Default.Save
+                            else Icons.Default.SaveAs,
+                            contentDescription = null,
+                            tint = if (!resetPressedSave) MaterialTheme.colorScheme.onSurface
+                            else MaterialTheme.colorScheme.primary
+                        )
+                    }
+
                 }
             )
         }
@@ -152,7 +175,7 @@ fun SkyjoGameScreen(
             Column (
                 modifier = modifier
                     .fillMaxWidth()
-                    .requiredHeight(250.dp)
+                    .requiredHeight(260.dp)
                     .verticalScroll(rememberScrollState())
             ){
                 // Input row per player
@@ -258,7 +281,6 @@ fun SkyjoGameScreen(
                                     Text("")
                                 }
                                 for (roundIndex in 1..visibleRoundRows)
-                                //Row {
                                 // Round number cell
                                     Box(
                                         modifier = Modifier
@@ -267,7 +289,6 @@ fun SkyjoGameScreen(
                                     ) {
                                         Text(roundIndex.toString())
                                     }
-                                //}
                             }
 
                             Column {

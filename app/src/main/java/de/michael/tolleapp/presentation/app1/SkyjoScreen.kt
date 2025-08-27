@@ -1,7 +1,9 @@
 package de.michael.tolleapp.presentation.app1
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
@@ -12,7 +14,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
+import de.michael.tolleapp.data.skyjo.game.SkyjoGame
+import kotlinx.coroutines.flow.catch
 import org.koin.compose.viewmodel.koinViewModel
+import java.text.DateFormat
+import java.util.Date
+import java.util.Locale
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,9 +33,28 @@ fun SkyjoScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
+    val pausedGamesState = remember { mutableStateOf(emptyList<SkyjoGame>()) }
+
+    LaunchedEffect(viewModel) {
+        viewModel.pausedGames
+            .catch { emit(emptyList()) }
+            .collect { pausedGamesState.value = it }
+    }
+
+    val pausedGames = pausedGamesState.value
+
+    var expanded by remember { mutableStateOf(false) }
+    val formatter = DateFormat.getDateTimeInstance(
+        DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault()
+    )
+
     var showDialog by remember { mutableStateOf(false) }
     var newPlayerName by remember { mutableStateOf("") }
     var pendingRowIndex by remember { mutableStateOf<Int?>(null) }
+
+    LaunchedEffect(Unit) {
+        viewModel.endGame()
+    }
 
     if (showDialog) {
         AlertDialog(
@@ -90,83 +119,129 @@ fun SkyjoScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Text("Spieler:", style = MaterialTheme.typography.titleMedium)
+            Box (modifier = Modifier.fillMaxWidth().weight(1f).requiredHeight(50.dp)) {
+                Button(onClick = { expanded = true }) {
+                    Text("Pausierte Spiele laden")
+                }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            state.selectedPlayerIds.forEachIndexed { index, selectedId ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
                 ) {
-                    var expanded by remember { mutableStateOf(false) }
-                    val selectedPlayer =
-                        state.players.firstOrNull { it.id == selectedId }?.name
-                            ?: "Spieler auswählen"
-
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = {
-                            if (index == 0 || state.selectedPlayerIds[index - 1] != null) {
-                                expanded = !expanded
-                            }
-                        },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        TextField(
-                            value = selectedPlayer,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Spieler") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                    if (pausedGames.isEmpty()) {
+                        DropdownMenuItem(
+                            text = { Text("Keine pausierten Spiele") },
+                            onClick = { expanded = false }
                         )
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Neuen Spieler erstellen…") },
-                                onClick = {
-                                    expanded = false
-                                    pendingRowIndex = index
-                                    showDialog = true
+                    } else {
+                        pausedGames.forEach { game: SkyjoGame ->
+                            val date = Date(
+                                if (game.createdAt < 10_000_000_000L) {
+                                    // looks like seconds
+                                    game.createdAt * 1000
+                                } else {
+                                    // already millis
+                                    game.createdAt
                                 }
                             )
-                            state.players.filter { player -> player.id !in state.selectedPlayerIds }
-                                .forEach { player ->
-                                    DropdownMenuItem(
-                                        text = { Text(player.name) },
-                                        onClick = {
-                                            viewModel.selectPlayer(index, player.id)
-                                            expanded = false
-                                        }
-                                    )
+                            DropdownMenuItem(
+                                text = { Text("Spiel gestartet am ${formatter.format(date)}") },
+                                onClick = {
+                                    viewModel.resumeGame(game.id)
+                                    expanded = false
+                                    navigateTo(Route.SkyjoGame)
                                 }
-
-                        }
-                    }
-
-                    //X Button to remove player
-                    if (index >= 2) {
-                        IconButton(
-                            onClick = { viewModel.removePlayer(index) },
-                            enabled = index < state.selectedPlayerIds.size - 1
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Entfernen",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = if (index < state.selectedPlayerIds.size - 1) 1f else 0.3f
-                                )
                             )
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Text("Spieler:", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            Column (
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .requiredHeight(450.dp)
+                    .weight(6f, fill = true)
+            ){
+                state.selectedPlayerIds.forEachIndexed { index, selectedId ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .verticalScroll(rememberScrollState()) //HALLO
+                    ) {
+                        var expanded by remember { mutableStateOf(false) }
+                        val selectedPlayer =
+                            state.players.firstOrNull { it.id == selectedId }?.name
+                                ?: "Spieler auswählen"
 
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
+                            onExpandedChange = {
+                                if (index == 0 || state.selectedPlayerIds[index - 1] != null) {
+                                    expanded = !expanded
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                        ) {
+                            TextField(
+                                value = selectedPlayer,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Spieler") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier.menuAnchor().fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Neuen Spieler erstellen…") },
+                                    onClick = {
+                                        expanded = false
+                                        pendingRowIndex = index
+                                        showDialog = true
+                                    }
+                                )
+                                state.players.filter { player -> player.id !in state.selectedPlayerIds }
+                                    .forEach { player ->
+                                        DropdownMenuItem(
+                                            text = { Text(player.name) },
+                                            onClick = {
+                                                viewModel.selectPlayer(index, player.id)
+                                                expanded = false
+                                            }
+                                        )
+                                    }
+
+                            }
+                        }
+
+                        //X Button to remove player
+                        if (index >= 2) {
+                            IconButton(
+                                onClick = { viewModel.removePlayer(index) },
+                                enabled = index < state.selectedPlayerIds.size - 1
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Entfernen",
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = if (index < state.selectedPlayerIds.size - 1) 1f else 0.3f
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
             val distinctSelected =
                 state.selectedPlayerIds.filterNotNull().distinct().size >= 2
 
@@ -177,7 +252,7 @@ fun SkyjoScreen(
                     navigateTo(Route.SkyjoGame)
                 },
                 enabled = distinctSelected,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().weight(1f).requiredHeight(50.dp)
             ) {
                 Text("Spiel starten")
             }

@@ -1,6 +1,6 @@
 package de.michael.tolleapp.presentation.app1
 
-import de.michael.tolleapp.data.SkyjoPlayer
+import de.michael.tolleapp.data.skyjo.player.SkyjoPlayer
 
 data class SkyjoState(
     val players: List<SkyjoPlayer> = emptyList(),

@@ -1,4 +1,4 @@
-package de.michael.tolleapp.data
+package de.michael.tolleapp.data.skyjo.player
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
