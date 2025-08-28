@@ -23,10 +23,8 @@ interface GameDao {
     @Query("SELECT * FROM games WHERE id = :id LIMIT 1")
     suspend fun getGame(id: String): SkyjoGame?
 
-    // GameDao.kt
     @Query("SELECT * FROM games WHERE isFinished = 0 ORDER BY createdAt DESC")
     fun getPausedGames(): Flow<List<SkyjoGame>>
-
 }
 
 @Dao

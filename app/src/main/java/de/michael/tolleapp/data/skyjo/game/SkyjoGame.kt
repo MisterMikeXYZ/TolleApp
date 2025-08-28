@@ -10,7 +10,7 @@ data class SkyjoGame(
     @PrimaryKey val id: String,
     val createdAt: Long = System.currentTimeMillis(),
     val endedAt: Long? = null,
-    val isFinished: Boolean = false
+    val isFinished: Boolean = false,
 )
 
 @Entity(

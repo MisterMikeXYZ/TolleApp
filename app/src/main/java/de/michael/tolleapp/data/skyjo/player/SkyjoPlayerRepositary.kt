@@ -16,28 +16,6 @@ class PlayerRepository(
         return true
     }
 
-//    suspend fun recordRound(gameId: String, playerId: String, score: Int) {
-//        roundResultDao.insertRoundResult(
-//            RoundResult(
-//                gameId = gameId,
-//                playerId = playerId,
-//                roundScore = score
-//            )
-//        )
-//        updateRoundStats(playerId, score)
-//    }
-
-//    suspend fun endGame(gameId: String) {
-//        val players = getPlayersOnce()
-//        players.forEach { player ->
-//            val rounds = roundResultDao.getRoundsForPlayer(gameId, player.id)
-//            if (rounds.isNotEmpty()) {
-//                val total = rounds.sumOf { it.roundScore }
-//                updateEndStats(player.id, total)
-//            }
-//        }
-//    }
-
     private suspend fun getPlayersOnce(): List<SkyjoPlayer> {
         return playerDao.getAllPlayers()
             .first() // requires kotlinx.coroutines.flow.first()
@@ -67,7 +45,23 @@ class PlayerRepository(
         val updated = player.copy(
             bestEndScoreSkyjo = bestEnd,
             worstEndScoreSkyjo = worstEnd,
-            totalGamesPlayedSkyjo = player.totalGamesPlayedSkyjo + 1
+            totalGamesPlayedSkyjo = player.totalGamesPlayedSkyjo + 1,
+        )
+        playerDao.updatePlayer(updated)
+    }
+
+    suspend fun incrementWonGames(playerId: String) {
+        val player = playerDao.getPlayerById(playerId) ?: return
+        val updated = player.copy(
+            wonGames = player.wonGames + 1
+        )
+        playerDao.updatePlayer(updated)
+    }
+
+    suspend fun incrementLostGames(playerId: String) {
+        val player = playerDao.getPlayerById(playerId) ?: return
+        val updated = player.copy(
+            lostGames = player.lostGames + 1
         )
         playerDao.updatePlayer(updated)
     }
@@ -83,8 +77,9 @@ class PlayerRepository(
                 worstEndScoreSkyjo = null,
                 roundsPlayedSkyjo = 0,
                 totalGamesPlayedSkyjo = 0,
-                totalRoundScoreSkyjo = 0,
-                totalEndScoreSkyjo = 0
+                totalEndScoreSkyjo = 0,
+                wonGames = 0,
+                lostGames = 0,
             )
             playerDao.updatePlayer(resetPlayer)
         }

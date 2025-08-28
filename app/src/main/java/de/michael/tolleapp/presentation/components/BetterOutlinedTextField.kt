@@ -14,18 +14,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BetterOutlinedTextField(
+    modifier: Modifier = Modifier,
     value: String,
     onValueChange: ((String) -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     label: @Composable () -> Unit = {},
-    modifier: Modifier = Modifier,
+    textColor: Color = MaterialTheme.colorScheme.onSurface,
+    textStyle: TextStyle = LocalTextStyle.current,
 ) {
     Column(
         modifier = modifier
@@ -39,16 +43,15 @@ fun BetterOutlinedTextField(
                         onValueChange = onValueChange,
                         keyboardOptions = keyboardOptions,
                         keyboardActions = keyboardActions,
-                        textStyle = LocalTextStyle.current.copy(
-                            color = MaterialTheme.colorScheme.onSurface
-                        ),
+                        textStyle = textStyle.copy(color = textColor),
                         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                         modifier = Modifier.fillMaxWidth(),
                     )
                 } else {
                     Text(
                         text = value,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = textColor,
+                        style = textStyle,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }

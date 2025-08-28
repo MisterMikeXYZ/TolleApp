@@ -135,8 +135,12 @@ fun SkyjoEndScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Winner
-        val winnerName = state.players.firstOrNull { it.id == state.winnerId }?.name ?: "Unbekannt"
-        Text("🏆 Gewinner: $winnerName", style = MaterialTheme.typography.titleMedium)
+        val winnerNames = state.players
+            .filter { state.winnerId.contains(it.id) }
+            .map { it.name }
+            .ifEmpty { listOf("Niemand") }
+            .joinToString(", ")
+        Text("🏆 Gewinner: $winnerNames", style = MaterialTheme.typography.titleMedium)
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -152,7 +156,7 @@ fun SkyjoEndScreen(
         Button (
             onClick = {
                 navigateTo(Route.Main)
-                viewModel.endGame()
+                viewModel.resetGame()
             }
         )
         {

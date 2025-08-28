@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [SkyjoGame::class, GameRound::class],
-    version = 2,
+    version = 4,
     exportSchema = true
 )
 abstract class SkyjoGameDatabase : RoomDatabase() {

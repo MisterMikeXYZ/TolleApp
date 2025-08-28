@@ -2,7 +2,9 @@ package de.michael.tolleapp.presentation.main
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,6 +14,7 @@ import de.michael.tolleapp.Route
 import org.koin.compose.viewmodel.koinViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 
 /**
  * MainScreen is the entry point of the app.
@@ -36,7 +39,8 @@ fun MainScreen(
         Button(
             onClick = { navigateTo(Route.Statistics) },
         ) { Text("Statistik") }
-
+        Spacer (modifier = Modifier.height(20.dp))
+        Text("Durchschnitt\nGewinner\nEinstellungen\nDarkmode\nSpieler löschen\nDart\nSchwimmen\nVerbesserung/Verschlechterung\n" )
     }
 
 }

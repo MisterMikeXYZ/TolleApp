@@ -52,29 +52,41 @@ class SkyjoViewModel(
                 .mapValues { entry -> entry.value.sortedBy { it.roundIndex }.map { it.roundScore } }
 
             val totals = grouped.mapValues { e -> e.value.sum() }.toMutableMap()
+
             val players = if (grouped.isNotEmpty()) {
                 grouped.keys.toMutableList<String?>()
             } else {
                 _state.value.selectedPlayerIds.filterNotNull().toMutableList<String?>()
             }
-            //val players = grouped.keys.toMutableList<String?>()
-
-            val maxRounds = maxOf(grouped.values.maxOfOrNull { it.size } ?: 0, 5)
 
             if (players.isEmpty() || players.lastOrNull() != null) {
                 players.add(null)
             }
+
+            val maxRounds = maxOf(grouped.values.maxOfOrNull { it.size } ?: 0, 5)
+
             _state.update {
                 it.copy(
                     currentGameId = gameId,
-                    selectedPlayerIds = players, // 👈 restore players
+                    selectedPlayerIds = players,
                     perPlayerRounds = grouped.toMutableMap(),
                     totalPoints = totals,
-                    visibleRoundRows = maxRounds, // 👈 restore row count
-                    isGameEnded = false,          // just in case
-                    winnerId = null,
-                    ranking = emptyList()
+                    visibleRoundRows = maxRounds,
+                    isGameEnded = false,
+                    winnerId = listOf(null),
+                    loserId = listOf(null),
+                    ranking = emptyList(),
+                    currentGameRounds = maxRounds,
                 )
+            }
+
+
+            val totalRoundsPlayed = grouped.values.maxOfOrNull { it.size } ?: 0
+            val updatedPlayers = _state.value.selectedPlayerIds.filterNotNull()
+            val dealerIndex = if (updatedPlayers.isNotEmpty()) totalRoundsPlayed % updatedPlayers.size else 0
+
+            _state.update {
+                    it.copy(dealerIndex = dealerIndex)
             }
             gameRepository.continueGame(gameId)
             onResumed?.invoke()
@@ -90,7 +102,6 @@ class SkyjoViewModel(
             state.selectedPlayerIds.filterNotNull().forEach { playerId ->
                 val score = points[playerId]?.toIntOrNull() ?: 0
 
-                // 👉 NEW: write round to the Game DB only
                 viewModelScope.launch {
                     gameRepository.ensureSession(state.currentGameId)
                     gameRepository.addRound(
@@ -117,7 +128,6 @@ class SkyjoViewModel(
                 visibleRoundRows = visible
             )
         }
-
         checkEndCondition()
     }
 
@@ -125,11 +135,19 @@ class SkyjoViewModel(
         val totals = _state.value.totalPoints
         val hasLoser = totals.values.any { it >= 100 }
         if (hasLoser) {
+            val sortedEntries = totals.entries.sortedBy { it.value }
+            val lowestScore = sortedEntries.first().value
+            val winners = sortedEntries.filter { it.value == lowestScore && it.value <= 99 }.map { it.key }
+
+            val highestScore = sortedEntries.last().value
+            val losers = sortedEntries.filter { it.value == highestScore && it.value >= 100 }.map { it.key }
+            // all others are neither winners nor losers
             val ranking = totals.entries.sortedBy { it.value }.map { it.key }
             _state.update {
                 it.copy(
                     isGameEnded = true,
-                    winnerId = ranking.first(),
+                    winnerId = winners, //if (winners.size == 1) winners.first() else null,
+                    loserId = losers,
                     ranking = ranking
                 )
             }
@@ -190,7 +208,7 @@ class SkyjoViewModel(
         viewModelScope.launch { gameRepository.startGame(newGameId) }
     }
 
-    fun endGame() {
+    fun resetGame() {
         _state.update { state ->
             state.copy(
                 currentGameId = "",
@@ -199,8 +217,11 @@ class SkyjoViewModel(
                 totalPoints = mutableMapOf(),
                 visibleRoundRows = 5,
                 isGameEnded = false,
-                winnerId = null,
-                ranking = emptyList()
+                winnerId = listOf(null),
+                loserId = listOf(null),
+                ranking = emptyList(),
+                currentGameRounds = 0,
+                dealerIndex = 0,
             )
         }
     }
@@ -210,7 +231,7 @@ class SkyjoViewModel(
         if (gameId.isNotEmpty()) {
             viewModelScope.launch { gameRepository.deleteGameCompletely(gameId) }
         }
-        endGame()
+        resetGame()
     }
 
     fun navigateToEndScreen() {
@@ -225,12 +246,26 @@ class SkyjoViewModel(
                     // per-round stats (best/worst rounds, totals)
                     rounds.forEach { repository.updateRoundStats(playerId, it) }
                     repository.updateEndStats(playerId, rounds.sum())
+                    if (_state.value.winnerId.contains(playerId)) {
+                        repository.incrementWonGames(playerId)
+                    }
+                    if (_state.value.loserId.contains(playerId)) {
+                        repository.incrementLostGames(playerId)
+                    }
                 }
 
                 // mark and purge the finished session (don’t keep in temp DB)
                 gameRepository.markEnded(gameId)
                 gameRepository.deleteGameCompletely(gameId)
             }
+        }
+    }
+
+    fun advanceDealer(totalPlayers: Int) {
+        _state.update { state ->
+            state.copy(
+                dealerIndex = (state.dealerIndex + 1) % totalPlayers
+            )
         }
     }
 }

@@ -26,7 +26,8 @@ val appModule = module {
             androidContext(),
             SkyjoPlayerDatabase::class.java,
             "skyjo.db"
-        ).fallbackToDestructiveMigration(false)
+        )
+            .fallbackToDestructiveMigration()
             .build()
     }
 
@@ -35,7 +36,8 @@ val appModule = module {
             androidContext(),
             SkyjoGameDatabase::class.java,
             "skyjo_game.db"
-        ).fallbackToDestructiveMigration(false)
+        )
+            .fallbackToDestructiveMigration()
             .build()
     }
 

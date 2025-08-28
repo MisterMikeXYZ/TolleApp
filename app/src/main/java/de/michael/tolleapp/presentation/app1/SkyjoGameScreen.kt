@@ -25,8 +25,10 @@ import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -42,11 +44,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import de.michael.tolleapp.Route
 import de.michael.tolleapp.presentation.components.BetterOutlinedTextField
 import kotlinx.coroutines.delay
@@ -107,7 +111,7 @@ fun SkyjoGameScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Skyjo") },
-                actions = {
+                navigationIcon = {
                     var resetPressedDelete by remember { mutableStateOf(false) }
                     LaunchedEffect(resetPressedDelete) {
                         if (resetPressedDelete) {
@@ -133,6 +137,8 @@ fun SkyjoGameScreen(
                             else MaterialTheme.colorScheme.error
                         )
                     }
+                },
+                actions = {
                     var resetPressedSave by remember { mutableStateOf(false) }
                     val hasAtLeastOneRound = state.perPlayerRounds.values.any { it.isNotEmpty() }
                     LaunchedEffect(resetPressedSave) {
@@ -188,6 +194,8 @@ fun SkyjoGameScreen(
                 state.selectedPlayerIds.filterNotNull().forEachIndexed { index, playerId ->
                     val player =
                         state.players.firstOrNull { it.id == playerId } ?: return@forEachIndexed
+                    val isDealer = index == state.dealerIndex
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
@@ -198,7 +206,11 @@ fun SkyjoGameScreen(
                         BetterOutlinedTextField(
                             value = player.name,
                             label = { Text("Spieler") },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            textColor = if (isDealer) Color(0xFFF44336)
+                            else MaterialTheme.colorScheme.onSurface,
+                            textStyle = if (isDealer) MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp)
+                            else LocalTextStyle.current,
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         // Points input
@@ -242,6 +254,10 @@ fun SkyjoGameScreen(
                     viewModel.endRound(points)
                     points.keys.toList().forEach { id -> points[id] = "" } // clear inputs
 
+                    viewModel.advanceDealer(state.selectedPlayerIds.filterNotNull().size)
+                    //Move the focus to the top input field
+                    focusManager.moveFocus(FocusDirection.Up)
+                    keyboardManager?.hide()
                     if (state.isGameEnded) {
                         navigateTo(Route.SkyjoEnd)
                     }
@@ -289,6 +305,7 @@ fun SkyjoGameScreen(
                     }
                 }
             }
+            HorizontalDivider()
             Column (
                 modifier = Modifier
                     .fillMaxWidth()

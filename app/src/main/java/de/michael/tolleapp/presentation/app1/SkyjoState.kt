@@ -10,7 +10,9 @@ data class SkyjoState(
     val perPlayerRounds: Map<String, List<Int>> = emptyMap(),
     val totalPoints: Map<String, Int> = emptyMap(),
     val visibleRoundRows: Int = 5,
-    val winnerId: String? = null,
+    val winnerId: List<String?> = listOf(null),
+    val loserId: List<String?> = listOf(null),
     val ranking: List<String> = emptyList(), // sorted playerIds by score
     val isGameEnded: Boolean = false,
+    val dealerIndex: Int = 0,
 )

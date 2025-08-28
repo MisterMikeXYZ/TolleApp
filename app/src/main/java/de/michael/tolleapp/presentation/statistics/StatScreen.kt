@@ -112,8 +112,11 @@ fun StatScreen(
                     ) {
                         listOf(
                             "",
+                            "Gewonnen",
+                            "Verloren",
                             "∑ Spiele",
                             "∑ Runden",
+                            "Ø pro Runde",
                             "Beste Runde",
                             "Schlechteste\nRunde",
                             "Bestes Ende",
@@ -138,8 +141,11 @@ fun StatScreen(
                             ) {
                                 listOf(
                                     player.name,
+                                    player.wonGames,
+                                    player.lostGames,
                                     player.totalGamesPlayedSkyjo,
                                     player.roundsPlayedSkyjo,
+                                    player.totalEndScoreSkyjo / (if (player.roundsPlayedSkyjo == 0) 1 else player.roundsPlayedSkyjo),
                                     player.bestRoundScoreSkyjo,
                                     player.worstRoundScoreSkyjo?.let { "\n$it" } ?: "\n—",
                                     player.bestEndScoreSkyjo,
@@ -162,6 +168,7 @@ fun StatScreen(
                                             )
                                             .width(60.dp),
                                     )
+                                    //if (index == 0) { HorizontalDivider() }
                                 }
                             }
                             Spacer(modifier = Modifier.width(8.dp))

@@ -53,7 +53,7 @@ fun SkyjoScreen(
     var pendingRowIndex by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(Unit) {
-        viewModel.endGame()
+        viewModel.resetGame()
     }
 
     if (showDialog) {
