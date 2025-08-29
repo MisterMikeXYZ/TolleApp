@@ -44,6 +44,8 @@ fun StatScreen(
     viewModel: StatViewModel = koinViewModel(),
     navigateTo: (Route) -> Unit,
 ) {
+    val state by viewModel.state.collectAsState()
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -75,7 +77,7 @@ fun StatScreen(
                     ) {
                         Icon(
                             imageVector = if (!resetPressed) Icons.Default.Delete
-                            else Icons.Default.DeleteForever,
+                                else Icons.Default.DeleteForever,
                             contentDescription = null,
                             tint = if (!resetPressed) MaterialTheme.colorScheme.onSurface
                                 else MaterialTheme.colorScheme.error
@@ -93,13 +95,6 @@ fun StatScreen(
                 .padding(start = 8.dp)
                 .fillMaxSize()
         ) {
-            //get the player List from the database according to the game that is selected
-            LaunchedEffect(Unit) {
-                viewModel.getPlayers()
-            }
-            val state by viewModel.state.collectAsState()
-
-
             if (state.players.isEmpty()) {
                 Text("Keine Spieler vorhanden")
             } else {

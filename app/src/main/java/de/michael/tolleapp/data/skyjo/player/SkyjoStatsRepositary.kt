@@ -22,6 +22,7 @@ class SkyjoStatsRepository(
         return true
     }
 
+    fun getAllStats(): Flow<List<SkyjoStats>> = skyjoStatsDao.getAllStatsFlow()
 
     suspend fun getStatsForPlayers(playerIds: List<String>): List<SkyjoStats> {
         return skyjoStatsDao.getStatsForPlayers(playerIds)

@@ -6,28 +6,39 @@ import de.michael.tolleapp.data.skyjo.player.SkyjoStatsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class StatViewModel(
     private val repository: SkyjoStatsRepository
 ) : ViewModel() {
-    private val _state: MutableStateFlow<StatState> = MutableStateFlow(StatState())
-    val state: StateFlow<StatState> = _state.asStateFlow()
 
-    fun getPlayers() {
-        viewModelScope.launch {
-            repository.getPlayers().collect { players ->
-                // players here are Player objects
-                val names = players.associate { it.id to it.name }
+    private val _allPlayers = repository
+        .getPlayers()
 
-                // fetch SkyjoStats for all players
-                val statsList = repository.getStatsForPlayers(players.map { it.id })
+    private val _statsList = repository
+        .getAllStats()
 
-                _state.update { it.copy(players = statsList, playerNames = names) }
-            }
-        }
+    private val _state = MutableStateFlow(StatState())
+
+    val state = combine(
+        _state,
+        _allPlayers,
+        _statsList,
+    ) { state, allPlayers, statsList ->
+        state.copy(
+            players = statsList,
+            playerNames = allPlayers.associate { it.id to it.name }
+        )
     }
+        .stateIn(
+            viewModelScope,
+            started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5_000),
+            initialValue = StatState()
+        )
 
 
     fun resetAllGameStats() {

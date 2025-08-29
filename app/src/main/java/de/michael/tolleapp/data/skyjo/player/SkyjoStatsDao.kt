@@ -14,6 +14,9 @@ interface SkyjoStatsDao {
     @Insert
     suspend fun insertStats(stats: SkyjoStats)
 
+    @Query("SELECT * FROM skyjo_stats")
+    fun getAllStatsFlow(): Flow<List<SkyjoStats>>
+
     @Query("SELECT * FROM skyjo_stats WHERE playerId IN (:playerIds)")
     suspend fun getStatsForPlayers(playerIds: List<String>): List<SkyjoStats>
 
