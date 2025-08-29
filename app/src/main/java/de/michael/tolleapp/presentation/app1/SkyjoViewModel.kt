@@ -16,7 +16,7 @@ import java.util.UUID
 
 
 class SkyjoViewModel(
-    private val repository: PlayerRepository,
+    private val playerRepository: PlayerRepository,
     private val gameRepository: SkyjoGameRepository
 ) : ViewModel() {
     private val _state = MutableStateFlow(SkyjoState())
@@ -30,7 +30,7 @@ class SkyjoViewModel(
 
     init {
         viewModelScope.launch {
-            repository.getPlayers().collect { players ->
+            playerRepository.getPlayers().collect { players ->
                 _state.update { it.copy(players = players) }
             }
         }
@@ -156,7 +156,7 @@ class SkyjoViewModel(
 
     fun addPlayer(name: String, rowIndex: Int) = viewModelScope.launch {
         val newPlayer = SkyjoPlayer(name = name)
-        val added = repository.addPlayer(newPlayer)
+        val added = playerRepository.addPlayer(newPlayer)
         if (added) {
             selectPlayer(rowIndex, newPlayer.id)
         }
@@ -234,24 +234,20 @@ class SkyjoViewModel(
         resetGame()
     }
 
-    fun navigateToEndScreen() {
+    fun endGame() {
         viewModelScope.launch {
             val gameId = _state.value.currentGameId
             if (gameId.isNotEmpty()) {
                 // read per-player rounds from Game DB
                 val roundsByPlayer = gameRepository.getRoundsGroupedByPlayer(gameId)
 
-                // update player stats based on *this* finished game
+                val winners = _state.value.winnerId.filterNotNull()
+                val losers = _state.value.loserId.filterNotNull()
+
                 roundsByPlayer.forEach { (playerId, rounds) ->
-                    // per-round stats (best/worst rounds, totals)
-                    rounds.forEach { repository.updateRoundStats(playerId, it) }
-                    repository.updateEndStats(playerId, rounds.sum())
-                    if (_state.value.winnerId.contains(playerId)) {
-                        repository.incrementWonGames(playerId)
-                    }
-                    if (_state.value.loserId.contains(playerId)) {
-                        repository.incrementLostGames(playerId)
-                    }
+                    val isWinner = winners.contains(playerId)
+                    val isLoser = losers.contains(playerId)
+                    playerRepository.finalizePlayerStats(playerId, rounds, isWinner, isLoser)
                 }
 
                 // mark and purge the finished session (don’t keep in temp DB)

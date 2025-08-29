@@ -21,51 +21,38 @@ class PlayerRepository(
             .first() // requires kotlinx.coroutines.flow.first()
     }
 
-    suspend fun updateRoundStats(playerId: String, roundScore: Int) {
+    suspend fun finalizePlayerStats(
+        playerId: String,
+        rounds: List<Int>,
+        isWinner: Boolean,
+        isLoser: Boolean
+    ) {
         val player = playerDao.getPlayerById(playerId) ?: return
 
-        val bestRound = if (player.bestRoundScoreSkyjo == null || roundScore < player.bestRoundScoreSkyjo) roundScore else player.bestRoundScoreSkyjo
-        val worstRound = if (player.worstRoundScoreSkyjo == null || roundScore > player.worstRoundScoreSkyjo) roundScore else player.worstRoundScoreSkyjo
+        val endScore = rounds.sum()
+
+        // Round stats
+        val bestRound = listOfNotNull(player.bestRoundScoreSkyjo, rounds.minOrNull()).minOrNull()
+        val worstRound = listOfNotNull(player.worstRoundScoreSkyjo, rounds.maxOrNull()).maxOrNull()
+
+        // End-of-game stats
+        val bestEnd = listOfNotNull(player.bestEndScoreSkyjo, endScore).minOrNull()
+        val worstEnd = listOfNotNull(player.worstEndScoreSkyjo, endScore).maxOrNull()
 
         val updated = player.copy(
             bestRoundScoreSkyjo = bestRound,
             worstRoundScoreSkyjo = worstRound,
-            roundsPlayedSkyjo = player.roundsPlayedSkyjo + 1,
-            totalEndScoreSkyjo = player.totalEndScoreSkyjo + roundScore
-        )
-        playerDao.updatePlayer(updated)
-    }
-
-    suspend fun updateEndStats(playerId: String, endScore: Int) {
-        val player = playerDao.getPlayerById(playerId) ?: return
-
-        val bestEnd = if (player.bestEndScoreSkyjo == null || endScore < player.bestEndScoreSkyjo) endScore else player.bestEndScoreSkyjo
-        val worstEnd = if (player.worstEndScoreSkyjo == null || endScore > player.worstEndScoreSkyjo) endScore else player.worstEndScoreSkyjo
-
-        val updated = player.copy(
             bestEndScoreSkyjo = bestEnd,
             worstEndScoreSkyjo = worstEnd,
+            roundsPlayedSkyjo = player.roundsPlayedSkyjo + rounds.size,
+            totalEndScoreSkyjo = player.totalEndScoreSkyjo + endScore,
             totalGamesPlayedSkyjo = player.totalGamesPlayedSkyjo + 1,
+            wonGames = if (isWinner) player.wonGames + 1 else player.wonGames,
+            lostGames = if (isLoser) player.lostGames + 1 else player.lostGames,
         )
+
         playerDao.updatePlayer(updated)
     }
-
-    suspend fun incrementWonGames(playerId: String) {
-        val player = playerDao.getPlayerById(playerId) ?: return
-        val updated = player.copy(
-            wonGames = player.wonGames + 1
-        )
-        playerDao.updatePlayer(updated)
-    }
-
-    suspend fun incrementLostGames(playerId: String) {
-        val player = playerDao.getPlayerById(playerId) ?: return
-        val updated = player.copy(
-            lostGames = player.lostGames + 1
-        )
-        playerDao.updatePlayer(updated)
-    }
-
     suspend fun resetAllGameStats()
     {
         val players = getPlayersOnce()

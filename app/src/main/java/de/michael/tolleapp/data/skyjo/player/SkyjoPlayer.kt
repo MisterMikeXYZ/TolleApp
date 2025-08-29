@@ -14,7 +14,6 @@ data class SkyjoPlayer(
     val worstEndScoreSkyjo: Int? = null,
     val roundsPlayedSkyjo: Int = 0,
     val totalGamesPlayedSkyjo: Int = 0,
-    //val totalRoundScoreSkyjo: Int = 0,
     val totalEndScoreSkyjo: Int = 0,
     val wonGames: Int = 0,
     val lostGames: Int = 0,

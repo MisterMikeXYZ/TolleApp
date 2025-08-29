@@ -102,7 +102,7 @@ fun SkyjoGameScreen(
 
     LaunchedEffect(state.isGameEnded) {
         if (state.isGameEnded) {
-            viewModel.navigateToEndScreen()
+            viewModel.endGame()
             navigateTo(Route.SkyjoEnd)
         }
     }
@@ -251,16 +251,12 @@ fun SkyjoGameScreen(
 
             Button(
                 onClick = {
+                    viewModel.advanceDealer(state.selectedPlayerIds.filterNotNull().size)
                     viewModel.endRound(points)
                     points.keys.toList().forEach { id -> points[id] = "" } // clear inputs
-
-                    viewModel.advanceDealer(state.selectedPlayerIds.filterNotNull().size)
                     //Move the focus to the top input field
                     focusManager.moveFocus(FocusDirection.Up)
                     keyboardManager?.hide()
-                    if (state.isGameEnded) {
-                        navigateTo(Route.SkyjoEnd)
-                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = allInputsFilled
