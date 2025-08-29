@@ -7,7 +7,7 @@ import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface GameDao {
+interface SkyjoGameDao {
     @Insert
     suspend fun insertGame(game: SkyjoGame)
 
@@ -28,7 +28,7 @@ interface GameDao {
 }
 
 @Dao
-interface GameRoundDao {
+interface SkyjoGameRoundDao {
     @Insert
     suspend fun insertRound(round: GameRound)
 

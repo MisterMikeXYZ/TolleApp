@@ -1,14 +1,17 @@
-package de.michael.tolleapp.presentation.app1
+package de.michael.tolleapp.presentation.skyjo
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import de.michael.tolleapp.data.player.Player
+import de.michael.tolleapp.data.player.PlayerRepository
 import de.michael.tolleapp.data.skyjo.game.SkyjoGameRepository
-import de.michael.tolleapp.data.skyjo.player.PlayerRepository
-import de.michael.tolleapp.data.skyjo.player.SkyjoPlayer
+import de.michael.tolleapp.data.skyjo.player.SkyjoStatsRepository
+import de.michael.tolleapp.data.skyjo.player.SkyjoStats
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -16,22 +19,28 @@ import java.util.UUID
 
 
 class SkyjoViewModel(
+    private val skyjoStatsRepository: SkyjoStatsRepository,
     private val playerRepository: PlayerRepository,
     private val gameRepository: SkyjoGameRepository
 ) : ViewModel() {
     private val _state = MutableStateFlow(SkyjoState())
     val state: StateFlow<SkyjoState> = _state.asStateFlow()
 
-    //Flow<List<SkyjoGame>>
-    // 👇 make the type explicit so Kotlin can’t infer the wrong thing
     val pausedGames: StateFlow<List<de.michael.tolleapp.data.skyjo.game.SkyjoGame>> =
         gameRepository.getPausedGames()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         viewModelScope.launch {
-            playerRepository.getPlayers().collect { players ->
-                _state.update { it.copy(players = players) }
+            // collect stats + players so UI always has names
+            combine(
+                skyjoStatsRepository.getPlayers(),
+                playerRepository.getAllPlayers()
+            ) { stats, players ->
+                val namesMap = players.associate { it.id to it.name }
+                namesMap
+            }.collect { namesMap ->
+                _state.update { it.copy(playerNames = namesMap) }
             }
         }
     }
@@ -155,8 +164,8 @@ class SkyjoViewModel(
     }
 
     fun addPlayer(name: String, rowIndex: Int) = viewModelScope.launch {
-        val newPlayer = SkyjoPlayer(name = name)
-        val added = playerRepository.addPlayer(newPlayer)
+        val newPlayer = Player(name = name)
+        val added = skyjoStatsRepository.addPlayer(newPlayer)
         if (added) {
             selectPlayer(rowIndex, newPlayer.id)
         }
@@ -247,7 +256,7 @@ class SkyjoViewModel(
                 roundsByPlayer.forEach { (playerId, rounds) ->
                     val isWinner = winners.contains(playerId)
                     val isLoser = losers.contains(playerId)
-                    playerRepository.finalizePlayerStats(playerId, rounds, isWinner, isLoser)
+                    skyjoStatsRepository.finalizePlayerStats(playerId, rounds, isWinner, isLoser)
                 }
 
                 // mark and purge the finished session (don’t keep in temp DB)

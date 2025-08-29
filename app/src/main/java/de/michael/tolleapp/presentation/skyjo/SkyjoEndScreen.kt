@@ -1,4 +1,4 @@
-package de.michael.tolleapp.presentation.app1
+package de.michael.tolleapp.presentation.skyjo
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -66,14 +66,14 @@ fun SkyjoEndScreen(
                     Text("Runde", style = MaterialTheme.typography.labelLarge)
                 }
                 state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                    val player = state.players.firstOrNull { it.id == playerId } ?: return@forEach
+                    val name = state.playerNames[playerId] ?: "?"
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .padding(4.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(player.name.take(2), style = MaterialTheme.typography.labelLarge)
+                        Text(name.take(2), style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }
@@ -135,9 +135,7 @@ fun SkyjoEndScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Winner
-        val winnerNames = state.players
-            .filter { state.winnerId.contains(it.id) }
-            .map { it.name }
+        val winnerNames = state.winnerId.mapNotNull { id -> state.playerNames[id] }
             .ifEmpty { listOf("Niemand") }
             .joinToString(", ")
         Text("🏆 Gewinner: $winnerNames", style = MaterialTheme.typography.titleMedium)
@@ -147,7 +145,7 @@ fun SkyjoEndScreen(
         // Ranking
         Text("Rangliste:", style = MaterialTheme.typography.titleMedium)
         state.ranking.forEachIndexed { index, playerId ->
-            val playerName = state.players.firstOrNull { it.id == playerId }?.name ?: playerId
+            val playerName = state.playerNames[playerId] ?: playerId
             val score = state.totalPoints[playerId] ?: 0
             Text("${index + 1}. $playerName - $score Punkte")
         }

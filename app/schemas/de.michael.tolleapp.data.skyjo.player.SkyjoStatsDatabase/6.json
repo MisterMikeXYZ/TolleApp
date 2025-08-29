@@ -1,0 +1,117 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 6,
+    "identityHash": "1a4b15d33a507383fa579e714e6591c0",
+    "entities": [
+      {
+        "tableName": "skyjo_stats",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`playerId` TEXT NOT NULL, `bestRoundScoreSkyjo` INTEGER, `worstRoundScoreSkyjo` INTEGER, `bestEndScoreSkyjo` INTEGER, `worstEndScoreSkyjo` INTEGER, `roundsPlayedSkyjo` INTEGER NOT NULL, `totalGamesPlayedSkyjo` INTEGER NOT NULL, `totalEndScoreSkyjo` INTEGER NOT NULL, `wonGames` INTEGER NOT NULL, `lostGames` INTEGER NOT NULL, PRIMARY KEY(`playerId`))",
+        "fields": [
+          {
+            "fieldPath": "playerId",
+            "columnName": "playerId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bestRoundScoreSkyjo",
+            "columnName": "bestRoundScoreSkyjo",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "worstRoundScoreSkyjo",
+            "columnName": "worstRoundScoreSkyjo",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "bestEndScoreSkyjo",
+            "columnName": "bestEndScoreSkyjo",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "worstEndScoreSkyjo",
+            "columnName": "worstEndScoreSkyjo",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "roundsPlayedSkyjo",
+            "columnName": "roundsPlayedSkyjo",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalGamesPlayedSkyjo",
+            "columnName": "totalGamesPlayedSkyjo",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalEndScoreSkyjo",
+            "columnName": "totalEndScoreSkyjo",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "wonGames",
+            "columnName": "wonGames",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lostGames",
+            "columnName": "lostGames",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "playerId"
+          ]
+        }
+      },
+      {
+        "tableName": "round_results",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `playerId` TEXT NOT NULL, `gameId` TEXT NOT NULL, `roundScore` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "playerId",
+            "columnName": "playerId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gameId",
+            "columnName": "gameId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "roundScore",
+            "columnName": "roundScore",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1a4b15d33a507383fa579e714e6591c0')"
+    ]
+  }
+}

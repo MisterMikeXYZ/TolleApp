@@ -1,4 +1,4 @@
-package de.michael.tolleapp.presentation.app1
+package de.michael.tolleapp.presentation.skyjo
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.LinearEasing
@@ -192,8 +192,7 @@ fun SkyjoGameScreen(
             ){
                 // Input row per player
                 state.selectedPlayerIds.filterNotNull().forEachIndexed { index, playerId ->
-                    val player =
-                        state.players.firstOrNull { it.id == playerId } ?: return@forEachIndexed
+                    val playerName = state.playerNames[playerId] ?: "Spieler auswählen"
                     val isDealer = index == state.dealerIndex
 
                     Row(
@@ -204,7 +203,7 @@ fun SkyjoGameScreen(
                     ) {
                         // Name
                         BetterOutlinedTextField(
-                            value = player.name,
+                            value = playerName, //THIS
                             label = { Text("Spieler") },
                             modifier = Modifier.weight(1f),
                             textColor = if (isDealer) Color(0xFFF44336)
@@ -284,9 +283,7 @@ fun SkyjoGameScreen(
                 Spacer(modifier = Modifier.width(17.dp))
                 Row(modifier = Modifier.fillMaxWidth()) {
                     state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                        val player =
-                            state.players.firstOrNull { it.id == playerId }
-                                ?: return@forEach
+                        val playerName = state.playerNames[playerId] ?: ""
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -294,7 +291,7 @@ fun SkyjoGameScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                player.name.take(2),
+                                playerName.take(2), //THIS
                                 style = MaterialTheme.typography.labelLarge
                             )
                         }

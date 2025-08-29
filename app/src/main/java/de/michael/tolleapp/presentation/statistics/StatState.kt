@@ -1,8 +1,9 @@
 package de.michael.tolleapp.presentation.statistics
 
-import de.michael.tolleapp.data.skyjo.player.SkyjoPlayer
+import de.michael.tolleapp.data.player.Player
+import de.michael.tolleapp.data.skyjo.player.SkyjoStats
 
 data class StatState(
-    val players: List<SkyjoPlayer> = emptyList(),
-    //val games : List<Games> = emptyList(),
+    val players: List<SkyjoStats> = emptyList(),
+    val playerNames: Map<String, String> = emptyMap(),
 )

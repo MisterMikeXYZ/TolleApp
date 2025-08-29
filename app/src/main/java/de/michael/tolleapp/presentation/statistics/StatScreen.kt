@@ -140,7 +140,7 @@ fun StatScreen(
                                 verticalArrangement = spacedBy(8.dp)
                             ) {
                                 listOf(
-                                    player.name,
+                                    state.playerNames[player.playerId] ?: "?",
                                     player.wonGames,
                                     player.lostGames,
                                     player.totalGamesPlayedSkyjo,

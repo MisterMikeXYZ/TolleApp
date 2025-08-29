@@ -14,10 +14,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.michael.tolleapp.Route
 import de.michael.tolleapp.Route.SkyjoEnd
-import de.michael.tolleapp.presentation.app1.SkyjoEndScreen
-import de.michael.tolleapp.presentation.app1.SkyjoGameScreen
-import de.michael.tolleapp.presentation.app1.SkyjoScreen
-import de.michael.tolleapp.presentation.app1.SkyjoViewModel
+import de.michael.tolleapp.presentation.skyjo.SkyjoEndScreen
+import de.michael.tolleapp.presentation.skyjo.SkyjoGameScreen
+import de.michael.tolleapp.presentation.skyjo.SkyjoScreen
+import de.michael.tolleapp.presentation.skyjo.SkyjoViewModel
 import de.michael.tolleapp.presentation.main.MainScreen
 import de.michael.tolleapp.presentation.statistics.StatScreen
 import de.michael.tolleapp.presentation.statistics.StatViewModel

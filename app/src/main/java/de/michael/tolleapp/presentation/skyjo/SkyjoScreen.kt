@@ -1,4 +1,4 @@
-package de.michael.tolleapp.presentation.app1
+package de.michael.tolleapp.presentation.skyjo
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -174,9 +174,7 @@ fun SkyjoScreen(
                             .verticalScroll(rememberScrollState()) //HALLO
                     ) {
                         var expanded by remember { mutableStateOf(false) }
-                        val selectedPlayer =
-                            state.players.firstOrNull { it.id == selectedId }?.name
-                                ?: "Spieler auswählen"
+                        val selectedPlayer = state.selectedPlayerIds[index]?.let { state.playerNames[it] } ?: "Spieler auswählen"
 
                         ExposedDropdownMenuBox(
                             expanded = expanded,
@@ -208,12 +206,12 @@ fun SkyjoScreen(
                                         showDialog = true
                                     }
                                 )
-                                state.players.filter { player -> player.id !in state.selectedPlayerIds }
-                                    .forEach { player ->
+                                state.playerNames.filter { (id, _) -> id !in state.selectedPlayerIds } //THIS
+                                    .forEach { (id, name) ->
                                         DropdownMenuItem(
-                                            text = { Text(player.name) },
+                                            text = { Text(name) }, //THIS
                                             onClick = {
-                                                viewModel.selectPlayer(index, player.id)
+                                                viewModel.selectPlayer(index, id) //THIS
                                                 expanded = false
                                             }
                                         )

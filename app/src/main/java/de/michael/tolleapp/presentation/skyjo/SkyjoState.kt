@@ -1,9 +1,7 @@
-package de.michael.tolleapp.presentation.app1
-
-import de.michael.tolleapp.data.skyjo.player.SkyjoPlayer
+package de.michael.tolleapp.presentation.skyjo
 
 data class SkyjoState(
-    val players: List<SkyjoPlayer> = emptyList(),
+    val playerNames: Map<String, String> = emptyMap(),
     val currentGameId: String = "",
     val currentGameRounds: Int = 1,
     val selectedPlayerIds: List<String?> = listOf(null, null), // at least two slots

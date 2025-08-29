@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * MainScreen is the entry point of the app.
- * It displays a simple button to navigate to the [SkyjoScreen][de.michael.tolleapp.presentation.app1.SkyjoScreen].
+ * It displays a simple button to navigate to the [SkyjoScreen][de.michael.tolleapp.presentation.skyjo.SkyjoScreen].
  * The MainViewModel is injected using Koin. []
  */
 @Composable
@@ -40,7 +40,6 @@ fun MainScreen(
             onClick = { navigateTo(Route.Statistics) },
         ) { Text("Statistik") }
         Spacer (modifier = Modifier.height(20.dp))
-        Text("Durchschnitt\nGewinner\nEinstellungen\nDarkmode\nSpieler löschen\nDart\nSchwimmen\nVerbesserung/Verschlechterung\n" )
+        Text("Durchschnitt✓\nGewinner✓\nEinstellungen\nDarkmode\nSpieler löschen\nDart\nSchwimmen\nVerbesserung/Verschlechterung\n" )
     }
-
 }
