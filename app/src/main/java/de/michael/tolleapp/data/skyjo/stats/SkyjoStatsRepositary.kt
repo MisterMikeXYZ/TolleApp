@@ -1,4 +1,4 @@
-package de.michael.tolleapp.data.skyjo.player
+package de.michael.tolleapp.data.skyjo.stats
 
 import de.michael.tolleapp.data.player.Player
 import de.michael.tolleapp.data.player.PlayerDao

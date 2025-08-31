@@ -1,4 +1,4 @@
-package de.michael.tolleapp.data.skyjo.player
+package de.michael.tolleapp.data.skyjo.stats
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -28,10 +28,10 @@ interface SkyjoStatsDao {
 }
 
 @Dao
-interface RoundResultDao {
+interface SkyjoRoundResultDao {
     @Insert
-    suspend fun insertRoundResult(result: RoundResult)
+    suspend fun insertRoundResult(result: SkyjoRoundResult)
 
-    @Query("SELECT * FROM round_results WHERE gameId = :gameId AND playerId = :playerId")
-    suspend fun getRoundsForPlayer(gameId: String, playerId: String): List<RoundResult>
+    @Query("SELECT * FROM skyjo_round_results WHERE gameId = :gameId AND playerId = :playerId")
+    suspend fun getRoundsForPlayer(gameId: String, playerId: String): List<SkyjoRoundResult>
 }

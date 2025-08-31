@@ -1,4 +1,4 @@
-package de.michael.tolleapp.data.skyjo.player
+package de.michael.tolleapp.data.skyjo.stats
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -18,8 +18,8 @@ data class SkyjoStats(
     val lostGames: Int = 0,
 )
 
-@Entity(tableName = "round_results")
-data class RoundResult(
+@Entity(tableName = "skyjo_round_results")
+data class SkyjoRoundResult(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val playerId: String,
     val gameId: String,

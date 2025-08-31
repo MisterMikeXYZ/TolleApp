@@ -20,4 +20,10 @@ sealed interface Route {
 
     @Serializable
     data object Settings : Route
+
+    @Serializable
+    data object Schwimmen : Route
+
+    @Serializable
+    data object SchwimmenGame : Route
 }

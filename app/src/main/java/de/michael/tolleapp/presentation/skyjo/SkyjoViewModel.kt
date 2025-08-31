@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import de.michael.tolleapp.data.player.Player
 import de.michael.tolleapp.data.player.PlayerRepository
 import de.michael.tolleapp.data.skyjo.game.SkyjoGameRepository
-import de.michael.tolleapp.data.skyjo.player.SkyjoStatsRepository
-import de.michael.tolleapp.data.skyjo.player.SkyjoStats
+import de.michael.tolleapp.data.skyjo.stats.SkyjoStatsRepository
+import de.michael.tolleapp.data.skyjo.game.SkyjoGame
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +26,7 @@ class SkyjoViewModel(
     private val _state = MutableStateFlow(SkyjoState())
     val state: StateFlow<SkyjoState> = _state.asStateFlow()
 
-    val pausedGames: StateFlow<List<de.michael.tolleapp.data.skyjo.game.SkyjoGame>> =
+    val pausedGames: StateFlow<List<SkyjoGame>> =
         gameRepository.getPausedGames()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

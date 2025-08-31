@@ -19,6 +19,9 @@ import de.michael.tolleapp.presentation.skyjo.SkyjoGameScreen
 import de.michael.tolleapp.presentation.skyjo.SkyjoScreen
 import de.michael.tolleapp.presentation.skyjo.SkyjoViewModel
 import de.michael.tolleapp.presentation.main.MainScreen
+import de.michael.tolleapp.presentation.schwimmen.SchwimmenGameScreen
+import de.michael.tolleapp.presentation.schwimmen.SchwimmenStartScreen
+import de.michael.tolleapp.presentation.schwimmen.SchwimmenViewModel
 import de.michael.tolleapp.presentation.statistics.StatScreen
 import de.michael.tolleapp.presentation.statistics.StatViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -32,6 +35,7 @@ fun NavGraph(
     // Get the ViewModel
     val skyjoViewModel = koinViewModel<SkyjoViewModel>()
     val statViewModel = koinViewModel<StatViewModel>()
+    val schwimmenViewModel = koinViewModel<SchwimmenViewModel>()
     NavHost(
         navController = navController,
         startDestination = Route.Main,
@@ -91,15 +95,40 @@ fun NavGraph(
             }
         }
 
-
         // Statistics Screen
-            composable<Route.Statistics> {
-                StatScreen(
-                    navigateTo = { route ->
-                        navController.navigate(route)
-                    },
-                    viewModel = statViewModel
-                )
-            }
+        composable<Route.Statistics> {
+            StatScreen(
+                navigateTo = { route ->
+                    navController.navigate(route)
+                },
+                viewModel = statViewModel
+            )
         }
+
+        composable <Route.Settings> {
+            // SettingsScreen(
+            //     navigateTo = { route ->
+            //         navController.navigate(route)
+            //     },
+            //     navigateBack = { navController.popBackStack() }
+            // )
+        }
+
+        composable<Route.Schwimmen> {
+             SchwimmenStartScreen(
+                 navigateTo = { route ->
+                     navController.navigate(route)
+                 },
+                 navigateBack = { navController.popBackStack() },
+                 viewModel = schwimmenViewModel
+             )
+        }
+
+        // Schwimmen Game Screen
+         composable<Route.SchwimmenGame> {
+             SchwimmenGameScreen(
+                 viewModel = schwimmenViewModel,
+             )
+         }
     }
+}

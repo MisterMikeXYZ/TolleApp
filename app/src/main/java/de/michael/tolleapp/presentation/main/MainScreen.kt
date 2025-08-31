@@ -37,6 +37,9 @@ fun MainScreen(
             onClick = { navigateTo(Route.Skyjo) },
         ) { Text("Go to Skyjo") }
         Button(
+            onClick = { navigateTo(Route.Schwimmen) }
+        ) { Text("Go to Schwimmen") }
+        Button(
             onClick = { navigateTo(Route.Statistics) },
         ) { Text("Statistik") }
         Spacer (modifier = Modifier.height(20.dp))
