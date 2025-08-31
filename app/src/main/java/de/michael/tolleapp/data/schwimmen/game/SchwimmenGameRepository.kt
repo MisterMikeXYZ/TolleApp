@@ -25,6 +25,11 @@ class SchwimmenGameRepository (
         gameDao.finishGame(gameId)
     }
 
+    suspend fun deleteGameCompletely(gameId: String) {
+        gameDao.deleteGame(gameId)
+    }
+
+
     suspend fun getStatsForPlayer(playerId: String): SchwimmenStats? =
         statsDao.getStatsForPlayer(playerId)
 

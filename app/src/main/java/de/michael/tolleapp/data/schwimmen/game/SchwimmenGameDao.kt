@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import de.michael.tolleapp.data.schwimmen.stats.SchwimmenGamePlayer
-import de.michael.tolleapp.data.skyjo.game.GameRound
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -24,6 +23,10 @@ interface SchwimmenGameDao {
 
     @Query("UPDATE schwimmen_games SET endedAt = :endedAt, isFinished = 1 WHERE id = :gameId")
     suspend fun finishGame(gameId: String, endedAt: Long = System.currentTimeMillis())
+
+    @Query("DELETE FROM schwimmen_games WHERE id = :gameId")
+    suspend fun deleteGame(gameId: String)
+
 }
 
 @Dao

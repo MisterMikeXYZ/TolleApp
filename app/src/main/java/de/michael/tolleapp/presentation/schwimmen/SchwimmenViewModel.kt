@@ -89,7 +89,7 @@ class SchwimmenViewModel(
             s.copy(
                 currentGameId = newGameId,
                 // everyone starts with 3 lives
-                playerLives = players.associateWith { 3 }
+                playerLives = players.associateWith { 4 }
             )
         }
         viewModelScope.launch { gameRepository.createGame(newGameId) }
@@ -111,6 +111,14 @@ class SchwimmenViewModel(
                 _state.update { it.copy(currentGameId = gameId) }
             }
         }
+    }
+
+    fun deleteGame() {
+        val gameId = _state.value.currentGameId
+        if (gameId.isNotEmpty()) {
+            viewModelScope.launch { gameRepository.deleteGameCompletely(gameId) }
+        }
+        resetGame()
     }
 
     fun deletePausedGame(gameId: String) {
@@ -138,7 +146,7 @@ class SchwimmenViewModel(
     // Round logic (kept from your version)
     // ----------------------------
     suspend fun endRound(loserId: String) {
-        val currentLives = _state.value.playerLives[loserId] ?: 3
+        val currentLives = _state.value.playerLives[loserId] ?: 4
         val newLives = statsRepository.loseLife(loserId, currentLives)
 
         val updatedLives = _state.value.playerLives.toMutableMap()

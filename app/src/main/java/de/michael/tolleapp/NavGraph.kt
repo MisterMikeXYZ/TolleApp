@@ -128,6 +128,9 @@ fun NavGraph(
          composable<Route.SchwimmenGame> {
              SchwimmenGameScreen(
                  viewModel = schwimmenViewModel,
+                 navigateTo = { route ->
+                     navController.navigate(route)
+                 }
              )
          }
     }
