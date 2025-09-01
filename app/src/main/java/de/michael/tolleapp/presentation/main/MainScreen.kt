@@ -1,5 +1,6 @@
 package de.michael.tolleapp.presentation.main
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +28,8 @@ fun MainScreen(
     navigateTo : (Route) -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
+
+    BackHandler {  }
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,

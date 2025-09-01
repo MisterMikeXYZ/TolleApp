@@ -19,7 +19,8 @@ import de.michael.tolleapp.presentation.skyjo.SkyjoGameScreen
 import de.michael.tolleapp.presentation.skyjo.SkyjoScreen
 import de.michael.tolleapp.presentation.skyjo.SkyjoViewModel
 import de.michael.tolleapp.presentation.main.MainScreen
-import de.michael.tolleapp.presentation.schwimmen.SchwimmenGameScreen
+import de.michael.tolleapp.presentation.schwimmen.SchwimmenGameScreenCanvas
+import de.michael.tolleapp.presentation.schwimmen.SchwimmenGameScreenCircle
 import de.michael.tolleapp.presentation.schwimmen.SchwimmenStartScreen
 import de.michael.tolleapp.presentation.schwimmen.SchwimmenViewModel
 import de.michael.tolleapp.presentation.statistics.StatScreen
@@ -124,14 +125,24 @@ fun NavGraph(
              )
         }
 
-        // Schwimmen Game Screen
-         composable<Route.SchwimmenGame> {
-             SchwimmenGameScreen(
+        // Schwimmen Game Screen with the boats
+         composable<Route.SchwimmenGameScreenCanvas> {
+             SchwimmenGameScreenCanvas(
                  viewModel = schwimmenViewModel,
                  navigateTo = { route ->
                      navController.navigate(route)
                  }
              )
          }
+
+        // Schwimmen Game Screen with a big circle
+        composable<Route.SchwimmenGameScreenCircle> {
+            SchwimmenGameScreenCircle(
+                viewModel = schwimmenViewModel,
+                navigateTo = { route ->
+                    navController.navigate(route)
+                }
+            )
+        }
     }
 }

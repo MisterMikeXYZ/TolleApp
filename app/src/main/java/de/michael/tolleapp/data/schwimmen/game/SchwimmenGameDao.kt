@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SchwimmenGameDao {
+
     @Insert
     suspend fun insertGame(game: SchwimmenGame)
 
@@ -26,6 +27,15 @@ interface SchwimmenGameDao {
 
     @Query("DELETE FROM schwimmen_games WHERE id = :gameId")
     suspend fun deleteGame(gameId: String)
+
+    @Insert
+    suspend fun insertRound(round: GameRound): Long
+
+    @Query("SELECT * FROM schwimmen_game_rounds WHERE gameId = :gameId ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestRound(gameId: String): GameRound?
+
+    @Query("SELECT * FROM schwimmen_game_rounds WHERE gameId = :gameId ORDER BY id ASC")
+    suspend fun getAllRoundsForGame(gameId: String): List<GameRound>
 
 }
 
@@ -45,13 +55,14 @@ interface SchwimmenGamePlayerDao {
 
     @Update
     suspend fun updatePlayer(player: SchwimmenGamePlayer)
-
-    // ⚡️ Shortcut: decrement life
-    @Query("""
-        UPDATE schwimmen_game_players
-        SET livesRemaining = livesRemaining - 1,
-            isOut = CASE WHEN livesRemaining - 1 <= 0 THEN 1 ELSE isOut END
-        WHERE gameId = :gameId AND playerId = :playerId
-    """)
-    suspend fun decrementLife(gameId: String, playerId: String)
 }
+
+@Dao
+interface RoundPlayerDao {
+    @Insert
+    suspend fun insertRoundPlayers(players: List<RoundPlayer>)
+
+    @Query("SELECT * FROM round_players WHERE roundId = :roundId")
+    suspend fun getPlayersForRound(roundId: Long): List<RoundPlayer>
+}
+

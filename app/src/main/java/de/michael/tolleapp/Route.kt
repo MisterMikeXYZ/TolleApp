@@ -25,5 +25,8 @@ sealed interface Route {
     data object Schwimmen : Route
 
     @Serializable
-    data object SchwimmenGame : Route
+    data object SchwimmenGameScreenCanvas : Route
+
+    @Serializable
+    data object SchwimmenGameScreenCircle : Route
 }

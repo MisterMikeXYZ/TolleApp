@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import de.michael.tolleapp.data.skyjo.game.SkyjoGame
 
 @Entity(tableName = "schwimmen_games")
 data class SchwimmenGame(
@@ -12,6 +11,31 @@ data class SchwimmenGame(
     val createdAt: Long = System.currentTimeMillis(),
     val endedAt: Long? = null,
     val isFinished: Boolean = false,
+    val screenType: GameScreenType,
+)
+
+enum class GameScreenType {
+    CIRCLE,
+    CANVAS
+}
+
+@Entity(
+    tableName = "round_players",
+    primaryKeys = ["roundId", "playerId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = GameRound::class,
+            parentColumns = ["id"],
+            childColumns = ["roundId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("roundId"), Index("playerId")]
+)
+data class RoundPlayer(
+    val roundId: Long,
+    val playerId: String,
+    val lives: Int
 )
 
 @Entity(
@@ -24,12 +48,10 @@ data class SchwimmenGame(
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("gameId"), Index("playerId")]
+    indices = [Index("gameId")]
 )
 data class GameRound(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val gameId: String,
-    val playerId: String,
-    val roundIndex: Int,
-    val roundScore: Int
+    val dealerIndex: Int,
 )

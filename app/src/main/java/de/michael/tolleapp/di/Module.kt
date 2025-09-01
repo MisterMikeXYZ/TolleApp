@@ -1,11 +1,8 @@
 package de.michael.tolleapp.di
 
 import androidx.room.Room
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import de.michael.tolleapp.data.AppDatabase
 import de.michael.tolleapp.data.player.PlayerRepository
-import de.michael.tolleapp.data.schwimmen.game.SchwimmenGamePlayerDao
 import de.michael.tolleapp.data.schwimmen.game.SchwimmenGameRepository
 import de.michael.tolleapp.data.schwimmen.stats.SchwimmenStatsRepository
 import de.michael.tolleapp.data.skyjo.game.SkyjoGameRepository
@@ -20,20 +17,6 @@ import org.koin.dsl.module
 
 val appModule = module {
 
-    val MIGRATION_2_3 = object : Migration(2, 3) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            // SQL to migrate from version 2 → 3
-            database.execSQL("ALTER TABLE schwimmen_stats ADD COLUMN newColumn INTEGER DEFAULT 0 NOT NULL")
-        }
-    }
-
-    val MIGRATION_3_4 = object : Migration(3, 4) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            // SQL to migrate from version 3 → 4
-        }
-    }
-
-
     single {
         Room.databaseBuilder(
             androidContext(),
@@ -41,7 +24,6 @@ val appModule = module {
             "app.db"
         )
             .fallbackToDestructiveMigration()
-            //.addMigrations(MIGRATION_2_3, MIGRATION_3_4) // <- add migration here
             .build()
     }
 
@@ -61,6 +43,7 @@ val appModule = module {
     single { get<AppDatabase>().schwimmenStatsDao() }
     single { get<AppDatabase>().schwimmenGamePlayerDao() }
     single { get<AppDatabase>().schwimmenGameDao() }
+    single { get<AppDatabase>().roundPlayerDao() }
 
     // Repositories
     single { PlayerRepository(get()) }
@@ -69,7 +52,7 @@ val appModule = module {
     single { SkyjoGameRepository(get(), get()) }
 
     single { SchwimmenStatsRepository(get(), get()) }
-    single { SchwimmenGameRepository(get(), get()) }
+    single { SchwimmenGameRepository(get(), get(), get()) }
 
     // ViewModels
     viewModel { MainViewModel() }

@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -31,7 +32,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SchwimmenGameScreen(
+fun SchwimmenGameScreenCanvas(
     viewModel: SchwimmenViewModel = koinViewModel(),
     navigateTo: (Route) -> Unit,
 ) {
@@ -44,10 +45,19 @@ fun SchwimmenGameScreen(
     val textColor = colorScheme.onSurface
     val riverColor = if (isSystemInDarkTheme()) Color(0xFF0D47A1) else Color(0xFF5AB0FF)
 
-    // Track boat states per player
-    val boatStates = remember { mutableStateMapOf<String, Int>() } // 0–2 = boats sunk, 3 = swimmer, 4 = skull
-    players.forEach { id ->
-        if (boatStates[id] == null) boatStates[id] = 0
+    val boatStates = remember(state.playerLives) {
+        mutableStateMapOf<String, Int>().apply {
+            state.playerLives.forEach { (id, lives) ->
+                val value = when (lives) {
+                    4 -> 0 // all boats intact
+                    3 -> 1
+                    2 -> 2
+                    1 -> 3 // swimmer
+                    else -> 4 // skull
+                }
+                this[id] = value
+            }
+        }
     }
 
     BackHandler { }
@@ -69,10 +79,12 @@ fun SchwimmenGameScreen(
                             if (!resetPressedDelete) resetPressedDelete = true
                             else {
                                 viewModel.deleteGame()
+                                viewModel.deletePausedGame(state.currentGameId)
                                 navigateTo(Route.Main)
                                 resetPressedDelete = false
                             }
-                        }
+                        },
+                        enabled = !state.isGameEnded
                     ) {
                         Icon(
                             imageVector = if (!resetPressedDelete) Icons.Default.Delete
@@ -100,6 +112,7 @@ fun SchwimmenGameScreen(
                                 resetPressedSave = false
                             }
                         },
+                        enabled = !state.isGameEnded
                     ) {
                         Icon(
                             imageVector = if (!resetPressedSave) Icons.Default.Save
@@ -134,16 +147,18 @@ fun SchwimmenGameScreen(
                             .fillMaxSize()
                             .onSizeChanged { canvasSize = it }
                             .pointerInput(playerId) {
-                                detectTapGestures { _ ->
-                                    val current = boatStates[playerId] ?: 0
-                                    val next = when (current) {
-                                        in 0..1 -> current + 1 // sink first two boats
-                                        2 -> 3 // sink third boat and instantly show swimmer
-                                        3 -> 4 // swimmer gone → skull
-                                        else -> 4
+                                if (!state.isGameEnded) {
+                                    detectTapGestures { _ ->
+                                        val current = boatStates[playerId] ?: 0
+                                        val next = when (current) {
+                                            in 0..1 -> current + 1 // sink first two boats
+                                            2 -> 3 // sink third boat and instantly show swimmer
+                                            3 -> 4 // swimmer gone → skull
+                                            else -> 4
+                                        }
+                                        boatStates[playerId] = next
+                                        coroutineScope.launch { viewModel.endRound(playerId) }
                                     }
-                                    boatStates[playerId] = next
-                                    coroutineScope.launch { viewModel.endRound(playerId) }
                                 }
                             }
                     ) {
@@ -183,7 +198,7 @@ fun SchwimmenGameScreen(
                         val w = size.width
                         val h = size.height
 
-// Define river curve
+                        // Define river curve
                         val riverTop = h * 0.5f
                         val riverBottom = h
                         val riverPath = Path().apply {
@@ -198,17 +213,25 @@ fun SchwimmenGameScreen(
 
                         //Draw text in the middle of the river
                         val playerName = state.playerNames[playerId] ?: playerId
+
+                        // Determine ranking text
+                        val rankText = if (state.isGameEnded) {
+                            val rankIndex = state.ranking.indexOf(playerId)
+                            val winnerLives = state.winnerLivesLeft - 1
+                            if (rankIndex == 0) "🏆 ($winnerLives lives left)" else "${rankIndex + 1}"
+                        } else ""
                         val paint = android.graphics.Paint().apply {
                             color = textColor.toArgb()
                             textSize = 80f
                             textAlign = android.graphics.Paint.Align.CENTER
                             isFakeBoldText = true }
                         drawContext.canvas.nativeCanvas.drawText(
-                            playerName,
-                            w / 2f,
-                            h * 0.9f,
+                            "$playerName $rankText",
+                            size.width / 2f,       // centered horizontally in this player's Box
+                            size.height * 0.9f,    // near the bottom of this player's Box
                             paint
                         )
+
                         // River control points
                         val p0 = Offset(0f, h * 0.5f)
                         val p1 = Offset(w * 0.25f, h * 0.45f)
@@ -254,8 +277,21 @@ fun SchwimmenGameScreen(
                             drawCircle(Color.Black, radius = h * 0.012f, center = Offset(swimmerX + w * 0.01f, swimmerY - h * 0.01f))
                             drawLine(Color.Black, start = Offset(swimmerX - w * 0.02f, swimmerY + h * 0.02f), end = Offset(swimmerX + w * 0.02f, swimmerY + h * 0.02f), strokeWidth = 3f)
                         }
-
                     }
+                }
+            }
+            // Bottom button when game ended
+            if (state.isGameEnded) {
+                Spacer(Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        navigateTo(Route.Main)
+                        viewModel.deleteGame()},
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text("Back to Main")
                 }
             }
         }

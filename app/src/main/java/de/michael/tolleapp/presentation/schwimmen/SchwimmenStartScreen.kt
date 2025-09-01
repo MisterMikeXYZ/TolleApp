@@ -6,14 +6,17 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
+import de.michael.tolleapp.data.schwimmen.game.GameScreenType
 import de.michael.tolleapp.data.schwimmen.game.SchwimmenGame
 import kotlinx.coroutines.flow.catch
 import org.koin.compose.viewmodel.koinViewModel
@@ -40,6 +43,10 @@ fun SchwimmenStartScreen(
 
     val pausedGames = pausedGamesState.value
 
+    //var gameScreen : Route = Route.SchwimmenGameScreenCircle //TODO auf anderen Screen als default noch wechseln.
+    var screenChange by remember {mutableStateOf(false)}
+    val screenType = if (screenChange) GameScreenType.CANVAS else GameScreenType.CIRCLE
+
     var expanded by remember { mutableStateOf(false) }
     val formatter = DateFormat.getDateTimeInstance(
         DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault()
@@ -48,6 +55,12 @@ fun SchwimmenStartScreen(
     var showDialog by remember { mutableStateOf(false) }
     var newPlayerName by remember { mutableStateOf("") }
     var pendingRowIndex by remember { mutableStateOf<Int?>(null) }
+
+//    LaunchedEffect(screenChange) {
+//        if (screenChange) {
+//            gameScreen = Route.SchwimmenGameScreenCanvas
+//        }
+//    }
 
     LaunchedEffect(Unit) {
         viewModel.resetGame()
@@ -117,47 +130,84 @@ fun SchwimmenStartScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Paused games dropdown
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .requiredHeight(50.dp)
+            // Select the gameScreen
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Button(onClick = { expanded = true }) {
-                    Text("Pausierte Spiele laden")
-                }
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                // Paused games dropdown
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .requiredHeight(50.dp),
+                    horizontalAlignment = AbsoluteAlignment.Left,
                 ) {
-                    if (pausedGames.isEmpty()) {
-                        DropdownMenuItem(
-                            text = { Text("Keine pausierten Spiele") },
-                            onClick = { expanded = false }
-                        )
-                    } else {
-                        pausedGames.forEach { game: SchwimmenGame ->
-                            val date = Date(
-                                if (game.createdAt < 10_000_000_000L) {
-                                    game.createdAt * 1000
-                                } else game.createdAt
-                            )
+                    Button(onClick = { expanded = true }) {
+                        Text("Pausierte Spiele")
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        if (pausedGames.isEmpty()) {
                             DropdownMenuItem(
-                                text = { Text("Spiel gestartet am ${formatter.format(date)}") },
-                                onClick = {
-                                    viewModel.resumeGame(game.id)
-                                    expanded = false
-                                    navigateTo(Route.SchwimmenGame)
-                                }
+                                text = { Text("Keine pausierten Spiele") },
+                                onClick = { expanded = false }
                             )
+                        } else {
+                            pausedGames.forEach { game: SchwimmenGame ->
+                                val date = Date(
+                                    if (game.createdAt < 10_000_000_000L) {
+                                        game.createdAt * 1000
+                                    } else game.createdAt
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Spiel gestartet am ${formatter.format(date)}") },
+                                    onClick = {
+                                        viewModel.resumeGame(game.id)
+                                        expanded = false
+                                        navigateTo(if (game.screenType == GameScreenType.CANVAS) Route.SchwimmenGameScreenCanvas
+                                        else Route.SchwimmenGameScreenCircle)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            Text("Spieler:", style = MaterialTheme.typography.titleMedium)
+                Column (
+                    modifier = Modifier
+                        .weight(1f),
+                    horizontalAlignment = AbsoluteAlignment.Right,
+                )
+                {
+                    Row (
+                        verticalAlignment = Alignment.CenterVertically
+                    ){
+                        Text(
+                            "Zeichnung",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Switch(
+                            checked = screenChange,
+                            onCheckedChange = { screenChange = !screenChange },
+                            thumbContent = if (screenChange) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Filled.Check,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(SwitchDefaults.IconSize),
+                                    )
+                                }
+                            } else null
+                        )
+                    }
+                }
+            }
+            HorizontalDivider()
             Spacer(modifier = Modifier.height(8.dp))
+            Text("Spieler:", style = MaterialTheme.typography.titleMedium)
 
             // Player list
             Column(
@@ -248,8 +298,9 @@ fun SchwimmenStartScreen(
             val distinctSelected = state.selectedPlayerIds.filterNotNull().distinct().size >= 2
             Button(
                 onClick = {
-                    viewModel.startNewGame()
-                    navigateTo(Route.SchwimmenGame)
+                    viewModel.startNewGame(screenType)
+                    navigateTo(if (screenType == GameScreenType.CANVAS) Route.SchwimmenGameScreenCanvas
+                    else Route.SchwimmenGameScreenCircle)
                 },
                 enabled = distinctSelected,
                 modifier = Modifier

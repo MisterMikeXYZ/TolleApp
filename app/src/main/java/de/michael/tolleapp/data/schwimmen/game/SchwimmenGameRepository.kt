@@ -1,19 +1,39 @@
 package de.michael.tolleapp.data.schwimmen.game
 
-import de.michael.tolleapp.data.schwimmen.stats.SchwimmenStats
-import de.michael.tolleapp.data.schwimmen.stats.SchwimmenStatsDao
+import de.michael.tolleapp.data.schwimmen.stats.SchwimmenGamePlayer
 import kotlinx.coroutines.flow.Flow
 
 class SchwimmenGameRepository (
     private val gameDao: SchwimmenGameDao,
-    private val statsDao: SchwimmenStatsDao
-
+    private val playerDao: SchwimmenGamePlayerDao,
+    private val roundPlayerDao: RoundPlayerDao,
 ) {
-    suspend fun createGame(gameId: String): SchwimmenGame {
-        val game = SchwimmenGame(id = gameId)
+    suspend fun saveGameSnapshot(
+        gameId: String,
+        playerIds: List<String>,
+        playerLives: Map<String, Int>,
+        dealerIndex: Int
+    ) {
+        // Insert the round first
+        val round = GameRound(gameId = gameId, dealerIndex = dealerIndex)
+        val roundId = gameDao.insertRound(round)  // <-- needs to return Long
+
+        // Insert round players
+        val roundPlayers = playerIds.map { id ->
+            RoundPlayer(roundId = roundId, playerId = id, lives = playerLives[id] ?: 0)
+        }
+        roundPlayerDao.insertRoundPlayers(roundPlayers)
+    }
+    suspend fun createGame(gameId: String, screenType: GameScreenType): SchwimmenGame {
+        val game = SchwimmenGame(
+            id = gameId,
+            createdAt = System.currentTimeMillis(),
+            screenType = screenType
+        )
         gameDao.insertGame(game)
         return game
     }
+
 
     suspend fun getGameById(gameId: String): SchwimmenGame? =
         gameDao.getGameById(gameId)
@@ -29,48 +49,26 @@ class SchwimmenGameRepository (
         gameDao.deleteGame(gameId)
     }
 
+    // Players
+    suspend fun addPlayersToGame(players: List<SchwimmenGamePlayer>) =
+        playerDao.insertPlayers(players)
 
-    suspend fun getStatsForPlayer(playerId: String): SchwimmenStats? =
-        statsDao.getStatsForPlayer(playerId)
+    suspend fun getPlayersForRound(roundId: Long): List<RoundPlayer> =
+        roundPlayerDao.getPlayersForRound(roundId)
 
-    fun getAllStats(): Flow<List<SchwimmenStats>> =
-        statsDao.getAllStatsFlow()
+    suspend fun getPlayersForGame(gameId: String): List<SchwimmenGamePlayer> =
+        playerDao.getPlayersForGame(gameId)
 
-    suspend fun ensureStatsExists(playerId: String) {
-        val existing = statsDao.getStatsForPlayer(playerId)
-        if (existing == null) {
-            statsDao.insertStats(SchwimmenStats(playerId = playerId))
-        }
-    }
+    suspend fun getAlivePlayers(gameId: String): List<SchwimmenGamePlayer> =
+        playerDao.getAlivePlayers(gameId)
 
-    suspend fun recordGamePlayed(playerId: String, won: Boolean, firstOut: Boolean) {
-        val stats = statsDao.getStatsForPlayer(playerId)
-        if (stats != null) {
-            statsDao.updateStats(
-                stats.copy(
-                    totalGamesPlayedSchwimmen = stats.totalGamesPlayedSchwimmen + 1,
-                    wonGames = stats.wonGames + if (won) 1 else 0,
-                    firstOutGames = stats.firstOutGames + if (firstOut) 1 else 0
-                )
-            )
-        } else {
-            statsDao.insertStats(
-                SchwimmenStats(
-                    playerId = playerId,
-                    totalGamesPlayedSchwimmen = 1,
-                    wonGames = if (won) 1 else 0,
-                    firstOutGames = if (firstOut) 1 else 0
-                )
-            )
-        }
-    }
+    suspend fun updatePlayer(player: SchwimmenGamePlayer) = playerDao.updatePlayer(player)
 
-    suspend fun recordRoundPlayed(playerId: String) {
-        val stats = statsDao.getStatsForPlayer(playerId)
-        if (stats != null) {
-            statsDao.updateStats(
-                stats.copy(roundsPlayedSchwimmen = stats.roundsPlayedSchwimmen + 1)
-            )
-        }
-    }
+    suspend fun getPlayer(gameId: String, playerId: String): SchwimmenGamePlayer? =
+        playerDao.getPlayer(gameId, playerId)
+
+
+    suspend fun getLatestRound(gameId: String): GameRound? = gameDao.getLatestRound(gameId)
+
+    suspend fun getAllRoundsForGame(gameId: String): List<GameRound> = gameDao.getAllRoundsForGame(gameId)
 }

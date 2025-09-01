@@ -4,6 +4,8 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import de.michael.tolleapp.data.player.Player
 import de.michael.tolleapp.data.player.PlayerDao
+import de.michael.tolleapp.data.schwimmen.game.RoundPlayer
+import de.michael.tolleapp.data.schwimmen.game.RoundPlayerDao
 import de.michael.tolleapp.data.schwimmen.game.GameRound as SchwimmenGameRound
 import de.michael.tolleapp.data.schwimmen.game.SchwimmenGame
 import de.michael.tolleapp.data.schwimmen.game.SchwimmenGameDao
@@ -31,8 +33,9 @@ import de.michael.tolleapp.data.skyjo.stats.SkyjoStatsDao
         SchwimmenGame::class,
         SchwimmenGameRound::class,
         SchwimmenGamePlayer::class,
+        RoundPlayer::class,
     ],
-    version = 4
+    version = 7
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -49,4 +52,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun schwimmenStatsDao(): SchwimmenStatsDao
     abstract fun schwimmenGameDao(): SchwimmenGameDao
     abstract fun schwimmenGamePlayerDao(): SchwimmenGamePlayerDao
+    abstract fun roundPlayerDao(): RoundPlayerDao
 }

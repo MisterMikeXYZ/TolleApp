@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 4,
-    "identityHash": "79c3f9cf83f3eec77ad5c610db993ea2",
+    "version": 5,
+    "identityHash": "892268fa27cf7be6fe222383e423607c",
     "entities": [
       {
         "tableName": "players",
@@ -326,7 +326,7 @@
       },
       {
         "tableName": "schwimmen_game_rounds",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `gameId` TEXT NOT NULL, `playerIds` TEXT NOT NULL, `playerLives` TEXT NOT NULL, `dealerIndex` INTEGER NOT NULL, FOREIGN KEY(`gameId`) REFERENCES `schwimmen_games`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `gameId` TEXT NOT NULL, `dealerIndex` INTEGER NOT NULL, FOREIGN KEY(`gameId`) REFERENCES `schwimmen_games`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -337,18 +337,6 @@
           {
             "fieldPath": "gameId",
             "columnName": "gameId",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "playerIds",
-            "columnName": "playerIds",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "playerLives",
-            "columnName": "playerLives",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -464,11 +452,75 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "round_players",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`roundId` INTEGER NOT NULL, `playerId` TEXT NOT NULL, `lives` INTEGER NOT NULL, PRIMARY KEY(`roundId`, `playerId`), FOREIGN KEY(`roundId`) REFERENCES `schwimmen_game_rounds`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "roundId",
+            "columnName": "roundId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "playerId",
+            "columnName": "playerId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lives",
+            "columnName": "lives",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "roundId",
+            "playerId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_round_players_roundId",
+            "unique": false,
+            "columnNames": [
+              "roundId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_round_players_roundId` ON `${TABLE_NAME}` (`roundId`)"
+          },
+          {
+            "name": "index_round_players_playerId",
+            "unique": false,
+            "columnNames": [
+              "playerId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_round_players_playerId` ON `${TABLE_NAME}` (`playerId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "schwimmen_game_rounds",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "roundId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '79c3f9cf83f3eec77ad5c610db993ea2')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '892268fa27cf7be6fe222383e423607c')"
     ]
   }
 }

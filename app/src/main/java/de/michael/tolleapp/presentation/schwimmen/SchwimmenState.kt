@@ -1,5 +1,7 @@
 package de.michael.tolleapp.presentation.schwimmen
 
+import de.michael.tolleapp.data.schwimmen.game.GameScreenType
+
 data class SchwimmenState (
     val playerNames: Map<String, String> = emptyMap(),
     val currentGameId: String = "",
@@ -11,4 +13,6 @@ data class SchwimmenState (
     val isGameEnded: Boolean = false,
     val dealerIndex: Int = 0,
     val playerLives: Map<String, Int> = emptyMap(),
+    val screenType: GameScreenType = GameScreenType.CIRCLE,
+    val winnerLivesLeft: Int = 0
 )
