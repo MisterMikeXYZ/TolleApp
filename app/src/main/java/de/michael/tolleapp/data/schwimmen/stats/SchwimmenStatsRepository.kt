@@ -2,8 +2,8 @@ package de.michael.tolleapp.data.schwimmen.stats
 
 import de.michael.tolleapp.data.player.Player
 import de.michael.tolleapp.data.player.PlayerDao
-import de.michael.tolleapp.data.skyjo.stats.SkyjoStats
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
 class SchwimmenStatsRepository(
     private val playerDao: PlayerDao,
@@ -13,7 +13,6 @@ class SchwimmenStatsRepository(
     suspend fun getStatsForPlayer(playerId: String): SchwimmenStats? =
         statsDao.getStatsForPlayer(playerId)
 
-    //fun getPlayers(): Flow<List<Player>> = playerDao.getAllPlayers()
     // expose players so the VM can observe names just like Skyjo
     fun getPlayers(): kotlinx.coroutines.flow.Flow<List<Player>> = playerDao.getAllPlayers()
 
@@ -66,21 +65,19 @@ class SchwimmenStatsRepository(
         }
     }
 
-    suspend fun loseLife(playerId: String, currentLives: Int): Int {
-        val newLives = (currentLives - 1).coerceAtLeast(0)
-        return newLives
-    }
-
-    fun checkGameOver(playerLives: Map<String, Int>): Boolean {
-        val alivePlayers = playerLives.filter { it.value > 0 }
-        return alivePlayers.size <= 1
-    }
-
-    fun getRoundResults(playerLives: Map<String, Int>): RoundResult {
-        val losers = playerLives.filter { it.value == 0 }.keys.toList()
-        val alive = playerLives.filter { it.value > 0 }.keys.toList()
-        val winners = if (alive.size == 1) alive else emptyList()
-        return RoundResult(winners = winners, losers = losers)
+    suspend fun resetAllGameStats()
+    {
+        val statsList = statsDao.getAllStats().first()
+        statsList.forEach { stats ->
+            val resetStats = stats.copy(
+                bestEndScoreSchwimmen = null,
+                roundsPlayedSchwimmen = 0,
+                totalGamesPlayedSchwimmen = 0,
+                wonGames = 0,
+                firstOutGames = 0,
+            )
+            statsDao.updateStats(resetStats)
+        }
     }
 
     data class RoundResult(

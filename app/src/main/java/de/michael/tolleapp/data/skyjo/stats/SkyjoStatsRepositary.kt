@@ -56,8 +56,7 @@ class SkyjoStatsRepository(
             wonGames = if (isWinner) stats.wonGames + 1 else stats.wonGames,
             lostGames = if (isLoser) stats.lostGames + 1 else stats.lostGames,
         )
-
-        skyjoStatsDao.updateStats(updated)
+        skyjoStatsDao.insertOrUpdateStats(updated)
     }
     suspend fun resetAllGameStats()
     {
@@ -74,7 +73,7 @@ class SkyjoStatsRepository(
                 wonGames = 0,
                 lostGames = 0,
             )
-            skyjoStatsDao.updateStats(resetStats)
+            skyjoStatsDao.insertOrUpdateStats(resetStats)
         }
     }
 }

@@ -2,8 +2,8 @@ package de.michael.tolleapp.data.skyjo.stats
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -20,8 +20,8 @@ interface SkyjoStatsDao {
     @Query("SELECT * FROM skyjo_stats WHERE playerId IN (:playerIds)")
     suspend fun getStatsForPlayers(playerIds: List<String>): List<SkyjoStats>
 
-    @Update
-    suspend fun updateStats(stats: SkyjoStats)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOrUpdateStats(stats: SkyjoStats)
 
     @Query("SELECT * FROM skyjo_stats")
     fun getAllStats(): Flow<List<SkyjoStats>>

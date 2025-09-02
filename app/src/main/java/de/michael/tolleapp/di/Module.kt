@@ -30,7 +30,7 @@ val appModule = module {
     // ViewModels
     viewModel { MainViewModel() }
     viewModel { SkyjoViewModel(get(), get(), get()) }
-    viewModel { StatViewModel(get()) }
+    viewModel { StatViewModel(get(), get()) }
 
     // DAOs
     single { get<AppDatabase>().playerDao() }
@@ -57,6 +57,6 @@ val appModule = module {
     // ViewModels
     viewModel { MainViewModel() }
     viewModel { SkyjoViewModel(get(), get(), get()) }
-    viewModel { StatViewModel(get()) }
+    viewModel { StatViewModel(get(), get())}
     viewModel { SchwimmenViewModel(get(), get()) }
 }
