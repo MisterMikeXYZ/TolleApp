@@ -45,9 +45,9 @@ fun SchwimmenGameScreenCanvas(
     val textColor = colorScheme.onSurface
     val riverColor = if (isSystemInDarkTheme()) Color(0xFF0D47A1) else Color(0xFF5AB0FF)
 
-    val boatStates = remember(state.playerLives) {
+    val boatStates = remember(state.perPlayerRounds) {
         mutableStateMapOf<String, Int>().apply {
-            state.playerLives.forEach { (id, lives) ->
+            state.perPlayerRounds.forEach { (id, lives) ->
                 val value = when (lives) {
                     4 -> 0 // all boats intact
                     3 -> 1
@@ -79,7 +79,6 @@ fun SchwimmenGameScreenCanvas(
                             if (!resetPressedDelete) resetPressedDelete = true
                             else {
                                 viewModel.deleteGame()
-                                viewModel.deletePausedGame(state.currentGameId)
                                 navigateTo(Route.Main)
                                 resetPressedDelete = false
                             }
@@ -146,6 +145,7 @@ fun SchwimmenGameScreenCanvas(
                         modifier = Modifier
                             .fillMaxSize()
                             .onSizeChanged { canvasSize = it }
+                            //.clickable { viewModel.onCanvasClick() }
                             .pointerInput(playerId) {
                                 if (!state.isGameEnded) {
                                     detectTapGestures { _ ->
@@ -217,8 +217,10 @@ fun SchwimmenGameScreenCanvas(
                         // Determine ranking text
                         val rankText = if (state.isGameEnded) {
                             val rankIndex = state.ranking.indexOf(playerId)
-                            val winnerLives = state.winnerLivesLeft - 1
-                            if (rankIndex == 0) "🏆 ($winnerLives lives left)" else "${rankIndex + 1}"
+                            val winnerId = state.winnerId
+                            val winnerLives = state.perPlayerRounds[winnerId]
+                            //val winnerLives = state.winnerLivesLeft - 1
+                            if (rankIndex == 0) "🏆 ($winnerLives lives left)" else ", Platz ${rankIndex + 1}"
                         } else ""
                         val paint = android.graphics.Paint().apply {
                             color = textColor.toArgb()
@@ -226,7 +228,7 @@ fun SchwimmenGameScreenCanvas(
                             textAlign = android.graphics.Paint.Align.CENTER
                             isFakeBoldText = true }
                         drawContext.canvas.nativeCanvas.drawText(
-                            "$playerName $rankText",
+                            "$playerName$rankText",
                             size.width / 2f,       // centered horizontally in this player's Box
                             size.height * 0.9f,    // near the bottom of this player's Box
                             paint

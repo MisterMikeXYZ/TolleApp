@@ -20,25 +20,6 @@ enum class GameScreenType {
 }
 
 @Entity(
-    tableName = "round_players",
-    primaryKeys = ["roundId", "playerId"],
-    foreignKeys = [
-        ForeignKey(
-            entity = GameRound::class,
-            parentColumns = ["id"],
-            childColumns = ["roundId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ],
-    indices = [Index("roundId"), Index("playerId")]
-)
-data class RoundPlayer(
-    val roundId: Long,
-    val playerId: String,
-    val lives: Int
-)
-
-@Entity(
     tableName = "schwimmen_game_rounds",
     foreignKeys = [
         ForeignKey(
@@ -50,8 +31,10 @@ data class RoundPlayer(
     ],
     indices = [Index("gameId")]
 )
-data class GameRound(
+data class SchwimmenGameRound(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val gameId: String,
-    val dealerIndex: Int,
+    val playerId: String,
+    val roundIndex: Int,
+    val lives: Int,
 )

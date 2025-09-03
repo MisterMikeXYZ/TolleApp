@@ -2,8 +2,8 @@ package de.michael.tolleapp.data.schwimmen.stats
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -20,8 +20,8 @@ interface SchwimmenStatsDao {
     @Query("SELECT * FROM schwimmen_stats WHERE playerId IN (:playerIds)")
     suspend fun getStatsForPlayers(playerIds: List<String>): List<SchwimmenStats>
 
-    @Update
-    suspend fun updateStats(stats: SchwimmenStats)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOrUpdateStats(stats: SchwimmenStats)
 
     @Query("SELECT * FROM schwimmen_stats")
     fun getAllStats(): Flow<List<SchwimmenStats>>

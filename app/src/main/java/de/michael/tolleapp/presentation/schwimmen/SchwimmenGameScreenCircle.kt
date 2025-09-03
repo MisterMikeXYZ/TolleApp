@@ -42,7 +42,7 @@ fun SchwimmenGameScreenCircle(
     var canvasSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize(0, 0)) }
 
     val players = state.selectedPlayerIds.filterNotNull()
-    val lives = state.playerLives
+    val lives = state.perPlayerRounds
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -132,6 +132,7 @@ fun SchwimmenGameScreenCircle(
                     modifier = Modifier
                         .size(300.dp)
                         .onSizeChanged { canvasSize = it } // capture size in px
+                        //.clickable { viewModel.onCanvasClick() }
                         .pointerInput(players, lives, canvasSize) {
                             // detect taps using canvasSize (IntSize)
                             if (!state.isGameEnded) {

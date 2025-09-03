@@ -41,9 +41,8 @@ val appModule = module {
     single { get<AppDatabase>().skyjoGameRoundDao() }
 
     single { get<AppDatabase>().schwimmenStatsDao() }
-    single { get<AppDatabase>().schwimmenGamePlayerDao() }
     single { get<AppDatabase>().schwimmenGameDao() }
-    single { get<AppDatabase>().roundPlayerDao() }
+    single { get<AppDatabase>().schwimmenGameRoundDao() }
 
     // Repositories
     single { PlayerRepository(get()) }
@@ -52,11 +51,11 @@ val appModule = module {
     single { SkyjoGameRepository(get(), get()) }
 
     single { SchwimmenStatsRepository(get(), get()) }
-    single { SchwimmenGameRepository(get(), get(), get()) }
+    single { SchwimmenGameRepository(get(), get()) }
 
     // ViewModels
     viewModel { MainViewModel() }
     viewModel { SkyjoViewModel(get(), get(), get()) }
     viewModel { StatViewModel(get(), get())}
-    viewModel { SchwimmenViewModel(get(), get()) }
+    viewModel { SchwimmenViewModel(get(), get(), get()) }
 }

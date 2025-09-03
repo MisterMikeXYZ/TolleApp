@@ -298,7 +298,7 @@ fun SchwimmenStartScreen(
             val distinctSelected = state.selectedPlayerIds.filterNotNull().distinct().size >= 2
             Button(
                 onClick = {
-                    viewModel.startNewGame(screenType)
+                    viewModel.startGame(screenType)
                     navigateTo(if (screenType == GameScreenType.CANVAS) Route.SchwimmenGameScreenCanvas
                     else Route.SchwimmenGameScreenCircle)
                 },

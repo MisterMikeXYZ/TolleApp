@@ -31,7 +31,6 @@ fun SchwimmenStatsTable(
                 "Erste raus",
                 "∑ Spiele",
                 "∑ Runden",
-                "Ø pro Runde",
                 "Bestes Ende"
             ).forEach { name ->
                 Text(
@@ -60,9 +59,6 @@ fun SchwimmenStatsTable(
                         player.firstOutGames,
                         player.totalGamesPlayedSchwimmen,
                         player.roundsPlayedSchwimmen,
-                        if (player.roundsPlayedSchwimmen > 0)
-                            player.totalGamesPlayedSchwimmen / player.roundsPlayedSchwimmen
-                        else 0,
                         player.bestEndScoreSchwimmen ?: "—"
                     ).forEachIndexed { index, value ->
                         Text(

@@ -5,7 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "games")
+@Entity(tableName = "skyjo_games")
 data class SkyjoGame(
     @PrimaryKey val id: String,
     val createdAt: Long = System.currentTimeMillis(),
@@ -14,7 +14,7 @@ data class SkyjoGame(
 )
 
 @Entity(
-    tableName = "game_rounds",
+    tableName = "skyjo_game_rounds",
     foreignKeys = [
         ForeignKey(
             entity = SkyjoGame::class,
@@ -25,7 +25,7 @@ data class SkyjoGame(
     ],
     indices = [Index("gameId"), Index("playerId")]
 )
-data class GameRound(
+data class SkyjoGameRound(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val gameId: String,
     val playerId: String,

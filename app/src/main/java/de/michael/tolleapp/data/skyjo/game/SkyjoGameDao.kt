@@ -14,27 +14,27 @@ interface SkyjoGameDao {
     @Update
     suspend fun updateGame(game: SkyjoGame)
 
-    @Query("UPDATE games SET endedAt = :endedAt WHERE id = :gameId")
+    @Query("UPDATE skyjo_games SET endedAt = :endedAt WHERE id = :gameId")
     suspend fun markEnded(gameId: String, endedAt: Long)
 
-    @Query("DELETE FROM games WHERE id = :gameId")
+    @Query("DELETE FROM skyjo_games WHERE id = :gameId")
     suspend fun deleteGame(gameId: String)
 
-    @Query("SELECT * FROM games WHERE id = :id LIMIT 1")
+    @Query("SELECT * FROM skyjo_games WHERE id = :id LIMIT 1")
     suspend fun getGame(id: String): SkyjoGame?
 
-    @Query("SELECT * FROM games WHERE isFinished = 0 ORDER BY createdAt DESC")
+    @Query("SELECT * FROM skyjo_games WHERE isFinished = 0 ORDER BY createdAt DESC")
     fun getPausedGames(): Flow<List<SkyjoGame>>
 }
 
 @Dao
 interface SkyjoGameRoundDao {
     @Insert
-    suspend fun insertRound(round: GameRound)
+    suspend fun insertRound(round: SkyjoGameRound)
 
-    @Query("SELECT * FROM game_rounds WHERE gameId = :gameId ORDER BY roundIndex ASC, id ASC")
-    suspend fun getRoundsForGame(gameId: String): List<GameRound>
+    @Query("SELECT * FROM skyjo_game_rounds WHERE gameId = :gameId ORDER BY roundIndex ASC, id ASC")
+    suspend fun getRoundsForGame(gameId: String): List<SkyjoGameRound>
 
-    @Query("DELETE FROM game_rounds WHERE gameId = :gameId")
+    @Query("DELETE FROM skyjo_game_rounds WHERE gameId = :gameId")
     suspend fun deleteRoundsForGame(gameId: String)
 }

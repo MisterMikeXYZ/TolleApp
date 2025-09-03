@@ -11,23 +11,16 @@ class SkyjoStatsRepository(
 ) {
 
     fun getPlayers(): Flow<List<Player>> = playerDao.getAllPlayers()
-    //fun getPlayers(): Flow<List<Player>> = playerDao.getAllPlayers()
 
     suspend fun addPlayer(player: Player): Boolean {
         val existing = playerDao.getPlayerByName(player.name)
         if (existing != null) return false
         playerDao.insertPlayer(player)
-        // also create empty stats for Skyjo
         skyjoStatsDao.insertStats(SkyjoStats(playerId = player.id))
         return true
     }
 
     fun getAllStats(): Flow<List<SkyjoStats>> = skyjoStatsDao.getAllStatsFlow()
-
-    suspend fun getStatsForPlayers(playerIds: List<String>): List<SkyjoStats> {
-        return skyjoStatsDao.getStatsForPlayers(playerIds)
-    }
-
 
     suspend fun finalizePlayerStats(
         playerId: String,
@@ -58,6 +51,7 @@ class SkyjoStatsRepository(
         )
         skyjoStatsDao.insertOrUpdateStats(updated)
     }
+
     suspend fun resetAllGameStats()
     {
         val statsList = skyjoStatsDao.getAllStats().first()

@@ -3,10 +3,10 @@ package de.michael.tolleapp.presentation.schwimmen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.michael.tolleapp.data.player.Player
+import de.michael.tolleapp.data.player.PlayerRepository
 import de.michael.tolleapp.data.schwimmen.game.GameScreenType
 import de.michael.tolleapp.data.schwimmen.game.SchwimmenGameRepository
 import de.michael.tolleapp.data.schwimmen.stats.SchwimmenStatsRepository
-import de.michael.tolleapp.data.schwimmen.game.RoundPlayer
 import de.michael.tolleapp.data.schwimmen.game.SchwimmenGame
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -14,52 +14,182 @@ import java.util.UUID
 
 class SchwimmenViewModel(
     private val statsRepository: SchwimmenStatsRepository,
+    private val playerRepo: PlayerRepository,
     private val gameRepository: SchwimmenGameRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SchwimmenState())
     val state: StateFlow<SchwimmenState> = _state.asStateFlow()
 
-//    val pausedGames: StateFlow<List<de.michael.tolleapp.data.schwimmen.game.SchwimmenGame>> =
-//        gameRepository.getAllGames()
-//            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val pausedGames: StateFlow<List<SchwimmenGame>> =
-        gameRepository.getAllGames()
-            .map { games -> games.filter { !it.isFinished } } // ✅ only include unfinished
+        gameRepository.getPausedGames()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         viewModelScope.launch {
-            statsRepository.getPlayers().collect { players ->
+            combine(
+                statsRepository.getPlayers(),
+                playerRepo.getAllPlayers(),
+            ) { stats, players ->
                 val namesMap = players.associate { it.id to it.name }
+                namesMap
+            }.collect { namesMap ->
                 _state.update { it.copy(playerNames = namesMap) }
+            }
+        }
+    }
 
-                _state.update { s ->
-                    val list = s.selectedPlayerIds.toMutableList()
-                    while (list.size < 2) list.add(null)
-                    s.copy(selectedPlayerIds = list)
+    fun pauseCurrentGame() {
+        val state = _state.value
+        if (state.currentGameId.isNotEmpty()) {
+            viewModelScope.launch {
+                gameRepository.saveSnapshot(state.currentGameId, state.perPlayerRounds)
+            }
+        }
+    }
+
+    fun resumeGame(gameId: String, onResumed: (() -> Unit)? = null) {
+        viewModelScope.launch {
+            val rounds = gameRepository.loadGame(gameId) // List<SchwimmenGameRound>
+            val currentLives = rounds.associate { it.playerId to it.lives }
+            val players = if (currentLives.isNotEmpty()) {
+                currentLives.keys.toMutableList<String?>()
+            } else {
+                _state.value.selectedPlayerIds.filterNotNull().toMutableList<String?>()
+            }
+            if (players.isEmpty() || players.lastOrNull() != null) {
+                players.add(null)
+            }
+            val loserId = state.value.losers.first()
+            _state.update {
+                it.copy(
+                    currentGameId = gameId,
+                    selectedPlayerIds = players,
+                    perPlayerRounds = currentLives.toMutableMap(),
+                    isGameEnded = false,
+                    winnerId = null,
+                    loserId = loserId,
+                    ranking = emptyList(),
+                    currentGameRounds = rounds.maxOfOrNull { it.roundIndex } ?: 1
+                )
+            }
+
+            val updatedPlayers = _state.value.selectedPlayerIds.filterNotNull()
+            val dealerIndex = if (updatedPlayers.isNotEmpty()) 0 else 0
+            _state.update {
+                it.copy(dealerIndex = dealerIndex)
+            }
+
+            gameRepository.continueGame(gameId)
+            onResumed?.invoke()
+        }
+    }
+
+    fun endRound(loserId: String) {
+        val nextRoundIndex = _state.value.currentGameRounds + 1
+        val updatedLives = _state.value.perPlayerRounds.toMutableMap()
+        val players = _state.value.selectedPlayerIds.filterNotNull()
+        if (players.isEmpty()) return
+
+        players.forEach { playerId ->
+            val currentLives = updatedLives[playerId] ?: 4
+            val newLives = if (playerId == loserId) (currentLives - 1).coerceAtLeast(0) else currentLives
+            updatedLives[playerId] = newLives
+
+            viewModelScope.launch {
+                try {
+                    gameRepository.addRound(
+                        _state.value.currentGameId,
+                        playerId,
+                        nextRoundIndex,
+                        newLives
+                    )
+                } catch (t: Throwable) {
+                    t.printStackTrace()
+                }
+            }
+        }
+
+        // Update state with new lives
+        _state.update { s ->
+            val newLosers = s.losers.toMutableList()
+            updatedLives.forEach { (playerId, lives) ->
+                if (lives == 0 && !newLosers.contains(playerId)) {
+                    newLosers.add(playerId)
+                }
+            }
+
+            s.copy(
+                perPlayerRounds = updatedLives,
+                currentGameRounds = nextRoundIndex,
+                losers = newLosers
+            )
+        }
+
+        checkEndCondition()
+    }
+
+    private fun checkEndCondition() {
+        val lives = _state.value.perPlayerRounds
+        val playersAlive = lives.count { it.value > 0 }
+
+        if (playersAlive == 1) {
+            val winnerId = lives.entries.first { it.value > 0 }.key
+
+            // Build final ranking: winner first, then losers in reverse order
+            val finalRanking = mutableListOf<String>()
+            finalRanking.add(winnerId)
+            finalRanking.addAll(_state.value.losers.reversed().filterNotNull())
+
+            _state.update {
+                it.copy(
+                    isGameEnded = true,
+                    winnerId = winnerId,
+                    loserId = _state.value.losers.firstOrNull(),
+                    ranking = finalRanking
+                )
+            }
+
+            // Persist stats
+            viewModelScope.launch {
+                val currentRounds = _state.value.currentGameRounds
+
+                lives.forEach { (playerId, remainingLives) ->
+                    val isWinner = playerId == winnerId
+                    val firstOut = playerId == _state.value.loserId
+                    statsRepository.finalizePlayerStats(
+                        playerId = playerId,
+                        lives = remainingLives,
+                        isWinner = isWinner,
+                        firstOut = firstOut,
+                        rounds = currentRounds
+                    )
                 }
             }
         }
     }
 
-    // ----------------------------
-    // Player management
-    // ----------------------------
+
     fun addPlayer(name: String, rowIndex: Int) = viewModelScope.launch {
         val newPlayer = Player(name = name)
         val added = statsRepository.addPlayer(newPlayer)
-        if (added) selectPlayer(rowIndex, newPlayer.id)
+        if (added) {
+            selectPlayer(rowIndex, newPlayer.id)
+        }
     }
 
     fun selectPlayer(rowIndex: Int, playerId: String) {
         _state.update { state ->
             val updated = state.selectedPlayerIds.toMutableList()
             if (updated.contains(playerId)) return
-            while (updated.size <= rowIndex) updated.add(null)
+            while (updated.size <= rowIndex) {
+                updated.add(null)
+            }
             updated[rowIndex] = playerId
-            if (rowIndex == updated.lastIndex) updated.add(null)
+            if (rowIndex == updated.lastIndex) {
+                updated.add(null)
+            }
             state.copy(selectedPlayerIds = updated)
         }
     }
@@ -67,72 +197,54 @@ class SchwimmenViewModel(
     fun removePlayer(rowIndex: Int) {
         _state.update { state ->
             val updated = state.selectedPlayerIds.toMutableList()
-            if (rowIndex < updated.size) updated.removeAt(rowIndex)
-            while (updated.size < 2) updated.add(null)
+            if (rowIndex < updated.size) {
+                updated.removeAt(rowIndex)
+            }
+            while (updated.size < 2) {
+                updated.add(null)
+            }
             state.copy(selectedPlayerIds = updated)
         }
     }
 
-    // ----------------------------
-    // Game lifecycle
-    // ----------------------------
-    fun startNewGame(screenType: GameScreenType) {
+    fun startGame(screenType: GameScreenType) {
         val newGameId = UUID.randomUUID().toString()
-        _state.update { s ->
-            val players = s.selectedPlayerIds.filterNotNull()
-            s.copy(
+        val players = _state.value.selectedPlayerIds.filterNotNull()
+        val initialLives = players.associateWith { 4 } // 4 lives per player
+
+        _state.update { state ->
+            state.copy(
                 currentGameId = newGameId,
-                playerLives = players.associateWith { 4 },
-                screenType = screenType,
+                selectedPlayerIds = players,
+                perPlayerRounds = initialLives.toMutableMap(),
+                currentGameRounds = 0,
+                losers = emptyList(),
+                isGameEnded = false,
+                winnerId = null,
+                loserId = null
             )
         }
 
         viewModelScope.launch {
-            gameRepository.createGame(newGameId, screenType)
-            persistCurrentGameSnapshot(newGameId)
+            gameRepository.startGame(newGameId, screenType)
         }
     }
 
-    fun pauseCurrentGame() {
-        val gameId = _state.value.currentGameId
-        if (gameId.isNotEmpty()) {
-            viewModelScope.launch { persistCurrentGameSnapshot(gameId) }
-        }
-    }
 
-    fun resumeGame(gameId: String) {
-        viewModelScope.launch {
-            val game = gameRepository.getGameById(gameId)
-            if (game != null) {
-                _state.update { s ->
-                    s.copy(
-                        currentGameId = gameId,
-                        screenType = game.screenType // ✅ safe now
-                    )
-                }
-            }
-            val latestRound = gameRepository.getLatestRound(gameId)
-            if (latestRound != null) {
-                // Load players for that round
-                val roundPlayers: List<RoundPlayer> = gameRepository.getPlayersForRound(latestRound.id)
-                val ids = roundPlayers.map { it.playerId }
-                val lives = roundPlayers.associate { it.playerId to it.lives }
-
-                _state.update { s ->
-                    s.copy(
-                        currentGameId = gameId,
-                        selectedPlayerIds = ids,
-                        playerLives = lives,
-                        dealerIndex = latestRound.dealerIndex,
-                        isGameEnded = false,
-                        winnerId = emptyList(),
-                        loserId = emptyList(),
-                        screenType = game!!.screenType
-                    )
-                }
-            } else {
-                _state.update { it.copy(currentGameId = gameId, screenType = game!!.screenType) }
-            }
+    fun resetGame() {
+        _state.update { state ->
+            state.copy(
+                currentGameId = "",
+                selectedPlayerIds = listOf(null, null),
+                perPlayerRounds = mutableMapOf(),
+                isGameEnded = false,
+                winnerId = null,
+                loserId = null,
+                ranking = emptyList(),
+                currentGameRounds = 0,
+                dealerIndex = 0,
+                screenType = GameScreenType.CANVAS,
+            )
         }
     }
 
@@ -144,131 +256,11 @@ class SchwimmenViewModel(
         resetGame()
     }
 
-    fun deletePausedGame(gameId: String) {
-        viewModelScope.launch {
-            gameRepository.deleteGameCompletely(gameId)
-            _state.update { it.copy(currentGameId = "", isGameEnded = false) }
-        }
-    }
-
-    fun resetGame() {
-        _state.update {
-            it.copy(
-                currentGameId = "",
-                selectedPlayerIds = listOf(null, null),
-                playerLives = emptyMap(),
-                isGameEnded = false,
-                winnerId = emptyList(),
-                loserId = emptyList(),
-                dealerIndex = 0,
-                //playerNames = emptyMap(),
-                currentGameRounds = 0,
-                ranking = emptyList(),
-                screenType = GameScreenType.CIRCLE,
-                winnerLivesLeft = 0,
-            )
-        }
-    }
-
-    // ----------------------------
-    // Round logic
-    // ----------------------------
-    suspend fun endRound(loserId: String) {
-        val currentLives = _state.value.playerLives[loserId] ?: 4
-        val newLives = (currentLives - 1).coerceAtLeast(0)
-
-        val updatedLives = _state.value.playerLives.toMutableMap()
-        updatedLives[loserId] = newLives
-
-        _state.update { it.copy(playerLives = updatedLives) }
-
-        val currentGameId = _state.value.currentGameId
-        if (currentGameId.isNotEmpty()) {
-            gameRepository.saveGameSnapshot(
-                currentGameId,
-                _state.value.selectedPlayerIds.filterNotNull(),
-                updatedLives,
-                _state.value.dealerIndex
-            )
-        }
-        // Check game end instantly
-        endGameIfOnePlayerLeft()
-    }
-
-    fun endGameIfOnePlayerLeft() {
-        val lives = _state.value.playerLives
-        val alivePlayers = lives.filter { it.value > 0 }
-
-        if (alivePlayers.size == 1 && _state.value.currentGameId.isNotEmpty()) {
-            val winnerId = alivePlayers.keys.first()
-            val winnerLives = alivePlayers[winnerId] ?: 0
-
-            val losers = lives.filter { it.value == 0 }.keys.toList()
-            val ranking = listOf(winnerId) + losers // winner first
-
-            _state.update { s ->
-                s.copy(
-                    isGameEnded = true,
-                    winnerId = listOf(winnerId),
-                    loserId = losers,
-                    ranking = ranking,
-                    winnerLivesLeft = winnerLives
-                )
-            }
-
-            // Persist stats and finish game
-            viewModelScope.launch {
-                _state.value.winnerId.forEach { statsRepository.recordGamePlayed(it!!, won = true, firstOut = false) }
-                losers.forEach { statsRepository.recordGamePlayed(it, won = false, firstOut = true) }
-
-                if (_state.value.currentGameId.isNotEmpty()) {
-                    gameRepository.finishGame(_state.value.currentGameId)
-                }
-            }
-        }
-    }
-
-    private fun computeRoundResult(playerLives: Map<String, Int>): Pair<List<String>, List<String>> {
-        val losers = playerLives.filter { it.value == 0 }.keys.toList()
-        val alive = playerLives.filter { it.value > 0 }.keys.toList()
-        val winners = if (alive.size == 1) alive else emptyList()
-        return Pair(winners, losers)
-    }
-
-    // ----------------------------
-    // Dealer rotation
-    // ----------------------------
-    fun advanceDealer() {
+    fun advanceDealer(totalPlayers: Int) {
         _state.update { state ->
-            val totalPlayers = state.selectedPlayerIds.count { it != null }
-            if (totalPlayers == 0) return@update state
-            val newState = state.copy(dealerIndex = (state.dealerIndex + 1) % totalPlayers)
-            val currentGameId = newState.currentGameId
-            if (currentGameId.isNotEmpty()) {
-                viewModelScope.launch {
-                    gameRepository.saveGameSnapshot(
-                        currentGameId,
-                        newState.selectedPlayerIds.filterNotNull(),
-                        newState.playerLives,
-                        newState.dealerIndex
-                    )
-                }
-            }
-            newState
+            state.copy(
+                dealerIndex = (state.dealerIndex + 1) % totalPlayers
+            )
         }
-    }
-
-    // ----------------------------
-    // Helpers
-    // ----------------------------
-    private suspend fun persistCurrentGameSnapshot(gameId: String) {
-        if (gameId.isEmpty()) return
-        val s = _state.value
-        gameRepository.saveGameSnapshot(
-            gameId,
-            s.selectedPlayerIds.filterNotNull(),
-            s.playerLives,
-            s.dealerIndex
-        )
     }
 }

@@ -30,7 +30,7 @@ class SkyjoGameRepository(
 
     suspend fun addRound(gameId: String, playerId: String, roundIndex: Int, score: Int) {
         skyjoGameRoundDao.insertRound(
-            GameRound(
+            SkyjoGameRound(
                 gameId = gameId,
                 playerId = playerId,
                 roundIndex = roundIndex,
@@ -66,7 +66,7 @@ class SkyjoGameRepository(
                 perPlayerRounds.forEach { (playerId, scores) ->
                     val score = scores.getOrNull(roundIdx - 1) ?: return@forEach
                     skyjoGameRoundDao.insertRound(
-                        GameRound(
+                        SkyjoGameRound(
                             gameId = gameId,
                             playerId = playerId,
                             roundIndex = roundIdx,
@@ -78,6 +78,6 @@ class SkyjoGameRepository(
         }
     }
 
-    suspend fun loadGame(gameId: String): List<GameRound> =
+    suspend fun loadGame(gameId: String): List<SkyjoGameRound> =
         skyjoGameRoundDao.getRoundsForGame(gameId)
 }
