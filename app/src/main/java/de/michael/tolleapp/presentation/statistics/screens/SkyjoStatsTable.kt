@@ -22,7 +22,6 @@ fun SkyjoStatsTable(
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.Start,
     ) {
-        // labels column
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {

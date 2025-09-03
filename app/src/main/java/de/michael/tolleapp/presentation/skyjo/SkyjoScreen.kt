@@ -7,6 +7,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +25,7 @@ import java.util.Locale
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,15 +45,18 @@ fun SkyjoScreen(
     }
 
     val pausedGames = pausedGamesState.value
-
     var expanded by remember { mutableStateOf(false) }
     val formatter = DateFormat.getDateTimeInstance(
         DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault()
     )
-
     var showDialog by remember { mutableStateOf(false) }
     var newPlayerName by remember { mutableStateOf("") }
     var pendingRowIndex by remember { mutableStateOf<Int?>(null) }
+
+    val presets by viewModel.presets.collectAsState()
+    var presetExpanded by remember { mutableStateOf(false) }
+    var showPresetDialog by remember { mutableStateOf(false) }
+    var newPresetName by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         viewModel.resetGame()
@@ -95,6 +101,36 @@ fun SkyjoScreen(
             }
         )
     }
+    if (showPresetDialog) {
+        AlertDialog(
+            onDismissRequest = { showPresetDialog = false },
+            title = { Text("Neues Preset erstellen") },
+            text = {
+                TextField(
+                    value = newPresetName,
+                    onValueChange = { newPresetName = it },
+                    label = { Text("Preset Name") }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val name = newPresetName.trim()
+                    if (name.isNotEmpty()) {
+                        viewModel.createPreset(name, state.selectedPlayerIds.filterNotNull())
+                    }
+                    newPresetName = ""
+                    showPresetDialog = false
+                }) {
+                    Text("Erstellen")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPresetDialog = false }) {
+                    Text("Abbrechen")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -119,39 +155,113 @@ fun SkyjoScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Box (modifier = Modifier.fillMaxWidth().weight(1f).requiredHeight(50.dp)) {
-                Button(onClick = { expanded = true }) {
-                    Text("Pausierte Spiele laden")
-                }
-
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
+            Row {
+                //Paused games Box
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(2f)
+                    .requiredHeight(50.dp)
                 ) {
-                    if (pausedGames.isEmpty()) {
-                        DropdownMenuItem(
-                            text = { Text("Keine pausierten Spiele") },
-                            onClick = { expanded = false }
-                        )
-                    } else {
-                        pausedGames.forEach { game: SkyjoGame ->
-                            val date = Date(
-                                if (game.createdAt < 10_000_000_000L) {
-                                    // looks like seconds
-                                    game.createdAt * 1000
-                                } else {
-                                    // already millis
-                                    game.createdAt
-                                }
-                            )
+                    Button(onClick = { expanded = true }) {
+                        Text("Pausierte Spiele laden")
+                    }
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        if (pausedGames.isEmpty()) {
                             DropdownMenuItem(
-                                text = { Text("Spiel gestartet am ${formatter.format(date)}") },
-                                onClick = {
-                                    viewModel.resumeGame(game.id)
-                                    expanded = false
-                                    navigateTo(Route.SkyjoGame)
-                                }
+                                text = { Text("Keine pausierten Spiele") },
+                                onClick = { expanded = false }
                             )
+                        } else {
+                            pausedGames.forEach { game: SkyjoGame ->
+                                val date = Date(
+                                    if (game.createdAt < 10_000_000_000L) {
+                                        // looks like seconds
+                                        game.createdAt * 1000
+                                    } else {
+                                        // already millis
+                                        game.createdAt
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Spiel gestartet am ${formatter.format(date)}") },
+                                    onClick = {
+                                        viewModel.resumeGame(game.id)
+                                        expanded = false
+                                        navigateTo(Route.SkyjoGame)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                //Preset box
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .requiredHeight(50.dp)
+                ) {
+                    Button(onClick = { presetExpanded = true }) {
+                        Text("Presets")
+                    }
+                    DropdownMenu(
+                        expanded = presetExpanded,
+                        onDismissRequest = { presetExpanded = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Neues Preset erstellen") },
+                            onClick = {
+                                presetExpanded = false
+                                showPresetDialog = true
+                            }
+                        )
+
+                        if (presets.isEmpty()) {
+                            DropdownMenuItem(
+                                text = { Text("Keine Presets vorhanden") },
+                                onClick = { presetExpanded = false }
+                            )
+                        } else {
+                            presets.forEach { presetWithPlayers ->
+                                DropdownMenuItem(
+                                    text = { Text(presetWithPlayers.preset.name) },
+                                    onClick = {
+                                        viewModel.resetSelectedPlayers()
+                                        presetWithPlayers.players.forEachIndexed { index, presetPlayer ->
+                                            viewModel.selectPlayer(index, presetPlayer.playerId)
+                                        }
+                                        presetExpanded = false
+                                    },
+                                    trailingIcon = {
+                                        var resetPressedDelete by remember { mutableStateOf(false) }
+                                        LaunchedEffect(resetPressedDelete) {
+                                            if (resetPressedDelete) {
+                                                delay(2000)
+                                                resetPressedDelete = false
+                                            }
+                                        }
+                                        IconButton(onClick = {
+                                            if (!resetPressedDelete) resetPressedDelete = true
+                                            else {
+                                                viewModel.deletePreset(presetWithPlayers.preset.id)
+                                                presetExpanded = false
+                                                resetPressedDelete = false
+                                            }
+                                        }) {
+                                            Icon(
+                                                imageVector = if (!resetPressedDelete) Icons.Default.Delete
+                                                else Icons.Default.DeleteForever,
+                                                contentDescription = null,
+                                                tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
+                                                else MaterialTheme.colorScheme.error
+                                            )
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }

@@ -14,6 +14,9 @@ import de.michael.tolleapp.data.skyjo.game.SkyjoGameRound
 import de.michael.tolleapp.data.skyjo.game.SkyjoGame
 import de.michael.tolleapp.data.skyjo.game.SkyjoGameDao
 import de.michael.tolleapp.data.skyjo.game.SkyjoGameRoundDao
+import de.michael.tolleapp.data.skyjo.presets.SkyjoPreset
+import de.michael.tolleapp.data.skyjo.presets.SkyjoPresetDao
+import de.michael.tolleapp.data.skyjo.presets.SkyjoPresetPlayer
 import de.michael.tolleapp.data.skyjo.stats.SkyjoRoundResult
 import de.michael.tolleapp.data.skyjo.stats.SkyjoRoundResultDao
 import de.michael.tolleapp.data.skyjo.stats.SkyjoStats
@@ -25,12 +28,14 @@ import de.michael.tolleapp.data.skyjo.stats.SkyjoStatsDao
         SkyjoStats::class,
         SkyjoRoundResult::class,
         SkyjoGame::class,
+        SkyjoPreset::class,
+        SkyjoPresetPlayer::class,
         SkyjoGameRound::class,
         SchwimmenStats::class,
         SchwimmenGame::class,
         SchwimmenGameRound::class,
     ],
-    version = 8
+    version = 9
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -42,11 +47,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun skyjoRoundResultDao(): SkyjoRoundResultDao
     abstract fun skyjoGameDao(): SkyjoGameDao
     abstract fun skyjoGameRoundDao(): SkyjoGameRoundDao
+    abstract fun skyjoPresetDao(): SkyjoPresetDao
 
     // Schwimmen
     abstract fun schwimmenStatsDao(): SchwimmenStatsDao
     abstract fun schwimmenGameDao(): SchwimmenGameDao
     abstract fun schwimmenGameRoundDao(): SchwimmenGameRoundDao
-//    abstract fun schwimmenGamePlayerDao(): SchwimmenGamePlayerDao
-//    abstract fun roundPlayerDao(): RoundPlayerDao
 }

@@ -42,25 +42,15 @@ fun SchwimmenStartScreen(
     }
 
     val pausedGames = pausedGamesState.value
-
-    //var gameScreen : Route = Route.SchwimmenGameScreenCircle //TODO auf anderen Screen als default noch wechseln.
     var screenChange by remember {mutableStateOf(false)}
     val screenType = if (screenChange) GameScreenType.CANVAS else GameScreenType.CIRCLE
-
     var expanded by remember { mutableStateOf(false) }
     val formatter = DateFormat.getDateTimeInstance(
         DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault()
     )
-
     var showDialog by remember { mutableStateOf(false) }
     var newPlayerName by remember { mutableStateOf("") }
     var pendingRowIndex by remember { mutableStateOf<Int?>(null) }
-
-//    LaunchedEffect(screenChange) {
-//        if (screenChange) {
-//            gameScreen = Route.SchwimmenGameScreenCanvas
-//        }
-//    }
 
     LaunchedEffect(Unit) {
         viewModel.resetGame()
@@ -84,7 +74,6 @@ fun SchwimmenStartScreen(
                     onClick = {
                         val name = newPlayerName.trim()
                         if (name.isNotEmpty() && pendingRowIndex != null) {
-                            // Here we assume addPlayer actually saves the new player in DB
                             viewModel.addPlayer(name, pendingRowIndex!!)
                         }
                         newPlayerName = ""
@@ -130,11 +119,9 @@ fun SchwimmenStartScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Select the gameScreen
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Paused games dropdown
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -209,7 +196,6 @@ fun SchwimmenStartScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Text("Spieler:", style = MaterialTheme.typography.titleMedium)
 
-            // Player list
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
@@ -223,6 +209,7 @@ fun SchwimmenStartScreen(
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
                     ) {
+                        //Dropdown for selecting the players
                         var playerExpanded by remember { mutableStateOf(false) }
                         val selectedPlayer =
                             state.selectedPlayerIds[index]?.let { state.playerNames[it] }
@@ -274,7 +261,7 @@ fun SchwimmenStartScreen(
                                 }
                             }
                         }
-
+                        // Enabling the delete of a new row
                         if (index >= 2) {
                             IconButton(
                                 onClick = { viewModel.removePlayer(index) },
@@ -296,6 +283,7 @@ fun SchwimmenStartScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             val distinctSelected = state.selectedPlayerIds.filterNotNull().distinct().size >= 2
+            // Start-Button
             Button(
                 onClick = {
                     viewModel.startGame(screenType)

@@ -6,6 +6,7 @@ import de.michael.tolleapp.data.player.PlayerRepository
 import de.michael.tolleapp.data.schwimmen.game.SchwimmenGameRepository
 import de.michael.tolleapp.data.schwimmen.stats.SchwimmenStatsRepository
 import de.michael.tolleapp.data.skyjo.game.SkyjoGameRepository
+import de.michael.tolleapp.data.skyjo.presets.SkyjoPresetRepository
 import de.michael.tolleapp.data.skyjo.stats.SkyjoStatsRepository
 import de.michael.tolleapp.presentation.main.MainViewModel
 import de.michael.tolleapp.presentation.schwimmen.SchwimmenViewModel
@@ -29,7 +30,7 @@ val appModule = module {
 
     // ViewModels
     viewModel { MainViewModel() }
-    viewModel { SkyjoViewModel(get(), get(), get()) }
+    viewModel { SkyjoViewModel(get(), get(), get(), get()) }
     viewModel { StatViewModel(get(), get()) }
 
     // DAOs
@@ -39,6 +40,7 @@ val appModule = module {
     single { get<AppDatabase>().skyjoRoundResultDao() }
     single { get<AppDatabase>().skyjoGameDao() }
     single { get<AppDatabase>().skyjoGameRoundDao() }
+    single { get<AppDatabase>().skyjoPresetDao() }
 
     single { get<AppDatabase>().schwimmenStatsDao() }
     single { get<AppDatabase>().schwimmenGameDao() }
@@ -49,13 +51,14 @@ val appModule = module {
 
     single { SkyjoStatsRepository(get(), get()) }
     single { SkyjoGameRepository(get(), get()) }
+    single { SkyjoPresetRepository(get()) }
 
     single { SchwimmenStatsRepository(get(), get()) }
     single { SchwimmenGameRepository(get(), get()) }
 
     // ViewModels
     viewModel { MainViewModel() }
-    viewModel { SkyjoViewModel(get(), get(), get()) }
+    viewModel { SkyjoViewModel(get(), get(), get(), get()) }
     viewModel { StatViewModel(get(), get())}
     viewModel { SchwimmenViewModel(get(), get(), get()) }
 }

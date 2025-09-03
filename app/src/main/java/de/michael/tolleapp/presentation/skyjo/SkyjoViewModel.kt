@@ -7,6 +7,8 @@ import de.michael.tolleapp.data.player.PlayerRepository
 import de.michael.tolleapp.data.skyjo.game.SkyjoGameRepository
 import de.michael.tolleapp.data.skyjo.stats.SkyjoStatsRepository
 import de.michael.tolleapp.data.skyjo.game.SkyjoGame
+import de.michael.tolleapp.data.skyjo.presets.SkyjoPresetRepository
+import de.michael.tolleapp.data.skyjo.presets.SkyjoPresetWithPlayers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,10 +23,14 @@ import java.util.UUID
 class SkyjoViewModel(
     private val skyjoStatsRepository: SkyjoStatsRepository,
     private val playerRepository: PlayerRepository,
-    private val gameRepository: SkyjoGameRepository
+    private val gameRepository: SkyjoGameRepository,
+    private val presetRepository: SkyjoPresetRepository
 ) : ViewModel() {
     private val _state = MutableStateFlow(SkyjoState())
     val state: StateFlow<SkyjoState> = _state.asStateFlow()
+    val presets: StateFlow<List<SkyjoPresetWithPlayers>> =
+        presetRepository.getPresets()
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val pausedGames: StateFlow<List<SkyjoGame>> =
         gameRepository.getPausedGames()
@@ -42,6 +48,18 @@ class SkyjoViewModel(
             }.collect { namesMap ->
                 _state.update { it.copy(playerNames = namesMap) }
             }
+        }
+    }
+
+    fun createPreset(name: String, playerIds: List<String>) {
+        viewModelScope.launch {
+            presetRepository.createPreset(name, playerIds)
+        }
+    }
+
+    fun deletePreset(presetId: Long) {
+        viewModelScope.launch {
+            presetRepository.deletePreset(presetId)
         }
     }
 
@@ -200,6 +218,14 @@ class SkyjoViewModel(
                 updated.add(null)
             }
             state.copy(selectedPlayerIds = updated)
+        }
+    }
+
+    fun resetSelectedPlayers() {
+        _state.update { state ->
+            state.copy(
+                selectedPlayerIds = listOf(null, null),
+            )
         }
     }
 
