@@ -45,6 +45,9 @@ fun MainScreen(
         Button(
             onClick = { navigateTo(Route.Statistics) },
         ) { Text("Statistik") }
+        Button(
+            onClick = { navigateTo(Route.Settings) }
+        ) { Text("Settings")}
         Spacer (modifier = Modifier.height(20.dp))
         Text("Durchschnitt✓\nGewinner✓\nEinstellungen\nDarkmode\nSpieler löschen\nDart\nSchwimmen\nVerbesserung/Verschlechterung\n" )
     }

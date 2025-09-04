@@ -21,6 +21,8 @@ import de.michael.tolleapp.data.games.skyjo.stats.SkyjoRoundResult
 import de.michael.tolleapp.data.games.skyjo.stats.SkyjoRoundResultDao
 import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStats
 import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStatsDao
+import de.michael.tolleapp.data.settings.Settings
+import de.michael.tolleapp.data.settings.SettingsDao
 
 @Database(
     entities = [
@@ -34,13 +36,17 @@ import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStatsDao
         SchwimmenStats::class,
         SchwimmenGame::class,
         SchwimmenGameRound::class,
+        Settings::class,
     ],
-    version = 9
+    version = 10
 )
 abstract class AppDatabase : RoomDatabase() {
 
     // Player
     abstract fun playerDao(): PlayerDao
+
+    // Settings
+    abstract fun settingsDao(): SettingsDao
 
     // Skyjo
     abstract fun skyjoStatsDao(): SkyjoStatsDao

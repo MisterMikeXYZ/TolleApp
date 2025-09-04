@@ -67,63 +67,64 @@ fun SchwimmenGameScreenCanvas(
             CenterAlignedTopAppBar(
                 title = { Text("Schwimmen") },
                 navigationIcon = {
-                    var resetPressedDelete by remember { mutableStateOf(false) }
-                    LaunchedEffect(resetPressedDelete) {
-                        if (resetPressedDelete) {
-                            delay(2000)
-                            resetPressedDelete = false
-                        }
-                    }
-                    IconButton(
-                        onClick = {
-                            if (!resetPressedDelete) resetPressedDelete = true
-                            else {
-                                viewModel.deleteGame()
-                                navigateTo(Route.Main)
+                    if (!state.isGameEnded) {
+                        var resetPressedDelete by remember { mutableStateOf(false) }
+                        LaunchedEffect(resetPressedDelete) {
+                            if (resetPressedDelete) {
+                                delay(2000)
                                 resetPressedDelete = false
                             }
-                        },
-                        enabled = !state.isGameEnded
-                    ) {
-                        Icon(
-                            imageVector = if (!resetPressedDelete) Icons.Default.Delete
-                            else Icons.Default.DeleteForever,
-                            contentDescription = null,
-                            tint = if (!resetPressedDelete) colorScheme.onSurface
-                            else colorScheme.error
-                        )
+                        }
+                        IconButton(
+                            onClick = {
+                                if (!resetPressedDelete) resetPressedDelete = true
+                                else {
+                                    viewModel.deleteGame()
+                                    navigateTo(Route.Main)
+                                    resetPressedDelete = false
+                                }
+                            },
+                        ) {
+                            Icon(
+                                imageVector = if (!resetPressedDelete) Icons.Default.Delete
+                                else Icons.Default.DeleteForever,
+                                contentDescription = null,
+                                tint = if (!resetPressedDelete) colorScheme.onSurface
+                                else colorScheme.error
+                            )
+                        }
                     }
                 },
                 actions = {
-                    var resetPressedSave by remember { mutableStateOf(false) }
-                    LaunchedEffect(resetPressedSave) {
-                        if (resetPressedSave) {
-                            delay(2000)
-                            resetPressedSave = false
-                        }
-                    }
-                    IconButton(
-                        onClick = {
-                            if (!resetPressedSave) resetPressedSave = true
-                            else {
-                                viewModel.pauseCurrentGame()
-                                navigateTo(Route.Main)
+                    if (!state.isGameEnded) {
+                        var resetPressedSave by remember { mutableStateOf(false) }
+                        LaunchedEffect(resetPressedSave) {
+                            if (resetPressedSave) {
+                                delay(2000)
                                 resetPressedSave = false
                             }
-                        },
-                        enabled = !state.isGameEnded
-                    ) {
-                        Icon(
-                            imageVector = if (!resetPressedSave) Icons.Default.Save
-                            else Icons.Default.SaveAs,
-                            contentDescription = null,
-                            tint = if (!resetPressedSave)
-                                colorScheme.onSurface
-                            else
-                                colorScheme.primary
-                        )
+                        }
+                        IconButton(
+                            onClick = {
+                                if (!resetPressedSave) resetPressedSave = true
+                                else {
+                                    viewModel.pauseCurrentGame()
+                                    navigateTo(Route.Main)
+                                    resetPressedSave = false
+                                }
+                            },
+                        ) {
+                            Icon(
+                                imageVector = if (!resetPressedSave) Icons.Default.Save
+                                else Icons.Default.SaveAs,
+                                contentDescription = null,
+                                tint = if (!resetPressedSave)
+                                    colorScheme.onSurface
+                                else
+                                    colorScheme.primary
+                            )
+                        }
                     }
-
                 }
             )
         },
@@ -218,8 +219,7 @@ fun SchwimmenGameScreenCanvas(
                         val rankText = if (state.isGameEnded) {
                             val rankIndex = state.ranking.indexOf(playerId)
                             val winnerId = state.winnerId
-                            val winnerLives = state.perPlayerRounds[winnerId]
-                            //val winnerLives = state.winnerLivesLeft - 1
+                            var winnerLives = state.perPlayerRounds[winnerId]!! - 1
                             if (rankIndex == 0) "🏆 ($winnerLives lives left)" else ", Platz ${rankIndex + 1}"
                         } else ""
                         val paint = android.graphics.Paint().apply {

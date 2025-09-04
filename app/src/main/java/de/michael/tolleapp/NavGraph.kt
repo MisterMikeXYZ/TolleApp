@@ -23,6 +23,9 @@ import de.michael.tolleapp.presentation.schwimmen.SchwimmenGameScreenCanvas
 import de.michael.tolleapp.presentation.schwimmen.SchwimmenGameScreenCircle
 import de.michael.tolleapp.presentation.schwimmen.SchwimmenStartScreen
 import de.michael.tolleapp.presentation.schwimmen.SchwimmenViewModel
+import de.michael.tolleapp.presentation.settings.SettingsScreen
+import de.michael.tolleapp.presentation.settings.SettingsViewModel
+import de.michael.tolleapp.presentation.settings.screens.PlayerDeleteScreen
 import de.michael.tolleapp.presentation.statistics.StatScreen
 import de.michael.tolleapp.presentation.statistics.StatViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -37,6 +40,8 @@ fun NavGraph(
     val skyjoViewModel = koinViewModel<SkyjoViewModel>()
     val statViewModel = koinViewModel<StatViewModel>()
     val schwimmenViewModel = koinViewModel<SchwimmenViewModel>()
+    val settingsViewModel = koinViewModel<SettingsViewModel>()
+
     NavHost(
         navController = navController,
         startDestination = Route.Main,
@@ -107,12 +112,20 @@ fun NavGraph(
         }
 
         composable <Route.Settings> {
-            // SettingsScreen(
-            //     navigateTo = { route ->
-            //         navController.navigate(route)
-            //     },
-            //     navigateBack = { navController.popBackStack() }
-            // )
+             SettingsScreen(
+                 viewModel = settingsViewModel,
+                 navigateBack = { navController.popBackStack() },
+                 navigateTo = { route ->
+                     navController.navigate(route)
+                 },
+             )
+        }
+
+        composable <Route.PlayerDeleteScreen> {
+            PlayerDeleteScreen(
+                viewModel = settingsViewModel,
+                navigateBack = { navController.popBackStack() },
+            )
         }
 
         composable<Route.Schwimmen> {

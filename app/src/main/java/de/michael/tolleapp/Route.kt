@@ -22,6 +22,9 @@ sealed interface Route {
     data object Settings : Route
 
     @Serializable
+    data object PlayerDeleteScreen : Route
+
+    @Serializable
     data object Schwimmen : Route
 
     @Serializable
@@ -29,4 +32,6 @@ sealed interface Route {
 
     @Serializable
     data object SchwimmenGameScreenCircle : Route
+
+
 }

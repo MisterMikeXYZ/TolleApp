@@ -218,50 +218,42 @@ fun SkyjoScreen(
                                 showPresetDialog = true
                             }
                         )
-
-                        if (presets.isEmpty()) {
+                        presets.forEach { presetWithPlayers ->
                             DropdownMenuItem(
-                                text = { Text("Keine Presets vorhanden") },
-                                onClick = { presetExpanded = false }
-                            )
-                        } else {
-                            presets.forEach { presetWithPlayers ->
-                                DropdownMenuItem(
-                                    text = { Text(presetWithPlayers.preset.name) },
-                                    onClick = {
-                                        viewModel.resetSelectedPlayers()
-                                        presetWithPlayers.players.forEachIndexed { index, presetPlayer ->
-                                            viewModel.selectPlayer(index, presetPlayer.playerId)
-                                        }
-                                        presetExpanded = false
-                                    },
-                                    trailingIcon = {
-                                        var resetPressedDelete by remember { mutableStateOf(false) }
-                                        LaunchedEffect(resetPressedDelete) {
-                                            if (resetPressedDelete) {
-                                                delay(2000)
-                                                resetPressedDelete = false
-                                            }
-                                        }
-                                        IconButton(onClick = {
-                                            if (!resetPressedDelete) resetPressedDelete = true
-                                            else {
-                                                viewModel.deletePreset(presetWithPlayers.preset.id)
-                                                presetExpanded = false
-                                                resetPressedDelete = false
-                                            }
-                                        }) {
-                                            Icon(
-                                                imageVector = if (!resetPressedDelete) Icons.Default.Delete
-                                                else Icons.Default.DeleteForever,
-                                                contentDescription = null,
-                                                tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
-                                                else MaterialTheme.colorScheme.error
-                                            )
+                                text = { Text(presetWithPlayers.preset.name) },
+                                onClick = {
+                                    viewModel.resetSelectedPlayers()
+                                    presetWithPlayers.players.forEachIndexed { index, presetPlayer ->
+                                        viewModel.selectPlayer(index, presetPlayer.playerId)
+                                    }
+                                    presetExpanded = false
+                                },
+                                trailingIcon = {
+                                    var resetPressedDelete by remember { mutableStateOf(false) }
+                                    LaunchedEffect(resetPressedDelete) {
+                                        if (resetPressedDelete) {
+                                            delay(2000)
+                                            resetPressedDelete = false
                                         }
                                     }
-                                )
-                            }
+                                    IconButton(onClick = {
+                                        if (!resetPressedDelete) resetPressedDelete = true
+                                        else {
+                                            viewModel.deletePreset(presetWithPlayers.preset.id)
+                                            presetExpanded = false
+                                            resetPressedDelete = false
+                                        }
+                                    }) {
+                                        Icon(
+                                            imageVector = if (!resetPressedDelete) Icons.Default.Delete
+                                            else Icons.Default.DeleteForever,
+                                            contentDescription = null,
+                                            tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
+                                            else MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            )
                         }
                     }
                 }
