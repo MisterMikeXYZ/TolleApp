@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
-import de.michael.tolleapp.data.skyjo.game.SkyjoGame
+import de.michael.tolleapp.data.games.skyjo.game.SkyjoGame
 import kotlinx.coroutines.flow.catch
 import org.koin.compose.viewmodel.koinViewModel
 import java.text.DateFormat

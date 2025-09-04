@@ -34,8 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
-import de.michael.tolleapp.data.schwimmen.stats.SchwimmenStats
-import de.michael.tolleapp.data.skyjo.stats.SkyjoStats
+import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStats
+import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStats
 import de.michael.tolleapp.presentation.statistics.screens.SchwimmenStatsTable
 import de.michael.tolleapp.presentation.statistics.screens.SkyjoStatsTable
 import kotlinx.coroutines.delay

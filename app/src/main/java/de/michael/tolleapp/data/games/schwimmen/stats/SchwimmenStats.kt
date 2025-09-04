@@ -1,4 +1,4 @@
-package de.michael.tolleapp.data.schwimmen.stats
+package de.michael.tolleapp.data.games.schwimmen.stats
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

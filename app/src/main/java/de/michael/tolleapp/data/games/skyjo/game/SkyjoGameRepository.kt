@@ -1,4 +1,4 @@
-package de.michael.tolleapp.data.skyjo.game
+package de.michael.tolleapp.data.games.skyjo.game
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

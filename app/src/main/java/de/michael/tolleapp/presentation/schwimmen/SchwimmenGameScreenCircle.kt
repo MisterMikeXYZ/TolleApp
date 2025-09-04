@@ -23,14 +23,15 @@ import de.michael.tolleapp.Route
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.math.PI
 import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.drawscope.Stroke
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,11 +45,15 @@ fun SchwimmenGameScreenCircle(
     val players = state.selectedPlayerIds.filterNotNull()
     val lives = state.perPlayerRounds
 
+    val sliceColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
+    val separatorColor = MaterialTheme.colorScheme.outline
+    val errorArgb = MaterialTheme.colorScheme.error.toArgb()
+    val primary = MaterialTheme.colorScheme.primary
+    val onSurface = MaterialTheme.colorScheme.onSurface.toArgb()
+
     val coroutineScope = rememberCoroutineScope()
 
-    // Disable back button while in game
-    BackHandler {
-    }
+    BackHandler {}
 
     Scaffold(
         topBar = {
@@ -111,16 +116,15 @@ fun SchwimmenGameScreenCircle(
                                 MaterialTheme.colorScheme.primary
                         )
                     }
-
                 }
             )
         },
     ) { innerPadding ->
-        Column (
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-        ){
+        ) {
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -128,13 +132,12 @@ fun SchwimmenGameScreenCircle(
                 contentAlignment = Alignment.Center
             ) {
                 val waterPainter = rememberVectorPainter(Icons.Default.Water)
+
                 Canvas(
                     modifier = Modifier
                         .size(300.dp)
-                        .onSizeChanged { canvasSize = it } // capture size in px
-                        //.clickable { viewModel.onCanvasClick() }
+                        .onSizeChanged { canvasSize = it }
                         .pointerInput(players, lives, canvasSize) {
-                            // detect taps using canvasSize (IntSize)
                             if (!state.isGameEnded) {
                                 detectTapGestures { offset ->
                                     val width = canvasSize.width.toFloat()
@@ -146,11 +149,9 @@ fun SchwimmenGameScreenCircle(
 
                                     val dx = offset.x - center.x
                                     val dy = offset.y - center.y
-                                    val distance = kotlin.math.sqrt(dx * dx + dy * dy)
-
+                                    val distance = sqrt(dx * dx + dy * dy)
                                     if (distance > radius) return@detectTapGestures
 
-                                    // Angle in degrees (0° = right, increasing counterclockwise)
                                     var angle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble()))
                                     if (angle < 0) angle += 360.0
 
@@ -167,135 +168,133 @@ fun SchwimmenGameScreenCircle(
                             }
                         }
                 ) {
-                    // DrawScope -> here `size` is available
                     val width = size.width
                     val height = size.height
                     val radius = minOf(width, height) / 2f
                     val center = Offset(width / 2f, height / 2f)
                     val sliceAngle = 360f / players.size
-
-                    val colors = listOf(
-                        Color(0xFFEF9A9A),
-                        Color(0xFF80CBC4),
-                        Color(0xFF90CAF9),
-                        Color(0xFFFFF59D),
-                        Color(0xFFCE93D8),
-                        Color(0xFFA5D6A7)
-                    )
+                    val elementScale = 2f
 
                     players.forEachIndexed { index, playerId ->
                         val startAngle = index * sliceAngle
-                        val sweep = sliceAngle
 
-                        // colored slice
+                        // Slice
                         drawArc(
-                            color = colors[index % colors.size],
+                            color = sliceColor,
                             startAngle = startAngle,
-                            sweepAngle = sweep,
+                            sweepAngle = sliceAngle,
                             useCenter = true,
                             topLeft = Offset(center.x - radius, center.y - radius),
                             size = Size(radius * 2f, radius * 2f)
                         )
 
-                        // separator line at the slice start
+                        // Separator
                         val lineAngleRad = startAngle * PI.toFloat() / 180f
                         drawLine(
-                            color = Color.Black,
+                            color = separatorColor,
                             start = center,
                             end = Offset(
                                 center.x + radius * cos(lineAngleRad),
                                 center.y + radius * sin(lineAngleRad)
                             ),
-                            strokeWidth = 4f
+                            strokeWidth = 3.dp.toPx()//1.5f,
+                            //style = Stroke(width = 3.dp.toPx()),
                         )
 
-                        // lives text
-                        val textAngleRad = (startAngle + sweep / 2f) * PI.toFloat() / 180f
+                        // Lives
+                        val playerLivesCount = lives[playerId] ?: 0
+                        val textAngleRad = (startAngle + sliceAngle / 2f) * PI.toFloat() / 180f
                         val textRadius = radius * 0.6f
                         val textX = center.x + textRadius * cos(textAngleRad)
                         val textY = center.y + textRadius * sin(textAngleRad)
-                        val playerLivesCount = lives[playerId] ?: 0
-                        val heartSize = 100f // font size for each heart
-                        val spacing = 120f   // horizontal spacing between hearts
-                        val centerX = center.x + textRadius * cos(textAngleRad).toFloat()
-                        val centerY = center.y + textRadius * sin(textAngleRad).toFloat()
+                        val iconSize = 40f * elementScale
+                        val spacing = 50f * elementScale
+                        val count = playerLivesCount - 1
+                        val totalWidth = (count - 1) * spacing
+                        val startX = textX - totalWidth / 2f
 
-
-                        val startX = textX - (playerLivesCount - 2) * spacing / 2 // center the hearts
                         when {
-                            playerLivesCount in 2..4 -> {
-                                for (i in 0 until playerLivesCount - 1) {
+                            playerLivesCount > 1 -> {
+                                repeat(playerLivesCount - 1) { i ->
                                     drawContext.canvas.nativeCanvas.drawText(
-                                        "❤️",
+                                        "♥",
                                         startX + i * spacing,
                                         textY,
                                         android.graphics.Paint().apply {
-                                            color = android.graphics.Color.RED
-                                            textSize = heartSize
+                                            color = primary.toArgb()
+                                            textSize = iconSize
                                             textAlign = android.graphics.Paint.Align.CENTER
                                         }
                                     )
                                 }
                             }
-
                             playerLivesCount == 1 -> {
-                                val iconSize = heartSize // scale factor
-                                drawIntoCanvas { canvas ->
-                                    with(waterPainter) {
-                                        translate(
-                                            left = centerX - iconSize / 2,
-                                            top = centerY - iconSize / 2
-                                        ) {
-                                            with(waterPainter) {
-                                                draw(
-                                                    size = Size(iconSize, iconSize) // correct type
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            playerLivesCount < 1 -> {
                                 drawContext.canvas.nativeCanvas.drawText(
-                                    "💀",
-                                    centerX,
-                                    centerY,
+                                    "\uD83C\uDF0A", // water drop instead of painter
+                                    textX,
+                                    textY,
                                     android.graphics.Paint().apply {
-                                        color = android.graphics.Color.RED
-                                        textSize = heartSize
+                                        color = primary.toArgb()
+                                        textSize = iconSize
+                                        textAlign = android.graphics.Paint.Align.CENTER
+                                    }
+                                )
+                            }
+                            else -> {
+                                drawContext.canvas.nativeCanvas.drawText(
+                                    "☠",
+                                    textX,
+                                    textY + iconSize,
+                                    android.graphics.Paint().apply {
+                                        color = errorArgb
+                                        textSize = iconSize * 3f
                                         textAlign = android.graphics.Paint.Align.CENTER
                                     }
                                 )
                             }
                         }
+                        // Player name (curved around circle, 8.dp outside)
+                        val nameRadius = radius + 8.dp.toPx()
+                        val nameAngleRad = (startAngle + sliceAngle / 2f) * PI.toFloat() / 180f
+                        val nameX = center.x + nameRadius * cos(nameAngleRad)
+                        val nameY = center.y + nameRadius * sin(nameAngleRad)
 
-                        // name outside the slice
-                        val nameRadius = radius * 1.1f
-                        val nameX = center.x + nameRadius * cos(textAngleRad)
-                        val nameY = center.y + nameRadius * sin(textAngleRad)
-                        drawContext.canvas.nativeCanvas.drawText(
-                            state.playerNames[playerId] ?: "Player",
-                            nameX,
-                            nameY,
-                            android.graphics.Paint().apply {
-                                color = android.graphics.Color.BLACK
-                                textSize = 50f
+                        val playerName = state.playerNames[playerId] ?: "Player"
+
+                        drawIntoCanvas { canvas ->
+                            val paint = android.graphics.Paint().apply {
+                                color = onSurface
+                                textSize = 36f * elementScale
                                 textAlign = android.graphics.Paint.Align.CENTER
+                                isAntiAlias = true
                             }
-                        )
+
+                            canvas.save()
+                            canvas.translate(nameX, nameY)
+                            canvas.rotate(Math.toDegrees(nameAngleRad.toDouble()).toFloat() + 90f)
+                            canvas.nativeCanvas.drawText(playerName, 0f, 0f, paint)
+                            canvas.restore()
+                        }
                     }
 
-                    // final separator (close the circle)
+                    // Close circle
                     drawLine(
-                        color = Color.Black,
+                        color = separatorColor,
                         start = center,
                         end = Offset(center.x + radius, center.y),
-                        strokeWidth = 4f
+                        strokeWidth = 3.dp.toPx()
+                    )
+
+                    // Circle outline
+                    drawCircle(
+                        color = separatorColor,
+                        radius = radius,
+                        center = center,
+                        style = Stroke(width = 3.dp.toPx())
                     )
                 }
             }
-            // Bottom button when game ended
+
             if (state.isGameEnded) {
                 Spacer(Modifier.height(16.dp))
                 Button(

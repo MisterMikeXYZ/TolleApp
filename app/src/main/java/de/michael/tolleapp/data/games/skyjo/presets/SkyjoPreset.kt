@@ -1,4 +1,4 @@
-package de.michael.tolleapp.data.skyjo.presets
+package de.michael.tolleapp.data.games.skyjo.presets
 
 import androidx.room.Entity
 import androidx.room.ForeignKey

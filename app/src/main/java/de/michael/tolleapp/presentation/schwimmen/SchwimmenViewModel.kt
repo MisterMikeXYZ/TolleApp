@@ -4,10 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.michael.tolleapp.data.player.Player
 import de.michael.tolleapp.data.player.PlayerRepository
-import de.michael.tolleapp.data.schwimmen.game.GameScreenType
-import de.michael.tolleapp.data.schwimmen.game.SchwimmenGameRepository
-import de.michael.tolleapp.data.schwimmen.stats.SchwimmenStatsRepository
-import de.michael.tolleapp.data.schwimmen.game.SchwimmenGame
+import de.michael.tolleapp.data.games.schwimmen.game.GameScreenType
+import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGameRepository
+import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStatsRepository
+import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGame
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.UUID

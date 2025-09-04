@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.data.skyjo.stats.SkyjoStats
+import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStats
 
 @Composable
 fun SkyjoStatsTable(
@@ -56,7 +56,7 @@ fun SkyjoStatsTable(
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.width(64.dp),
+                    modifier = Modifier.width(50.dp),
                 ) {
                     listOf(
                         playerNames[player.playerId] ?: "?",
@@ -86,7 +86,7 @@ fun SkyjoStatsTable(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(1.dp))
             }
         }
     }

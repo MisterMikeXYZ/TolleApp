@@ -1,4 +1,4 @@
-package de.michael.tolleapp.data.schwimmen.game
+package de.michael.tolleapp.data.games.schwimmen.game
 
 import androidx.room.Dao
 import androidx.room.Insert

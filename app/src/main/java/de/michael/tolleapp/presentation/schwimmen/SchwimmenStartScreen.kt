@@ -16,8 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
-import de.michael.tolleapp.data.schwimmen.game.GameScreenType
-import de.michael.tolleapp.data.schwimmen.game.SchwimmenGame
+import de.michael.tolleapp.data.games.schwimmen.game.GameScreenType
+import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGame
 import kotlinx.coroutines.flow.catch
 import org.koin.compose.viewmodel.koinViewModel
 import java.text.DateFormat

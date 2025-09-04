@@ -1,4 +1,4 @@
-package de.michael.tolleapp.data.schwimmen.game
+package de.michael.tolleapp.data.games.schwimmen.game
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

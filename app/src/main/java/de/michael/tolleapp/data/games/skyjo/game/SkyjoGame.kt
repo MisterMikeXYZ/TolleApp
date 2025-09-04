@@ -1,40 +1,34 @@
-package de.michael.tolleapp.data.schwimmen.game
+package de.michael.tolleapp.data.games.skyjo.game
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "schwimmen_games")
-data class SchwimmenGame(
+@Entity(tableName = "skyjo_games")
+data class SkyjoGame(
     @PrimaryKey val id: String,
     val createdAt: Long = System.currentTimeMillis(),
     val endedAt: Long? = null,
     val isFinished: Boolean = false,
-    val screenType: GameScreenType,
 )
 
-enum class GameScreenType {
-    CIRCLE,
-    CANVAS
-}
-
 @Entity(
-    tableName = "schwimmen_game_rounds",
+    tableName = "skyjo_game_rounds",
     foreignKeys = [
         ForeignKey(
-            entity = SchwimmenGame::class,
+            entity = SkyjoGame::class,
             parentColumns = ["id"],
             childColumns = ["gameId"],
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("gameId")]
+    indices = [Index("gameId"), Index("playerId")]
 )
-data class SchwimmenGameRound(
+data class SkyjoGameRound(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val gameId: String,
     val playerId: String,
     val roundIndex: Int,
-    val lives: Int,
+    val roundScore: Int
 )

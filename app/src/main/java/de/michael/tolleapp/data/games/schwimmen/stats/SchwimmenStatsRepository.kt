@@ -1,4 +1,4 @@
-package de.michael.tolleapp.data.schwimmen.stats
+package de.michael.tolleapp.data.games.schwimmen.stats
 
 import de.michael.tolleapp.data.player.Player
 import de.michael.tolleapp.data.player.PlayerDao
@@ -30,7 +30,7 @@ class SchwimmenStatsRepository(
         rounds: Int,
     ) {
         val stats = statsDao.getStatsForPlayer(playerId) ?: SchwimmenStats(playerId)
-        val bestEnd = listOfNotNull((stats.bestEndScoreSchwimmen), lives).minOrNull()
+        val bestEnd = listOfNotNull((stats.bestEndScoreSchwimmen), lives).maxOrNull()
 
         val updated = stats.copy(
             bestEndScoreSchwimmen = bestEnd,

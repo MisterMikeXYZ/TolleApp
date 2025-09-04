@@ -4,11 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.michael.tolleapp.data.player.Player
 import de.michael.tolleapp.data.player.PlayerRepository
-import de.michael.tolleapp.data.skyjo.game.SkyjoGameRepository
-import de.michael.tolleapp.data.skyjo.stats.SkyjoStatsRepository
-import de.michael.tolleapp.data.skyjo.game.SkyjoGame
-import de.michael.tolleapp.data.skyjo.presets.SkyjoPresetRepository
-import de.michael.tolleapp.data.skyjo.presets.SkyjoPresetWithPlayers
+import de.michael.tolleapp.data.games.skyjo.game.SkyjoGameRepository
+import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStatsRepository
+import de.michael.tolleapp.data.games.skyjo.game.SkyjoGame
+import de.michael.tolleapp.data.games.skyjo.presets.SkyjoPresetRepository
+import de.michael.tolleapp.data.games.skyjo.presets.SkyjoPresetWithPlayers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

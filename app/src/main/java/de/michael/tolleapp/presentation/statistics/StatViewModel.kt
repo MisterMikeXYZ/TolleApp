@@ -2,10 +2,10 @@ package de.michael.tolleapp.presentation.statistics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.michael.tolleapp.data.schwimmen.stats.SchwimmenStats
-import de.michael.tolleapp.data.schwimmen.stats.SchwimmenStatsRepository
-import de.michael.tolleapp.data.skyjo.stats.SkyjoStats
-import de.michael.tolleapp.data.skyjo.stats.SkyjoStatsRepository
+import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStats
+import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStatsRepository
+import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStats
+import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStatsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine

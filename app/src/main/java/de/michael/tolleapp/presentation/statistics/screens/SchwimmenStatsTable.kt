@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.data.schwimmen.stats.SchwimmenStats
+import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStats
 
 @Composable
 fun SchwimmenStatsTable(
@@ -51,7 +51,7 @@ fun SchwimmenStatsTable(
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.width(64.dp)
+                    modifier = Modifier.width(50.dp)
                 ) {
                     listOf(
                         playerNames[player.playerId] ?: "?",
@@ -73,7 +73,7 @@ fun SchwimmenStatsTable(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(1.dp))
             }
         }
     }

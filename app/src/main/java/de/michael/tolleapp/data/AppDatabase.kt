@@ -4,23 +4,23 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import de.michael.tolleapp.data.player.Player
 import de.michael.tolleapp.data.player.PlayerDao
-import de.michael.tolleapp.data.schwimmen.game.SchwimmenGame
-import de.michael.tolleapp.data.schwimmen.game.SchwimmenGameDao
-import de.michael.tolleapp.data.schwimmen.game.SchwimmenGameRound
-import de.michael.tolleapp.data.schwimmen.game.SchwimmenGameRoundDao
-import de.michael.tolleapp.data.schwimmen.stats.SchwimmenStats
-import de.michael.tolleapp.data.schwimmen.stats.SchwimmenStatsDao
-import de.michael.tolleapp.data.skyjo.game.SkyjoGameRound
-import de.michael.tolleapp.data.skyjo.game.SkyjoGame
-import de.michael.tolleapp.data.skyjo.game.SkyjoGameDao
-import de.michael.tolleapp.data.skyjo.game.SkyjoGameRoundDao
-import de.michael.tolleapp.data.skyjo.presets.SkyjoPreset
-import de.michael.tolleapp.data.skyjo.presets.SkyjoPresetDao
-import de.michael.tolleapp.data.skyjo.presets.SkyjoPresetPlayer
-import de.michael.tolleapp.data.skyjo.stats.SkyjoRoundResult
-import de.michael.tolleapp.data.skyjo.stats.SkyjoRoundResultDao
-import de.michael.tolleapp.data.skyjo.stats.SkyjoStats
-import de.michael.tolleapp.data.skyjo.stats.SkyjoStatsDao
+import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGame
+import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGameDao
+import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGameRound
+import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGameRoundDao
+import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStats
+import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStatsDao
+import de.michael.tolleapp.data.games.skyjo.game.SkyjoGameRound
+import de.michael.tolleapp.data.games.skyjo.game.SkyjoGame
+import de.michael.tolleapp.data.games.skyjo.game.SkyjoGameDao
+import de.michael.tolleapp.data.games.skyjo.game.SkyjoGameRoundDao
+import de.michael.tolleapp.data.games.skyjo.presets.SkyjoPreset
+import de.michael.tolleapp.data.games.skyjo.presets.SkyjoPresetDao
+import de.michael.tolleapp.data.games.skyjo.presets.SkyjoPresetPlayer
+import de.michael.tolleapp.data.games.skyjo.stats.SkyjoRoundResult
+import de.michael.tolleapp.data.games.skyjo.stats.SkyjoRoundResultDao
+import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStats
+import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStatsDao
 
 @Database(
     entities = [

@@ -1,4 +1,4 @@
-package de.michael.tolleapp.data.skyjo.stats
+package de.michael.tolleapp.data.games.skyjo.stats
 
 import androidx.room.Dao
 import androidx.room.Insert

@@ -1,6 +1,6 @@
 package de.michael.tolleapp.presentation.schwimmen
 
-import de.michael.tolleapp.data.schwimmen.game.GameScreenType
+import de.michael.tolleapp.data.games.schwimmen.game.GameScreenType
 
 data class SchwimmenState (
     val playerNames: Map<String, String> = emptyMap(),

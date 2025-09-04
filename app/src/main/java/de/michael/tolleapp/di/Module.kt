@@ -3,11 +3,11 @@ package de.michael.tolleapp.di
 import androidx.room.Room
 import de.michael.tolleapp.data.AppDatabase
 import de.michael.tolleapp.data.player.PlayerRepository
-import de.michael.tolleapp.data.schwimmen.game.SchwimmenGameRepository
-import de.michael.tolleapp.data.schwimmen.stats.SchwimmenStatsRepository
-import de.michael.tolleapp.data.skyjo.game.SkyjoGameRepository
-import de.michael.tolleapp.data.skyjo.presets.SkyjoPresetRepository
-import de.michael.tolleapp.data.skyjo.stats.SkyjoStatsRepository
+import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGameRepository
+import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStatsRepository
+import de.michael.tolleapp.data.games.skyjo.game.SkyjoGameRepository
+import de.michael.tolleapp.data.games.skyjo.presets.SkyjoPresetRepository
+import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStatsRepository
 import de.michael.tolleapp.presentation.main.MainViewModel
 import de.michael.tolleapp.presentation.schwimmen.SchwimmenViewModel
 import de.michael.tolleapp.presentation.skyjo.SkyjoViewModel
