@@ -8,9 +8,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
@@ -18,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
 import de.michael.tolleapp.data.games.schwimmen.game.GameScreenType
 import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGame
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import org.koin.compose.viewmodel.koinViewModel
 import java.text.DateFormat
@@ -51,6 +53,12 @@ fun SchwimmenStartScreen(
     var showDialog by remember { mutableStateOf(false) }
     var newPlayerName by remember { mutableStateOf("") }
     var pendingRowIndex by remember { mutableStateOf<Int?>(null) }
+
+    var showPresetDialog by remember { mutableStateOf(false) }
+    var newPresetName by remember { mutableStateOf("") }
+    var presetExpanded by remember { mutableStateOf(false) }
+    val presets by viewModel.presets.collectAsState(initial = emptyList())
+
 
     LaunchedEffect(Unit) {
         viewModel.resetGame()
@@ -95,6 +103,36 @@ fun SchwimmenStartScreen(
             }
         )
     }
+    if (showPresetDialog) {
+        AlertDialog(
+            onDismissRequest = { showPresetDialog = false },
+            title = { Text("Neues Preset erstellen") },
+            text = {
+                TextField(
+                    value = newPresetName,
+                    onValueChange = { newPresetName = it },
+                    label = { Text("Preset Name") }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val name = newPresetName.trim()
+                    if (name.isNotEmpty()) {
+                        viewModel.createPreset("schwimmen", name, state.selectedPlayerIds.filterNotNull())
+                    }
+                    newPresetName = ""
+                    showPresetDialog = false
+                }) {
+                    Text("Erstellen")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPresetDialog = false }) {
+                    Text("Abbrechen")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -122,77 +160,134 @@ fun SchwimmenStartScreen(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .requiredHeight(50.dp),
-                    horizontalAlignment = AbsoluteAlignment.Left,
+                Button(
+                    onClick = { expanded = true },
+                    modifier = Modifier.weight(3f)
+
                 ) {
-                    Button(onClick = { expanded = true }) {
-                        Text("Pausierte Spiele")
-                    }
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        if (pausedGames.isEmpty()) {
-                            DropdownMenuItem(
-                                text = { Text("Keine pausierten Spiele") },
-                                onClick = { expanded = false }
+                    Text("Pausierte Spiele")
+                }
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    if (pausedGames.isEmpty()) {
+                        DropdownMenuItem(
+                            text = { Text("Keine pausierten Spiele") },
+                            onClick = { expanded = false }
+                        )
+                    } else {
+                        pausedGames.forEach { game: SchwimmenGame ->
+                            val date = Date(
+                                if (game.createdAt < 10_000_000_000L) {
+                                    game.createdAt * 1000
+                                } else game.createdAt
                             )
-                        } else {
-                            pausedGames.forEach { game: SchwimmenGame ->
-                                val date = Date(
-                                    if (game.createdAt < 10_000_000_000L) {
-                                        game.createdAt * 1000
-                                    } else game.createdAt
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Spiel gestartet am ${formatter.format(date)}") },
-                                    onClick = {
-                                        viewModel.resumeGame(game.id)
-                                        expanded = false
-                                        navigateTo(if (game.screenType == GameScreenType.CANVAS) Route.SchwimmenGameScreenCanvas
-                                        else Route.SchwimmenGameScreenCircle)
-                                    }
-                                )
-                            }
+                            DropdownMenuItem(
+                                text = { Text("Spiel gestartet am ${formatter.format(date)}") },
+                                onClick = {
+                                    viewModel.resumeGame(game.id)
+                                    expanded = false
+                                    navigateTo(
+                                        if (game.screenType == GameScreenType.CANVAS) Route.SchwimmenGameScreenCanvas
+                                        else Route.SchwimmenGameScreenCircle
+                                    )
+                                }
+                            )
                         }
                     }
                 }
 
-                Column (
-                    modifier = Modifier
-                        .weight(1f),
-                    horizontalAlignment = AbsoluteAlignment.Right,
-                )
-                {
-                    Row (
-                        verticalAlignment = Alignment.CenterVertically
-                    ){
-                        Text(
-                            "Zeichnung",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(5.dp))
 
-                        Switch(
-                            checked = screenChange,
-                            onCheckedChange = { screenChange = !screenChange },
-                            thumbContent = if (screenChange) {
-                                {
+                Button(
+                    onClick = { presetExpanded = true },
+                    modifier = Modifier
+                        .width(150.dp)
+                        .weight(2f)
+                ) {
+                    Text("Presets")
+                }
+                DropdownMenu(
+                    expanded = presetExpanded,
+                    onDismissRequest = { presetExpanded = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Neues Preset erstellen") },
+                        onClick = {
+                            presetExpanded = false
+                            showPresetDialog = true
+                        }
+                    )
+                    presets.forEach { presetWithPlayers ->
+                        DropdownMenuItem(
+                            text = { Text(presetWithPlayers.preset.name) },
+                            onClick = {
+                                viewModel.resetSelectedPlayers()
+                                presetWithPlayers.players.forEachIndexed { index, presetPlayer ->
+                                    viewModel.selectPlayer(index, presetPlayer.playerId)
+                                }
+                                presetExpanded = false
+                            },
+                            trailingIcon = {
+                                var resetPressedDelete by remember { mutableStateOf(false) }
+                                LaunchedEffect(resetPressedDelete) {
+                                    if (resetPressedDelete) {
+                                        delay(2000)
+                                        resetPressedDelete = false
+                                    }
+                                }
+                                IconButton(onClick = {
+                                    if (!resetPressedDelete) resetPressedDelete = true
+                                    else {
+                                        viewModel.deletePreset(presetWithPlayers.preset.id)
+                                        presetExpanded = false
+                                        resetPressedDelete = false
+                                    }
+                                }) {
                                     Icon(
-                                        imageVector = Icons.Filled.Check,
+                                        imageVector = if (!resetPressedDelete) Icons.Default.Delete
+                                        else Icons.Default.DeleteForever,
                                         contentDescription = null,
-                                        modifier = Modifier.size(SwitchDefaults.IconSize),
+                                        tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
+                                        else MaterialTheme.colorScheme.error
                                     )
                                 }
-                            } else null
+                            }
                         )
                     }
                 }
+
             }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    "Zeichnung",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Switch(
+                    checked = screenChange,
+                    onCheckedChange = { screenChange = !screenChange },
+                    thumbContent = if (screenChange) {
+                        {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(SwitchDefaults.IconSize),
+                            )
+                        }
+                    } else null
+                )
+            }
+
             HorizontalDivider()
+
             Spacer(modifier = Modifier.height(8.dp))
             Text("Spieler:", style = MaterialTheme.typography.titleMedium)
 

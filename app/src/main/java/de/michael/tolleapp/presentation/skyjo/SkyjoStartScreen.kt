@@ -29,7 +29,7 @@ import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SkyjoScreen(
+fun SkyjoStartScreen(
     viewModel: SkyjoViewModel = koinViewModel(),
     navigateTo: (Route) -> Unit,
     navigateBack: () -> Unit,
@@ -53,7 +53,7 @@ fun SkyjoScreen(
     var newPlayerName by remember { mutableStateOf("") }
     var pendingRowIndex by remember { mutableStateOf<Int?>(null) }
 
-    val presets by viewModel.presets.collectAsState()
+    val presets by viewModel.presets.collectAsState(initial = emptyList())
     var presetExpanded by remember { mutableStateOf(false) }
     var showPresetDialog by remember { mutableStateOf(false) }
     var newPresetName by remember { mutableStateOf("") }
@@ -116,7 +116,7 @@ fun SkyjoScreen(
                 TextButton(onClick = {
                     val name = newPresetName.trim()
                     if (name.isNotEmpty()) {
-                        viewModel.createPreset(name, state.selectedPlayerIds.filterNotNull())
+                        viewModel.createPreset("skyjo", name, state.selectedPlayerIds.filterNotNull())
                     }
                     newPresetName = ""
                     showPresetDialog = false
@@ -156,111 +156,108 @@ fun SkyjoScreen(
                 .padding(16.dp)
         ) {
             Row {
-                //Paused games Box
-                Box(modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(2f)
-                    .requiredHeight(50.dp)
-                ) {
-                    Button(onClick = { expanded = true }) {
-                        Text("Pausierte Spiele laden")
-                    }
-
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        if (pausedGames.isEmpty()) {
-                            DropdownMenuItem(
-                                text = { Text("Keine pausierten Spiele") },
-                                onClick = { expanded = false }
-                            )
-                        } else {
-                            pausedGames.forEach { game: SkyjoGame ->
-                                val date = Date(
-                                    if (game.createdAt < 10_000_000_000L) {
-                                        // looks like seconds
-                                        game.createdAt * 1000
-                                    } else {
-                                        // already millis
-                                        game.createdAt
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Spiel gestartet am ${formatter.format(date)}") },
-                                    onClick = {
-                                        viewModel.resumeGame(game.id)
-                                        expanded = false
-                                        navigateTo(Route.SkyjoGame)
-                                    }
-                                )
-                            }
-                        }
-                    }
+                //Paused games Button
+                Button(onClick = { expanded = true },
+                    modifier = Modifier.weight(3f)) {
+                    Text("Pausierte Spiele laden")
                 }
-                //Preset box
-                Box(modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .requiredHeight(50.dp)
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
                 ) {
-                    Button(onClick = { presetExpanded = true }) {
-                        Text("Presets")
-                    }
-                    DropdownMenu(
-                        expanded = presetExpanded,
-                        onDismissRequest = { presetExpanded = false },
-                    ) {
+                    if (pausedGames.isEmpty()) {
                         DropdownMenuItem(
-                            text = { Text("Neues Preset erstellen") },
-                            onClick = {
-                                presetExpanded = false
-                                showPresetDialog = true
-                            }
+                            text = { Text("Keine pausierten Spiele") },
+                            onClick = { expanded = false }
                         )
-                        presets.forEach { presetWithPlayers ->
+                    } else {
+                        pausedGames.forEach { game: SkyjoGame ->
+                            val date = Date(
+                                if (game.createdAt < 10_000_000_000L) {
+                                    // looks like seconds
+                                    game.createdAt * 1000
+                                } else {
+                                    // already millis
+                                    game.createdAt
+                                }
+                            )
                             DropdownMenuItem(
-                                text = { Text(presetWithPlayers.preset.name) },
+                                text = { Text("Spiel gestartet am ${formatter.format(date)}") },
                                 onClick = {
-                                    viewModel.resetSelectedPlayers()
-                                    presetWithPlayers.players.forEachIndexed { index, presetPlayer ->
-                                        viewModel.selectPlayer(index, presetPlayer.playerId)
-                                    }
-                                    presetExpanded = false
-                                },
-                                trailingIcon = {
-                                    var resetPressedDelete by remember { mutableStateOf(false) }
-                                    LaunchedEffect(resetPressedDelete) {
-                                        if (resetPressedDelete) {
-                                            delay(2000)
-                                            resetPressedDelete = false
-                                        }
-                                    }
-                                    IconButton(onClick = {
-                                        if (!resetPressedDelete) resetPressedDelete = true
-                                        else {
-                                            viewModel.deletePreset(presetWithPlayers.preset.id)
-                                            presetExpanded = false
-                                            resetPressedDelete = false
-                                        }
-                                    }) {
-                                        Icon(
-                                            imageVector = if (!resetPressedDelete) Icons.Default.Delete
-                                            else Icons.Default.DeleteForever,
-                                            contentDescription = null,
-                                            tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
-                                            else MaterialTheme.colorScheme.error
-                                        )
-                                    }
+                                    viewModel.resumeGame(game.id)
+                                    expanded = false
+                                    navigateTo(Route.SkyjoGame)
                                 }
                             )
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.width(5.dp))
+
+                //Preset button
+                Button(
+                    onClick = { presetExpanded = true },
+                    modifier = Modifier.weight(2f)) {
+                    Text("Presets")
+                }
+                DropdownMenu(
+                    expanded = presetExpanded,
+                    onDismissRequest = { presetExpanded = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Neues Preset erstellen") },
+                        onClick = {
+                            presetExpanded = false
+                            showPresetDialog = true
+                        }
+                    )
+                    presets.forEach { presetWithPlayers ->
+                        DropdownMenuItem(
+                            text = { Text(presetWithPlayers.preset.name) },
+                            onClick = {
+                                viewModel.resetSelectedPlayers()
+                                presetWithPlayers.players.forEachIndexed { index, presetPlayer ->
+                                    viewModel.selectPlayer(index, presetPlayer.playerId)
+                                }
+                                presetExpanded = false
+                            },
+                            trailingIcon = {
+                                var resetPressedDelete by remember { mutableStateOf(false) }
+                                LaunchedEffect(resetPressedDelete) {
+                                    if (resetPressedDelete) {
+                                        delay(2000)
+                                        resetPressedDelete = false
+                                    }
+                                }
+                                IconButton(onClick = {
+                                    if (!resetPressedDelete) resetPressedDelete = true
+                                    else {
+                                        viewModel.deletePreset(presetWithPlayers.preset.id)
+                                        presetExpanded = false
+                                        resetPressedDelete = false
+                                    }
+                                }) {
+                                    Icon(
+                                        imageVector = if (!resetPressedDelete) Icons.Default.Delete
+                                        else Icons.Default.DeleteForever,
+                                        contentDescription = null,
+                                        tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
+                                        else MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
             }
 
-            Text("Spieler:", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(3.dp))
+            HorizontalDivider()
+
             Spacer(modifier = Modifier.height(8.dp))
+            Text("Spieler:", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(2.dp))
             Column (
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())

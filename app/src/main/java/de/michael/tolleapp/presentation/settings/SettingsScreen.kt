@@ -3,6 +3,7 @@ package de.michael.tolleapp.presentation.settings
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -12,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import de.michael.tolleapp.Route
-import de.michael.tolleapp.presentation.settings.screens.PlayerDeleteScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +46,7 @@ fun SettingsScreen (
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
+            // Darkmode
             Row (
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -59,16 +60,30 @@ fun SettingsScreen (
 
             HorizontalDivider()
 
+            // Deleting Players
             Row (
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Spieler löschen", modifier = Modifier.weight(1f))
+                IconButton(
+                    onClick = { navigateTo(Route.PlayerDeleteScreen) },
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowForwardIos,
+                        contentDescription = "Spieler löschen",
+                    )
+                }
             }
-            Button(
-                onClick = { navigateTo(Route.PlayerDeleteScreen) }
+
+            HorizontalDivider()
+
+            // Farbe einstellen
+            Row (
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Hallo")
+
             }
         }
     }

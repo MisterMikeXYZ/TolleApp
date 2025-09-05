@@ -14,9 +14,9 @@ import de.michael.tolleapp.data.games.skyjo.game.SkyjoGameRound
 import de.michael.tolleapp.data.games.skyjo.game.SkyjoGame
 import de.michael.tolleapp.data.games.skyjo.game.SkyjoGameDao
 import de.michael.tolleapp.data.games.skyjo.game.SkyjoGameRoundDao
-import de.michael.tolleapp.data.games.skyjo.presets.SkyjoPreset
-import de.michael.tolleapp.data.games.skyjo.presets.SkyjoPresetDao
-import de.michael.tolleapp.data.games.skyjo.presets.SkyjoPresetPlayer
+import de.michael.tolleapp.data.games.presets.GamePreset
+import de.michael.tolleapp.data.games.presets.GamePresetDao
+import de.michael.tolleapp.data.games.presets.GamePresetPlayer
 import de.michael.tolleapp.data.games.skyjo.stats.SkyjoRoundResult
 import de.michael.tolleapp.data.games.skyjo.stats.SkyjoRoundResultDao
 import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStats
@@ -27,23 +27,29 @@ import de.michael.tolleapp.data.settings.SettingsDao
 @Database(
     entities = [
         Player::class,
+        Settings::class,
+
+        GamePreset::class,
+        GamePresetPlayer::class,
+
         SkyjoStats::class,
         SkyjoRoundResult::class,
         SkyjoGame::class,
-        SkyjoPreset::class,
-        SkyjoPresetPlayer::class,
         SkyjoGameRound::class,
+
         SchwimmenStats::class,
         SchwimmenGame::class,
         SchwimmenGameRound::class,
-        Settings::class,
     ],
-    version = 10
+    version = 12
 )
 abstract class AppDatabase : RoomDatabase() {
 
     // Player
     abstract fun playerDao(): PlayerDao
+
+    // Presets
+    abstract fun gamePresetDao(): GamePresetDao
 
     // Settings
     abstract fun settingsDao(): SettingsDao
@@ -53,7 +59,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun skyjoRoundResultDao(): SkyjoRoundResultDao
     abstract fun skyjoGameDao(): SkyjoGameDao
     abstract fun skyjoGameRoundDao(): SkyjoGameRoundDao
-    abstract fun skyjoPresetDao(): SkyjoPresetDao
 
     // Schwimmen
     abstract fun schwimmenStatsDao(): SchwimmenStatsDao

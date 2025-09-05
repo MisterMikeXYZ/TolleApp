@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 10,
-    "identityHash": "79cce16e9e3491ef277fe751e63aa43c",
+    "version": 11,
+    "identityHash": "d51ff8c184978bc58d0339f080e7d213",
     "entities": [
       {
         "tableName": "players",
@@ -89,8 +89,8 @@
         }
       },
       {
-        "tableName": "skyjo_preset_players",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `presetId` INTEGER NOT NULL, `playerId` TEXT NOT NULL, FOREIGN KEY(`presetId`) REFERENCES `game_presets`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "tableName": "game_preset_players",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `presetId` INTEGER NOT NULL, `playerId` TEXT NOT NULL, FOREIGN KEY(`presetId`) REFERENCES `game_presets`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`playerId`) REFERENCES `players`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -119,22 +119,22 @@
         },
         "indices": [
           {
-            "name": "index_skyjo_preset_players_presetId",
+            "name": "index_game_preset_players_presetId",
             "unique": false,
             "columnNames": [
               "presetId"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_skyjo_preset_players_presetId` ON `${TABLE_NAME}` (`presetId`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_game_preset_players_presetId` ON `${TABLE_NAME}` (`presetId`)"
           },
           {
-            "name": "index_skyjo_preset_players_playerId",
+            "name": "index_game_preset_players_playerId",
             "unique": false,
             "columnNames": [
               "playerId"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_skyjo_preset_players_playerId` ON `${TABLE_NAME}` (`playerId`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_game_preset_players_playerId` ON `${TABLE_NAME}` (`playerId`)"
           }
         ],
         "foreignKeys": [
@@ -144,6 +144,17 @@
             "onUpdate": "NO ACTION",
             "columns": [
               "presetId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "players",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "playerId"
             ],
             "referencedColumns": [
               "id"
@@ -522,7 +533,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '79cce16e9e3491ef277fe751e63aa43c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd51ff8c184978bc58d0339f080e7d213')"
     ]
   }
 }

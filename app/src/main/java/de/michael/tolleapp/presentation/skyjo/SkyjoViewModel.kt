@@ -7,8 +7,7 @@ import de.michael.tolleapp.data.player.PlayerRepository
 import de.michael.tolleapp.data.games.skyjo.game.SkyjoGameRepository
 import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStatsRepository
 import de.michael.tolleapp.data.games.skyjo.game.SkyjoGame
-import de.michael.tolleapp.data.games.skyjo.presets.SkyjoPresetRepository
-import de.michael.tolleapp.data.games.skyjo.presets.SkyjoPresetWithPlayers
+import de.michael.tolleapp.data.games.presets.GamePresetRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,13 +23,15 @@ class SkyjoViewModel(
     private val skyjoStatsRepository: SkyjoStatsRepository,
     private val playerRepository: PlayerRepository,
     private val gameRepository: SkyjoGameRepository,
-    private val presetRepository: SkyjoPresetRepository
+    private val presetRepository: GamePresetRepository
 ) : ViewModel() {
     private val _state = MutableStateFlow(SkyjoState())
     val state: StateFlow<SkyjoState> = _state.asStateFlow()
-    val presets: StateFlow<List<SkyjoPresetWithPlayers>> =
-        presetRepository.getPresets()
-            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val presets = presetRepository.getPresets("skyjo")
+
+//    val presets: StateFlow<List<GamePresetWithPlayers>> =
+//        presetRepository.getPresets()
+//            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val pausedGames: StateFlow<List<SkyjoGame>> =
         gameRepository.getPausedGames()
@@ -51,9 +52,9 @@ class SkyjoViewModel(
         }
     }
 
-    fun createPreset(name: String, playerIds: List<String>) {
+    fun createPreset(gameType: String, name: String, playerIds: List<String>) {
         viewModelScope.launch {
-            presetRepository.createPreset(name, playerIds)
+            presetRepository.createPreset(gameType, name, playerIds)
         }
     }
 
@@ -121,15 +122,41 @@ class SkyjoViewModel(
     }
 
     fun endRound(points: Map<String, String>) {
-        _state.update { state ->
-            val updatedRounds = state.perPlayerRounds.toMutableMap()
-            val updatedTotals = state.totalPoints.toMutableMap()
-            val nextRoundIndex = (state.perPlayerRounds.values.maxOfOrNull { it.size } ?: 0) + 1
+        viewModelScope.launch {
+            var newState: SkyjoState? = null
 
-            state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                val score = points[playerId]?.toIntOrNull() ?: 0
+            _state.update { state ->
+                val updatedRounds = state.perPlayerRounds.toMutableMap()
+                val updatedTotals = state.totalPoints.toMutableMap()
 
-                viewModelScope.launch {
+                state.selectedPlayerIds.filterNotNull().forEach { playerId ->
+                    val score = points[playerId]?.toIntOrNull() ?: 0
+
+                    val currentPlayerRounds = updatedRounds[playerId]?.toMutableList() ?: mutableListOf()
+                    currentPlayerRounds.add(score)
+                    updatedRounds[playerId] = currentPlayerRounds
+                    updatedTotals[playerId] = (updatedTotals[playerId] ?: 0) + score
+                }
+
+                val maxRounds = updatedRounds.values.maxOfOrNull { it.size } ?: 0
+                var visible = state.visibleRoundRows
+                while (maxRounds > visible) visible += 1
+
+                val updatedState = state.copy(
+                    perPlayerRounds = updatedRounds,
+                    totalPoints = updatedTotals,
+                    visibleRoundRows = visible
+                )
+
+                newState = updatedState
+                updatedState
+            }
+
+            // ✅ write to DB AFTER state is consistent
+            newState?.let { state ->
+                val nextRoundIndex = (state.perPlayerRounds.values.maxOfOrNull { it.size } ?: 0)
+                state.selectedPlayerIds.filterNotNull().forEach { playerId ->
+                    val score = state.perPlayerRounds[playerId]?.lastOrNull() ?: 0
                     gameRepository.ensureSession(state.currentGameId)
                     gameRepository.addRound(
                         state.currentGameId,
@@ -138,25 +165,50 @@ class SkyjoViewModel(
                         score
                     )
                 }
-
-                val currentRounds = updatedRounds[playerId]?.toMutableList() ?: mutableListOf()
-                currentRounds.add(score)
-                updatedRounds[playerId] = currentRounds
-                updatedTotals[playerId] = (updatedTotals[playerId] ?: 0) + score
             }
 
-            val maxRounds = updatedRounds.values.maxOfOrNull { it.size } ?: 0
-            var visible = state.visibleRoundRows
-            while (maxRounds > visible) visible += 1
-
-            state.copy(
-                perPlayerRounds = updatedRounds,
-                totalPoints = updatedTotals,
-                visibleRoundRows = visible
-            )
+            // ✅ check end condition after everything
+            checkEndCondition()
         }
-        checkEndCondition()
     }
+
+//    fun endRound(points: Map<String, String>) {
+//        _state.update { state ->
+//            val updatedRounds = state.perPlayerRounds.toMutableMap()
+//            val updatedTotals = state.totalPoints.toMutableMap()
+//            val nextRoundIndex = (state.perPlayerRounds.values.maxOfOrNull { it.size } ?: 0) + 1
+//
+//            state.selectedPlayerIds.filterNotNull().forEach { playerId ->
+//                val score = points[playerId]?.toIntOrNull() ?: 0
+//
+//                viewModelScope.launch {
+//                    gameRepository.ensureSession(state.currentGameId)
+//                    gameRepository.addRound(
+//                        state.currentGameId,
+//                        playerId,
+//                        nextRoundIndex,
+//                        score
+//                    )
+//                }
+//
+//                val currentRounds = updatedRounds[playerId]?.toMutableList() ?: mutableListOf()
+//                currentRounds.add(score)
+//                updatedRounds[playerId] = currentRounds
+//                updatedTotals[playerId] = (updatedTotals[playerId] ?: 0) + score
+//            }
+//
+//            val maxRounds = updatedRounds.values.maxOfOrNull { it.size } ?: 0
+//            var visible = state.visibleRoundRows
+//            while (maxRounds > visible) visible += 1
+//
+//            state.copy(
+//                perPlayerRounds = updatedRounds,
+//                totalPoints = updatedTotals,
+//                visibleRoundRows = visible
+//            )
+//        }
+//        checkEndCondition()
+//    }
 
     private fun checkEndCondition() {
         val totals = _state.value.totalPoints

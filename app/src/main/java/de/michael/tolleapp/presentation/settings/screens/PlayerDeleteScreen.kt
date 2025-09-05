@@ -121,7 +121,8 @@ fun PlayerDeleteScreen (
                             players.forEach { player ->
                                 viewModel.deselectPlayer(player) }
                             },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !state.players.isEmpty()
                     ) { Text("Abbrechen") }
                 }
             }

@@ -1,30 +1,38 @@
-package de.michael.tolleapp.data.games.skyjo.presets
+package de.michael.tolleapp.data.games.presets
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import de.michael.tolleapp.data.player.Player
 
-@Entity(tableName = "skyjo_presets")
-data class SkyjoPreset(
+@Entity(tableName = "game_presets")
+data class GamePreset(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val gameType: String,
     val name: String,
     val createdAt: Long = System.currentTimeMillis()
 )
 
 @Entity(
-    tableName = "skyjo_preset_players",
+    tableName = "game_preset_players",
     foreignKeys = [
         ForeignKey(
-            entity = SkyjoPreset::class,
+            entity = GamePreset::class,
             parentColumns = ["id"],
             childColumns = ["presetId"],
             onDelete = ForeignKey.CASCADE
-        )
+        ),
+        ForeignKey(
+            entity = Player::class,
+            parentColumns = ["id"],
+            childColumns = ["playerId"],
+            onDelete = ForeignKey.CASCADE
+        ),
     ],
     indices = [Index("presetId"), Index("playerId")]
 )
-data class SkyjoPresetPlayer(
+data class GamePresetPlayer(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val presetId: Long,
     val playerId: String

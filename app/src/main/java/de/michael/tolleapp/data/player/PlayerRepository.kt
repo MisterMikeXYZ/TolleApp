@@ -22,6 +22,6 @@ class PlayerRepository(
     }
 
     suspend fun deletePlayer(player: Player) {
-        playerDao.deletePlayer(player)
+        playerDao.deletePlayerAndPresets(player)
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,7 +20,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * MainScreen is the entry point of the app.
- * It displays a simple button to navigate to the [SkyjoScreen][de.michael.tolleapp.presentation.skyjo.SkyjoScreen].
+ * It displays a simple button to navigate to the [SkyjoScreen][de.michael.tolleapp.presentation.skyjo.SkyjoStartScreen].
  * The MainViewModel is injected using Koin. []
  */
 @Composable
@@ -27,7 +28,7 @@ fun MainScreen(
     viewModel: MainViewModel = koinViewModel(),
     navigateTo : (Route) -> Unit,
 ) {
-    val state by viewModel.state.collectAsState()
+    val modifier = Modifier.width(200.dp)
 
     BackHandler {  }
     Column(
@@ -38,15 +39,19 @@ fun MainScreen(
         Text("main")
         Button(
             onClick = { navigateTo(Route.Skyjo) },
+            modifier = modifier
         ) { Text("Go to Skyjo") }
         Button(
-            onClick = { navigateTo(Route.Schwimmen) }
+            onClick = { navigateTo(Route.Schwimmen) },
+            modifier = modifier
         ) { Text("Go to Schwimmen") }
         Button(
             onClick = { navigateTo(Route.Statistics) },
+            modifier = modifier
         ) { Text("Statistik") }
         Button(
-            onClick = { navigateTo(Route.Settings) }
+            onClick = { navigateTo(Route.Settings) },
+            modifier = modifier
         ) { Text("Settings")}
         Spacer (modifier = Modifier.height(20.dp))
         Text("Durchschnitt✓\nGewinner✓\nEinstellungen\nDarkmode\nSpieler löschen\nDart\nSchwimmen\nVerbesserung/Verschlechterung\n" )

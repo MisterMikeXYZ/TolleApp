@@ -6,9 +6,8 @@ import de.michael.tolleapp.data.player.PlayerRepository
 import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGameRepository
 import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStatsRepository
 import de.michael.tolleapp.data.games.skyjo.game.SkyjoGameRepository
-import de.michael.tolleapp.data.games.skyjo.presets.SkyjoPresetRepository
+import de.michael.tolleapp.data.games.presets.GamePresetRepository
 import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStatsRepository
-import de.michael.tolleapp.data.settings.SettingsDao
 import de.michael.tolleapp.data.settings.SettingsRepository
 import de.michael.tolleapp.presentation.main.MainViewModel
 import de.michael.tolleapp.presentation.schwimmen.SchwimmenViewModel
@@ -32,36 +31,35 @@ val appModule = module {
     }
 
     // DAOs
-    single { get<AppDatabase>().playerDao() } //Player
+    single { get<AppDatabase>().playerDao() } // Player
+    single { get<AppDatabase>().settingsDao() } // Settings
+    single { get<AppDatabase>().gamePresetDao() } // Presets
 
-    single { get<AppDatabase>().settingsDao() } //Settings
-
-    single { get<AppDatabase>().skyjoStatsDao() } //Skyjo
+    single { get<AppDatabase>().skyjoStatsDao() } // Skyjo
     single { get<AppDatabase>().skyjoRoundResultDao() }
     single { get<AppDatabase>().skyjoGameDao() }
     single { get<AppDatabase>().skyjoGameRoundDao() }
-    single { get<AppDatabase>().skyjoPresetDao() }
 
-    single { get<AppDatabase>().schwimmenStatsDao() } //Schwimmen
+    single { get<AppDatabase>().schwimmenStatsDao() } // Schwimmen
     single { get<AppDatabase>().schwimmenGameDao() }
     single { get<AppDatabase>().schwimmenGameRoundDao() }
 
     // Repositories
-    single { PlayerRepository(get()) } //Player
+    single { PlayerRepository(get()) } // Player
+    single { SettingsRepository(get()) } // Settings
 
-    single { SettingsRepository(get()) } //Settings
-
-    single { SkyjoStatsRepository(get(), get()) } //Skyjo
+    single { SkyjoStatsRepository(get(), get()) } // Skyjo
     single { SkyjoGameRepository(get(), get()) }
-    single { SkyjoPresetRepository(get()) }
 
-    single { SchwimmenStatsRepository(get(), get()) } //Schwimmen
+    single { GamePresetRepository(get()) } // Presets
+
+    single { SchwimmenStatsRepository(get(), get()) } // Schwimmen
     single { SchwimmenGameRepository(get(), get()) }
 
     // ViewModels
-    viewModel { MainViewModel() } //Main
-    viewModel { SkyjoViewModel(get(), get(), get(), get()) } //Skyjo
-    viewModel { StatViewModel(get(), get())} //Statistics
-    viewModel { SchwimmenViewModel(get(), get(), get()) } //Schwimmen
-    viewModel { SettingsViewModel(get(), get()) } //Settings
+    viewModel { MainViewModel() }
+    viewModel { SkyjoViewModel(get(), get(), get(), get()) }
+    viewModel { StatViewModel(get(), get()) }
+    viewModel { SchwimmenViewModel(get(), get(), get(), get()) }
+    viewModel { SettingsViewModel(get(), get()) }
 }

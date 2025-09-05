@@ -16,7 +16,7 @@ import de.michael.tolleapp.Route
 import de.michael.tolleapp.Route.SkyjoEnd
 import de.michael.tolleapp.presentation.skyjo.SkyjoEndScreen
 import de.michael.tolleapp.presentation.skyjo.SkyjoGameScreen
-import de.michael.tolleapp.presentation.skyjo.SkyjoScreen
+import de.michael.tolleapp.presentation.skyjo.SkyjoStartScreen
 import de.michael.tolleapp.presentation.skyjo.SkyjoViewModel
 import de.michael.tolleapp.presentation.main.MainScreen
 import de.michael.tolleapp.presentation.schwimmen.SchwimmenGameScreenCanvas
@@ -62,7 +62,7 @@ fun NavGraph(
 
         // Skyjo Screen
         composable<Route.Skyjo> {
-            SkyjoScreen(
+            SkyjoStartScreen(
                 navigateTo = { route ->
                     navController.navigate(route)
                 },

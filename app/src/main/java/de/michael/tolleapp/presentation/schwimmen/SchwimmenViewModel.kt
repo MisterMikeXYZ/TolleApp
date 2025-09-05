@@ -2,6 +2,7 @@ package de.michael.tolleapp.presentation.schwimmen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import de.michael.tolleapp.data.games.presets.GamePresetRepository
 import de.michael.tolleapp.data.player.Player
 import de.michael.tolleapp.data.player.PlayerRepository
 import de.michael.tolleapp.data.games.schwimmen.game.GameScreenType
@@ -15,11 +16,14 @@ import java.util.UUID
 class SchwimmenViewModel(
     private val statsRepository: SchwimmenStatsRepository,
     private val playerRepo: PlayerRepository,
-    private val gameRepository: SchwimmenGameRepository
+    private val gameRepository: SchwimmenGameRepository,
+    private val presetRepo: GamePresetRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SchwimmenState())
     val state: StateFlow<SchwimmenState> = _state.asStateFlow()
+    val presets = presetRepo.getPresets("schwimmen")
+
 
 
     val pausedGames: StateFlow<List<SchwimmenGame>> =
@@ -46,6 +50,14 @@ class SchwimmenViewModel(
             viewModelScope.launch {
                 gameRepository.saveSnapshot(state.currentGameId, state.perPlayerRounds)
             }
+        }
+    }
+
+    fun resetSelectedPlayers() {
+        _state.update { state ->
+            state.copy(
+                selectedPlayerIds = listOf(null, null),
+            )
         }
     }
 
@@ -261,6 +273,18 @@ class SchwimmenViewModel(
             state.copy(
                 dealerIndex = (state.dealerIndex + 1) % totalPlayers
             )
+        }
+    }
+
+    fun createPreset(gameType: String, name: String, playerIds: List<String>) {
+        viewModelScope.launch {
+            presetRepo.createPreset(gameType, name, playerIds)
+        }
+    }
+
+    fun deletePreset(presetId: Long) {
+        viewModelScope.launch {
+            presetRepo.deletePreset(presetId)
         }
     }
 }
