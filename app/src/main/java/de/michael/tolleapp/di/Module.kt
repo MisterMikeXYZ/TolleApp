@@ -1,5 +1,6 @@
 package de.michael.tolleapp.di
 
+import DartGameRepository
 import androidx.room.Room
 import de.michael.tolleapp.data.AppDatabase
 import de.michael.tolleapp.data.player.PlayerRepository
@@ -17,8 +18,37 @@ import de.michael.tolleapp.presentation.statistics.StatViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+import de.michael.tolleapp.presentation.dart.DartViewModel
 
 val appModule = module {
+
+    val MIGRATION_13_14 = object : Migration(13, 14) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Spalte gameStyle hinzufügen, wenn sie fehlt
+            database.execSQL("ALTER TABLE dart_games ADD COLUMN `gameStyle` INTEGER")
+
+            // falls du sicherstellen willst, dass die Runden-Tabelle existiert:
+            database.execSQL("""
+            CREATE TABLE IF NOT EXISTS `dart_game_rounds` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `gameId` TEXT NOT NULL,
+                `playerId` TEXT NOT NULL,
+                `roundIndex` INTEGER NOT NULL,
+                `dart1` INTEGER NOT NULL,
+                `dart2` INTEGER NOT NULL,
+                `dart3` INTEGER NOT NULL,
+                FOREIGN KEY(`gameId`) REFERENCES `dart_games`(`id`) ON DELETE CASCADE
+            )
+        """)
+
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_dart_game_rounds_gameId` ON `dart_game_rounds`(`gameId`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_dart_game_rounds_playerId` ON `dart_game_rounds`(`playerId`)")
+        }
+    }
+
+
 
     single {
         Room.databaseBuilder(
@@ -26,9 +56,10 @@ val appModule = module {
             AppDatabase::class.java,
             "app.db"
         )
-            .fallbackToDestructiveMigration()
+            .addMigrations(MIGRATION_13_14) // <-- add migration here
             .build()
     }
+
 
     // DAOs
     single { get<AppDatabase>().playerDao() } // Player
@@ -44,6 +75,10 @@ val appModule = module {
     single { get<AppDatabase>().schwimmenGameDao() }
     single { get<AppDatabase>().schwimmenGameRoundDao() }
 
+    // Dart
+    single { get<AppDatabase>().dartGameDao() } // Dart
+
+
     // Repositories
     single { PlayerRepository(get()) } // Player
     single { SettingsRepository(get()) } // Settings
@@ -56,10 +91,14 @@ val appModule = module {
     single { SchwimmenStatsRepository(get(), get()) } // Schwimmen
     single { SchwimmenGameRepository(get(), get()) }
 
+    single { DartGameRepository(get()) } // Dart
+
+
     // ViewModels
     viewModel { MainViewModel() }
     viewModel { SkyjoViewModel(get(), get(), get(), get()) }
     viewModel { StatViewModel(get(), get()) }
     viewModel { SchwimmenViewModel(get(), get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get()) }
+    viewModel { DartViewModel(get(), get(), get())}
 }

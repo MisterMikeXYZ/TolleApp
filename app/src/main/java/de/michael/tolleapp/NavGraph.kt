@@ -14,6 +14,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.michael.tolleapp.Route
 import de.michael.tolleapp.Route.SkyjoEnd
+import de.michael.tolleapp.presentation.dart.DartStartScreen
+import de.michael.tolleapp.presentation.dart.DartViewModel
 import de.michael.tolleapp.presentation.skyjo.SkyjoEndScreen
 import de.michael.tolleapp.presentation.skyjo.SkyjoGameScreen
 import de.michael.tolleapp.presentation.skyjo.SkyjoStartScreen
@@ -41,6 +43,7 @@ fun NavGraph(
     val statViewModel = koinViewModel<StatViewModel>()
     val schwimmenViewModel = koinViewModel<SchwimmenViewModel>()
     val settingsViewModel = koinViewModel<SettingsViewModel>()
+    val dartViewModel = koinViewModel<DartViewModel>()
 
     NavHost(
         navController = navController,
@@ -111,6 +114,7 @@ fun NavGraph(
             )
         }
 
+        // Settings Screen
         composable <Route.Settings> {
              SettingsScreen(
                  viewModel = settingsViewModel,
@@ -121,6 +125,7 @@ fun NavGraph(
              )
         }
 
+        // Player Delete Settings
         composable <Route.PlayerDeleteScreen> {
             PlayerDeleteScreen(
                 viewModel = settingsViewModel,
@@ -128,6 +133,7 @@ fun NavGraph(
             )
         }
 
+        // Schwimmen Startscreen
         composable<Route.Schwimmen> {
              SchwimmenStartScreen(
                  navigateTo = { route ->
@@ -139,7 +145,7 @@ fun NavGraph(
         }
 
         // Schwimmen Game Screen with the boats
-         composable<Route.SchwimmenGameScreenCanvas> {
+        composable<Route.SchwimmenGameScreenCanvas> {
              SchwimmenGameScreenCanvas(
                  viewModel = schwimmenViewModel,
                  navigateTo = { route ->
@@ -155,6 +161,17 @@ fun NavGraph(
                 navigateTo = { route ->
                     navController.navigate(route)
                 }
+            )
+        }
+
+        // Dart Startscreen
+        composable<Route.DartStartScreen> {
+            DartStartScreen(
+                viewModel = dartViewModel,
+                navigateTo = { route ->
+                    navController.navigate(route)
+                },
+                navigateBack = { navController.popBackStack() },
             )
         }
     }

@@ -52,8 +52,7 @@ class SkyjoStatsRepository(
         skyjoStatsDao.insertOrUpdateStats(updated)
     }
 
-    suspend fun resetAllGameStats()
-    {
+    suspend fun resetAllGameStats() {
         val statsList = skyjoStatsDao.getAllStats().first()
         statsList.forEach { stats ->
             val resetStats = stats.copy(

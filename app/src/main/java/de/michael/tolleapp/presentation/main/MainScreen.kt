@@ -10,11 +10,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import de.michael.tolleapp.Route
 import org.koin.compose.viewmodel.koinViewModel
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 
@@ -46,6 +44,10 @@ fun MainScreen(
             modifier = modifier
         ) { Text("Go to Schwimmen") }
         Button(
+            onClick = { navigateTo(Route.DartStartScreen) },
+            modifier = modifier
+        ) { Text("Dart")}
+        Button(
             onClick = { navigateTo(Route.Statistics) },
             modifier = modifier
         ) { Text("Statistik") }
@@ -54,6 +56,6 @@ fun MainScreen(
             modifier = modifier
         ) { Text("Settings")}
         Spacer (modifier = Modifier.height(20.dp))
-        Text("Durchschnitt✓\nGewinner✓\nEinstellungen\nDarkmode\nSpieler löschen\nDart\nSchwimmen\nVerbesserung/Verschlechterung\n" )
+        Text("Durchschnitt✓\nGewinner✓\nEinstellungen✓\nDarkmode✓\nSpieler löschen✓\nDart\nSchwimmen✓\nVerbesserung/Verschlechterung\n" )
     }
 }

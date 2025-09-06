@@ -2,6 +2,9 @@ package de.michael.tolleapp.data
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import de.michael.tolleapp.data.games.dart.DartGame
+import de.michael.tolleapp.data.games.dart.DartGameDao
+import de.michael.tolleapp.data.games.dart.DartGameRound
 import de.michael.tolleapp.data.player.Player
 import de.michael.tolleapp.data.player.PlayerDao
 import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGame
@@ -40,8 +43,11 @@ import de.michael.tolleapp.data.settings.SettingsDao
         SchwimmenStats::class,
         SchwimmenGame::class,
         SchwimmenGameRound::class,
+
+        DartGame::class,
+        DartGameRound::class
     ],
-    version = 12
+    version = 14
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -64,4 +70,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun schwimmenStatsDao(): SchwimmenStatsDao
     abstract fun schwimmenGameDao(): SchwimmenGameDao
     abstract fun schwimmenGameRoundDao(): SchwimmenGameRoundDao
+
+    // Dart
+    abstract fun dartGameDao(): DartGameDao
 }

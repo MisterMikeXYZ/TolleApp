@@ -19,6 +19,9 @@ interface PlayerDao {
     @Update
     suspend fun updatePlayer(player: Player)
 
+    @Query("SELECT * FROM players")
+    suspend fun getAllPlayersOnce(): List<Player>
+
     @Delete
     suspend fun deletePlayer(player: Player)
 

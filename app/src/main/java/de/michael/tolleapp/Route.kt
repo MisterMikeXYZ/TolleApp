@@ -33,5 +33,6 @@ sealed interface Route {
     @Serializable
     data object SchwimmenGameScreenCircle : Route
 
-
+    @Serializable
+    data object DartStartScreen : Route
 }

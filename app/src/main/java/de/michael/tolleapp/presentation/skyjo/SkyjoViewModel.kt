@@ -29,10 +29,6 @@ class SkyjoViewModel(
     val state: StateFlow<SkyjoState> = _state.asStateFlow()
     val presets = presetRepository.getPresets("skyjo")
 
-//    val presets: StateFlow<List<GamePresetWithPlayers>> =
-//        presetRepository.getPresets()
-//            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-
     val pausedGames: StateFlow<List<SkyjoGame>> =
         gameRepository.getPausedGames()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -171,44 +167,6 @@ class SkyjoViewModel(
             checkEndCondition()
         }
     }
-
-//    fun endRound(points: Map<String, String>) {
-//        _state.update { state ->
-//            val updatedRounds = state.perPlayerRounds.toMutableMap()
-//            val updatedTotals = state.totalPoints.toMutableMap()
-//            val nextRoundIndex = (state.perPlayerRounds.values.maxOfOrNull { it.size } ?: 0) + 1
-//
-//            state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-//                val score = points[playerId]?.toIntOrNull() ?: 0
-//
-//                viewModelScope.launch {
-//                    gameRepository.ensureSession(state.currentGameId)
-//                    gameRepository.addRound(
-//                        state.currentGameId,
-//                        playerId,
-//                        nextRoundIndex,
-//                        score
-//                    )
-//                }
-//
-//                val currentRounds = updatedRounds[playerId]?.toMutableList() ?: mutableListOf()
-//                currentRounds.add(score)
-//                updatedRounds[playerId] = currentRounds
-//                updatedTotals[playerId] = (updatedTotals[playerId] ?: 0) + score
-//            }
-//
-//            val maxRounds = updatedRounds.values.maxOfOrNull { it.size } ?: 0
-//            var visible = state.visibleRoundRows
-//            while (maxRounds > visible) visible += 1
-//
-//            state.copy(
-//                perPlayerRounds = updatedRounds,
-//                totalPoints = updatedTotals,
-//                visibleRoundRows = visible
-//            )
-//        }
-//        checkEndCondition()
-//    }
 
     private fun checkEndCondition() {
         val totals = _state.value.totalPoints

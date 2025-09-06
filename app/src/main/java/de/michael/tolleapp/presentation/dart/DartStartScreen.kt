@@ -1,5 +1,7 @@
-package de.michael.tolleapp.presentation.skyjo
+package de.michael.tolleapp.presentation.dart
 
+import kotlin.collections.component1
+import kotlin.collections.component2
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -16,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
-import de.michael.tolleapp.data.games.skyjo.game.SkyjoGame
 import kotlinx.coroutines.flow.catch
 import org.koin.compose.viewmodel.koinViewModel
 import java.text.DateFormat
@@ -25,18 +26,19 @@ import java.util.Locale
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import de.michael.tolleapp.data.games.dart.DartGame
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SkyjoStartScreen(
-    viewModel: SkyjoViewModel = koinViewModel(),
+fun DartStartScreen(
+    viewModel: DartViewModel = koinViewModel(),
     navigateTo: (Route) -> Unit,
     navigateBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
 
-    val pausedGamesState = remember { mutableStateOf(emptyList<SkyjoGame>()) }
+    val pausedGamesState = remember { mutableStateOf(emptyList<DartGame>()) }
 
     LaunchedEffect(viewModel) {
         viewModel.pausedGames
@@ -116,7 +118,11 @@ fun SkyjoStartScreen(
                 TextButton(onClick = {
                     val name = newPresetName.trim()
                     if (name.isNotEmpty()) {
-                        viewModel.createPreset("skyjo", name, state.selectedPlayerIds.filterNotNull())
+                        viewModel.createPreset(
+                            "dart",
+                            name,
+                            state.selectedPlayerIds.filterNotNull()
+                        )
                     }
                     newPresetName = ""
                     showPresetDialog = false
@@ -135,7 +141,7 @@ fun SkyjoStartScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Skyjo") },
+                title = { Text("Dart") },
                 navigationIcon = {
                     IconButton(onClick = navigateBack) {
                         Icon(
@@ -157,8 +163,10 @@ fun SkyjoStartScreen(
         ) {
             Row {
                 //Paused games Button
-                Button(onClick = { expanded = true },
-                    modifier = Modifier.weight(3f)) {
+                Button(
+                    onClick = { expanded = true },
+                    modifier = Modifier.weight(3f)
+                ) {
                     Text("Pausierte Spiele laden")
                 }
                 DropdownMenu(
@@ -171,7 +179,7 @@ fun SkyjoStartScreen(
                             onClick = { expanded = false }
                         )
                     } else {
-                        pausedGames.forEach { game: SkyjoGame ->
+                        pausedGames.forEach { game: DartGame ->
                             val date = Date(
                                 if (game.createdAt < 10_000_000_000L) {
                                     // looks like seconds
@@ -186,7 +194,7 @@ fun SkyjoStartScreen(
                                 onClick = {
                                     viewModel.resumeGame(game.id)
                                     expanded = false
-                                    navigateTo(Route.SkyjoGame)
+                                    //navigateTo(Route.DartGameScreen)
                                 }
                             )
                         }
@@ -198,7 +206,8 @@ fun SkyjoStartScreen(
                 //Preset button
                 Button(
                     onClick = { presetExpanded = true },
-                    modifier = Modifier.weight(2f)) {
+                    modifier = Modifier.weight(2f)
+                ) {
                     Text("Presets")
                 }
                 DropdownMenu(
@@ -258,12 +267,12 @@ fun SkyjoStartScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Text("Spieler:", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(2.dp))
-            Column (
+            Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
                     .requiredHeight(450.dp)
                     .weight(6f, fill = true)
-            ){
+            ) {
                 state.selectedPlayerIds.forEachIndexed { index, selectedId ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -273,7 +282,9 @@ fun SkyjoStartScreen(
                             .verticalScroll(rememberScrollState())
                     ) {
                         var expanded by remember { mutableStateOf(false) }
-                        val selectedPlayer = state.selectedPlayerIds[index]?.let { state.playerNames[it] } ?: "Spieler auswählen"
+                        val selectedPlayer =
+                            state.selectedPlayerIds[index]?.let { state.playerNames[it] }
+                                ?: "Spieler auswählen"
 
                         ExposedDropdownMenuBox(
                             expanded = expanded,
@@ -291,7 +302,9 @@ fun SkyjoStartScreen(
                                 readOnly = true,
                                 label = { Text("Spieler") },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                modifier = Modifier.menuAnchor().fillMaxWidth()
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth()
                             )
                             ExposedDropdownMenu(
                                 expanded = expanded,
@@ -305,12 +318,12 @@ fun SkyjoStartScreen(
                                         showDialog = true
                                     }
                                 )
-                                state.playerNames.filter { (id, _) -> id !in state.selectedPlayerIds } //THIS
+                                state.playerNames.filter { (id, _) -> id !in state.selectedPlayerIds }
                                     .forEach { (id, name) ->
                                         DropdownMenuItem(
-                                            text = { Text(name) }, //THIS
+                                            text = { Text(name) },
                                             onClick = {
-                                                viewModel.selectPlayer(index, id) //THIS
+                                                viewModel.selectPlayer(index, id)
                                                 expanded = false
                                             }
                                         )
@@ -345,11 +358,14 @@ fun SkyjoStartScreen(
             //Button to start the game
             Button(
                 onClick = {
-                    viewModel.startGame()
-                    navigateTo(Route.SkyjoGame)
+                    viewModel.startGame(301)
+                    //navigateTo(Route.DartGameScree)
                 },
                 enabled = distinctSelected,
-                modifier = Modifier.fillMaxWidth().weight(1f).requiredHeight(50.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .requiredHeight(50.dp)
             ) {
                 Text("Spiel starten")
             }
