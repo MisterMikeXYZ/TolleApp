@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStats
+import de.michael.tolleapp.data.games.skyjo.SkyjoStats
 
 @Composable
 fun SkyjoStatsTable(
@@ -49,7 +49,7 @@ fun SkyjoStatsTable(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        Row (
+        Row(
             modifier = Modifier.horizontalScroll(rememberScrollState())
         ) {
             players.forEach { player ->
@@ -58,19 +58,21 @@ fun SkyjoStatsTable(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.width(50.dp),
                 ) {
+                    val avg = if (player.roundsPlayed > 0 && player.avgRound != null)
+                        player.avgRound else 0.0
+
                     listOf(
                         playerNames[player.playerId] ?: "?",
-                        player.wonGames,
-                        player.lostGames,
-                        player.totalGamesPlayedSkyjo,
-                        player.roundsPlayedSkyjo,
-                        if (player.roundsPlayedSkyjo > 0)
-                            player.totalEndScoreSkyjo / player.roundsPlayedSkyjo else 0,
-                        player.bestRoundScoreSkyjo ?: "—",
-                        player.worstRoundScoreSkyjo?.let { "\n$it" } ?: "\n—",
-                        player.bestEndScoreSkyjo ?: "—",
-                        player.worstEndScoreSkyjo?.let { "\n$it" } ?: "\n—",
-                        player.totalEndScoreSkyjo
+                        player.gamesWon,
+                        player.gamesLost,
+                        player.totalGames,
+                        player.roundsPlayed,
+                        String.format("%.1f", avg),
+                        player.bestRound ?: "—",
+                        player.worstRound?.let { "\n$it" } ?: "\n—",
+                        player.bestEnd ?: "—",
+                        player.worstEnd?.let { "\n$it" } ?: "\n—",
+                        player.totalEnd ?: "—"
                     ).forEachIndexed { index, value ->
                         val strValue = value.toString()
                         val multiline = strValue.contains("\n")

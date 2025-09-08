@@ -4,35 +4,34 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStats
 import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStatsRepository
-import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStats
-import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStatsRepository
+import de.michael.tolleapp.data.games.skyjo.SkyjoGameRepository
+import de.michael.tolleapp.data.games.skyjo.SkyjoStats
+import de.michael.tolleapp.data.player.Player
+import de.michael.tolleapp.data.player.PlayerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class StatViewModel(
-    private val skyjoRepo: SkyjoStatsRepository,
+    private val skyjoRepo: SkyjoGameRepository,
     private val schwimmenRepo: SchwimmenStatsRepository,
+    private val playerRepo: PlayerRepository,
 ) : ViewModel() {
 
-    private val _allPlayers = skyjoRepo.getPlayers()
-
-    private val _skyjoStats = skyjoRepo.getAllStats()
+    private val _allPlayers = playerRepo.getAllPlayers()
     private val _schwimmenStats = schwimmenRepo.getAllStats()
-
     private val _state = MutableStateFlow(StatState())
 
     val state = combine(
-        _allPlayers,       // Flow<List<Player>>
-        _skyjoStats,       // Flow<List<SkyjoStats>>
-        _schwimmenStats,   // Flow<List<SchwimmenStats>>
-        _state             // MutableStateFlow for selectedGame
-    ) { allPlayers, skyjoList, schwimmenList, state ->
-        val playersSkyjoFull = allPlayers.map { player ->
-            skyjoList.find { it.playerId == player.id } ?: SkyjoStats(playerId = player.id)
-        }
+        _allPlayers,
+        _schwimmenStats,
+        _state
+    ) { allPlayers, schwimmenList, state ->
+        val playersSkyjoFull = buildSkyjoStats(allPlayers)
+
         val playersSchwimmenFull = allPlayers.map { player ->
             schwimmenList.find { it.playerId == player.id } ?: SchwimmenStats(playerId = player.id)
         }
@@ -48,16 +47,65 @@ class StatViewModel(
         initialValue = StatState()
     )
 
-    fun resetCurrentGameStats() {
-        viewModelScope.launch {
-            when (_state.value.selectedGame) {
-                GameType.SKYJO -> skyjoRepo.resetAllGameStats()
-                GameType.SCHWIMMEN -> schwimmenRepo.resetAllGameStats()
-            }
+    private suspend fun buildSkyjoStats(players: List<Player>): List<SkyjoStats> {
+        return players.map { player ->
+            SkyjoStats(
+                playerId = player.id,
+                totalGames = skyjoRepo.getTotalGamesPlayed(player.id),
+                gamesWon = skyjoRepo.getGamesWon(player.id),
+                gamesLost = skyjoRepo.getGamesLost(player.id),
+                roundsPlayed = skyjoRepo.getRoundsPlayed(player.id),
+                bestRound = skyjoRepo.getBestRoundScore(player.id),
+                worstRound = skyjoRepo.getWorstRoundScore(player.id),
+                avgRound = skyjoRepo.getAverageRoundScore(player.id),
+                bestEnd = skyjoRepo.getBestEndScore(player.id),
+                worstEnd = skyjoRepo.getWorstEndScore(player.id),
+                totalEnd = skyjoRepo.getTotalEndScore(player.id),
+            )
         }
     }
 
     fun selectGame(game: GameType) {
         _state.value = _state.value.copy(selectedGame = game)
     }
+
+    fun resetCurrentGameStats() {
+        viewModelScope.launch {
+            when (_state.value.selectedGame) {
+                GameType.SKYJO -> {
+                    // Reset all Skyjo stats in DB
+                    skyjoRepo.resetAllGameStats()
+
+                    // Refresh state to reflect the reset
+                    val allPlayers = playerRepo.getAllPlayersOnce()
+                    val playersSkyjoFull = allPlayers.map { player ->
+                        SkyjoStats(
+                            playerId = player.id,
+                            totalGames = 0,
+                            gamesWon = 0,
+                            gamesLost = 0,
+                            roundsPlayed = 0,
+                            bestRound = null,
+                            worstRound = null,
+                            avgRound = null,
+                            bestEnd = null,
+                            worstEnd = null,
+                            totalEnd = 0,
+                        )
+                    }
+
+                    _state.update { state ->
+                        state.copy(
+                            playersSkyjo = playersSkyjoFull
+                        )
+                    }
+                }
+                GameType.SCHWIMMEN -> {
+                    schwimmenRepo.resetAllGameStats()
+                    // Schwimmen flow is already collected, UI refreshes automatically
+                }
+            }
+        }
+    }
+
 }

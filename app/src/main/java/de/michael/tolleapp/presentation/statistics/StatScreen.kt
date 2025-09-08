@@ -35,7 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
 import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStats
-import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStats
+import de.michael.tolleapp.data.games.skyjo.SkyjoStats
 import de.michael.tolleapp.presentation.statistics.screens.SchwimmenStatsTable
 import de.michael.tolleapp.presentation.statistics.screens.SkyjoStatsTable
 import kotlinx.coroutines.delay
@@ -54,14 +54,13 @@ fun StatScreen(
         GameType.SKYJO -> state.playerNames.keys.map { playerId ->
             state.playersSkyjo.find { it.playerId == playerId }
                 ?: SkyjoStats(playerId = playerId) // default stats
-        }.sortedByDescending { it.roundsPlayedSkyjo + it.totalGamesPlayedSkyjo }
+        }.sortedByDescending { it.roundsPlayed + it.totalGames }
 
         GameType.SCHWIMMEN -> state.playerNames.keys.map { playerId ->
             state.playersSchwimmen.find { it.playerId == playerId }
                 ?: SchwimmenStats(playerId = playerId)
         }.sortedByDescending { it.roundsPlayedSchwimmen + it.totalGamesPlayedSchwimmen }
     }
-
 
     Scaffold(
         topBar = {
@@ -94,10 +93,10 @@ fun StatScreen(
                     ) {
                         Icon(
                             imageVector = if (!resetPressed) Icons.Default.Delete
-                                else Icons.Default.DeleteForever,
+                            else Icons.Default.DeleteForever,
                             contentDescription = null,
                             tint = if (!resetPressed) MaterialTheme.colorScheme.onSurface
-                                else MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -115,14 +114,12 @@ fun StatScreen(
         ) {
             // --- Dropdown for game selection ---
             Row(verticalAlignment = Alignment.CenterVertically) {
-//                Text("Spiel:", style = MaterialTheme.typography.labelLarge)
-//                Spacer(modifier = Modifier.width(8.dp))
                 val str = when (state.selectedGame) {
                     GameType.SKYJO -> "Skyjo"
                     GameType.SCHWIMMEN -> "Schwimmen"
                 }
                 Button(onClick = { expanded = true }) {
-                    Text("Ausgewähltes Spiel: " + str)
+                    Text("Ausgewähltes Spiel: $str")
                 }
                 DropdownMenu(
                     expanded = expanded,

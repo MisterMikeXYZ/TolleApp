@@ -13,17 +13,16 @@ import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGameRound
 import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGameRoundDao
 import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStats
 import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStatsDao
-import de.michael.tolleapp.data.games.skyjo.game.SkyjoGameRound
-import de.michael.tolleapp.data.games.skyjo.game.SkyjoGame
-import de.michael.tolleapp.data.games.skyjo.game.SkyjoGameDao
-import de.michael.tolleapp.data.games.skyjo.game.SkyjoGameRoundDao
+import de.michael.tolleapp.data.games.skyjo.SkyjoGame
+import de.michael.tolleapp.data.games.skyjo.SkyjoGameDao
+import de.michael.tolleapp.data.games.skyjo.SkyjoGameRound
+import de.michael.tolleapp.data.games.skyjo.SkyjoGameRoundDao
 import de.michael.tolleapp.data.games.presets.GamePreset
 import de.michael.tolleapp.data.games.presets.GamePresetDao
 import de.michael.tolleapp.data.games.presets.GamePresetPlayer
-import de.michael.tolleapp.data.games.skyjo.stats.SkyjoRoundResult
-import de.michael.tolleapp.data.games.skyjo.stats.SkyjoRoundResultDao
-import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStats
-import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStatsDao
+import de.michael.tolleapp.data.games.skyjo.SkyjoGameLoser
+import de.michael.tolleapp.data.games.skyjo.SkyjoGameStatisticsDao
+import de.michael.tolleapp.data.games.skyjo.SkyjoGameWinner
 import de.michael.tolleapp.data.settings.Settings
 import de.michael.tolleapp.data.settings.SettingsDao
 
@@ -35,19 +34,22 @@ import de.michael.tolleapp.data.settings.SettingsDao
         GamePreset::class,
         GamePresetPlayer::class,
 
-        SkyjoStats::class,
-        SkyjoRoundResult::class,
+        // Skyjo
         SkyjoGame::class,
         SkyjoGameRound::class,
+        SkyjoGameWinner::class,
+        SkyjoGameLoser::class,
 
+        // Schwimmen
         SchwimmenStats::class,
         SchwimmenGame::class,
         SchwimmenGameRound::class,
 
+        // Dart
         DartGame::class,
         DartGameRound::class
     ],
-    version = 14
+    version = 17
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -61,10 +63,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun settingsDao(): SettingsDao
 
     // Skyjo
-    abstract fun skyjoStatsDao(): SkyjoStatsDao
-    abstract fun skyjoRoundResultDao(): SkyjoRoundResultDao
     abstract fun skyjoGameDao(): SkyjoGameDao
     abstract fun skyjoGameRoundDao(): SkyjoGameRoundDao
+    abstract fun skyjoGameStatisticsDao(): SkyjoGameStatisticsDao
 
     // Schwimmen
     abstract fun schwimmenStatsDao(): SchwimmenStatsDao

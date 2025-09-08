@@ -1,11 +1,16 @@
 package de.michael.tolleapp.data.player
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
 class PlayerRepository(
     private val playerDao: PlayerDao
 ) {
     fun getAllPlayers(): Flow<List<Player>> = playerDao.getAllPlayers()
+
+    suspend fun getAllPlayersOnce(): List<Player> {
+        return getAllPlayers().first()
+    }
 
     suspend fun getPlayerById(id: String): Player? = playerDao.getPlayerById(id)
 

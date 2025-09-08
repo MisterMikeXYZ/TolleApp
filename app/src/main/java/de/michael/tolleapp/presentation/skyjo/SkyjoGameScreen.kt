@@ -193,8 +193,7 @@ fun SkyjoGameScreen(
                 // Input row per player
                 state.selectedPlayerIds.filterNotNull().forEachIndexed { index, playerId ->
                     val playerName = state.playerNames[playerId] ?: "Spieler auswählen"
-                    val isDealer = index == state.dealerIndex
-
+                    val isDealer = playerId == state.currentDealerId
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
@@ -250,11 +249,10 @@ fun SkyjoGameScreen(
 
             Button(
                 onClick = {
-                    viewModel.advanceDealer(state.selectedPlayerIds.filterNotNull().size)
                     viewModel.endRound(points)
                     points.keys.toList().forEach { id -> points[id] = "" } // clear inputs
                     //Move the focus to the top input field
-                    focusManager.moveFocus(FocusDirection.Up)
+                    focusManager.moveFocus(FocusDirection.Down)
                     keyboardManager?.hide()
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -321,27 +319,27 @@ fun SkyjoGameScreen(
 
                     Column {
                         // Round rows
-                        for (roundIndex in 1..visibleRoundRows) {
+                        for (roundIndex in 1..visibleRoundRows)
+                        {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                             ) {
                                 // SkyjoPlayer score cells
-                                state.selectedPlayerIds.filterNotNull()
-                                    .forEach { playerId ->
-                                        val list = perPlayerRounds[playerId]
-                                        val value =
-                                            list?.getOrNull(roundIndex - 1)?.toString()
-                                                ?: ""
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .padding(4.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(value)
-                                        }
+                                state.selectedPlayerIds.filterNotNull().forEach { playerId ->
+                                    val list = perPlayerRounds[playerId]
+                                    val value =
+                                        list?.getOrNull(roundIndex - 1)?.toString()
+                                            ?: ""
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(4.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(value)
                                     }
+                                }
                             }
                         }
                     }

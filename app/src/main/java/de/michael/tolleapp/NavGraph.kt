@@ -110,7 +110,7 @@ fun NavGraph(
                 navigateTo = { route ->
                     navController.navigate(route)
                 },
-                viewModel = statViewModel
+                //viewModel = statViewModel
             )
         }
 

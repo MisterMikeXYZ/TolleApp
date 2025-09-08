@@ -1,7 +1,7 @@
 package de.michael.tolleapp.presentation.statistics
 
 import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStats
-import de.michael.tolleapp.data.games.skyjo.stats.SkyjoStats
+import de.michael.tolleapp.data.games.skyjo.SkyjoStats
 
 enum class GameType { SKYJO, SCHWIMMEN }
 
