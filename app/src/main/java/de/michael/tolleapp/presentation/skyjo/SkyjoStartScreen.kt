@@ -345,7 +345,7 @@ fun SkyjoStartScreen(
             //Button to start the game
             Button(
                 onClick = {
-                    viewModel.startGame()
+                    viewModel.startGame(state.selectedPlayerIds.first())
                     navigateTo(Route.SkyjoGame)
                 },
                 enabled = distinctSelected,

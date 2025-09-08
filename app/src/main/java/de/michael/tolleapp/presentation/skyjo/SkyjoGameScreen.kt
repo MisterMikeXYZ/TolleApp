@@ -247,18 +247,27 @@ fun SkyjoGameScreen(
             }
             Spacer(modifier = Modifier.height(12.dp))
 
-            Button(
-                onClick = {
-                    viewModel.endRound(points)
-                    points.keys.toList().forEach { id -> points[id] = "" } // clear inputs
-                    //Move the focus to the top input field
-                    focusManager.moveFocus(FocusDirection.Down)
-                    keyboardManager?.hide()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = allInputsFilled
-            ) {
-                Text("Runde beenden")
+            Row {
+                Button(
+                    onClick = { viewModel.advanceDealer() },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Dealer")
+                }
+                Spacer(modifier = Modifier.width(3.dp))
+                Button(
+                    onClick = {
+                        viewModel.endRound(points)
+                        points.keys.toList().forEach { id -> points[id] = "" } // clear inputs
+                        //Move the focus to the top input field
+                        focusManager.moveFocus(FocusDirection.Down)
+                        keyboardManager?.hide()
+                    },
+                    modifier = Modifier.fillMaxWidth().weight(2f),
+                    enabled = allInputsFilled
+                ) {
+                    Text("Runde beenden")
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))

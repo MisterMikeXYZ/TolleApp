@@ -145,6 +145,7 @@ class SkyjoViewModel(
                 gameRepo.addRound(stateValue.currentGameId, playerId, nextRoundIndex, score)
             }
 
+            advanceDealer()
             checkEndCondition()
         }
     }
@@ -186,7 +187,6 @@ class SkyjoViewModel(
             }
         }
     }
-
 
     fun addPlayer(name: String, rowIndex: Int) = viewModelScope.launch {
         val newPlayer = Player(name = name)
@@ -278,7 +278,15 @@ class SkyjoViewModel(
         }
     }
 
-    fun advanceDealer(nextDealerId: String?) {
-        setDealer(nextDealerId)
+    fun advanceDealer() {
+        val currentDealerId = _state.value.currentDealerId
+        val players = _state.value.selectedPlayerIds.filterNotNull()
+        if (players.isNotEmpty()) {
+            val currentIndex = players.indexOf(currentDealerId)
+            val nextIndex =
+                if (currentIndex == -1 || currentIndex + 1 >= players.size) 0 else currentIndex + 1
+            val nextDealerId = players[nextIndex]
+            setDealer(nextDealerId)
+        }
     }
 }
