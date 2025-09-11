@@ -14,4 +14,10 @@ class MainViewModel () : ViewModel(){
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = MainState()
     )
+//    TODO
+//    Dart: viel
+//    Skyjo:
+//    1. Leere Spielerauswahl ist scrollable
+//    2. Alle Spiele speichern und in Liste anzeigen
+//    3.
 }

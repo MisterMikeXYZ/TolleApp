@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
@@ -16,6 +17,7 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -65,7 +67,21 @@ fun SchwimmenGameScreenCanvas(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Schwimmen") },
+                title = { Text(
+                    "Schwimmen",
+                    color = MaterialTheme.colorScheme.onSurface
+                ) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+                modifier = Modifier
+                    .clip(
+                        shape = MaterialTheme.shapes.extraLarge.copy(
+                            topStart = CornerSize(0.dp),
+                            topEnd = CornerSize(0.dp),
+                        )
+                    ),
                 navigationIcon = {
                     if (!state.isGameEnded) {
                         var resetPressedDelete by remember { mutableStateOf(false) }

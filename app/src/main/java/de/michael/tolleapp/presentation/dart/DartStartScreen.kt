@@ -4,6 +4,7 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -26,6 +27,7 @@ import java.util.Locale
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.draw.clip
 import de.michael.tolleapp.data.games.dart.DartGame
 import kotlinx.coroutines.delay
 
@@ -142,6 +144,17 @@ fun DartStartScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Dart") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+                modifier = Modifier
+                    .clip(
+                        shape = MaterialTheme.shapes.extraLarge.copy(
+                            topStart = CornerSize(0.dp),
+                            topEnd = CornerSize(0.dp),
+                        )
+                    ),
                 navigationIcon = {
                     IconButton(onClick = navigateBack) {
                         Icon(

@@ -36,7 +36,7 @@ interface SkyjoGameDao {
     @Query("SELECT * FROM skyjo_games WHERE isFinished = 0 ORDER BY createdAt DESC")
     fun getPausedGames(): Flow<List<SkyjoGame>>
 
-    @Query("UPDATE skyjo_games SET endedAt = :endedAt WHERE id = :gameId")
+    @Query("UPDATE skyjo_games SET isFinished = 1, endedAt = :endedAt WHERE id = :gameId")
     suspend fun markEnded(gameId: String, endedAt: Long)
 
     @Query("UPDATE skyjo_games SET dealerId = :dealerId WHERE id = :gameId")

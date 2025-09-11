@@ -2,6 +2,7 @@ package de.michael.tolleapp.presentation.skyjo
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -25,6 +26,7 @@ import java.util.Locale
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.draw.clip
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -135,7 +137,21 @@ fun SkyjoStartScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Skyjo") },
+                title = { Text(
+                    "Skyjo",
+                    color = MaterialTheme.colorScheme.onSurface
+                ) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+                modifier = Modifier
+                    .clip(
+                        shape = MaterialTheme.shapes.extraLarge.copy(
+                            topStart = CornerSize(0.dp),
+                            topEnd = CornerSize(0.dp),
+                        )
+                    ),
                 navigationIcon = {
                     IconButton(onClick = navigateBack) {
                         Icon(
@@ -153,9 +169,11 @@ fun SkyjoStartScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding( 16.dp)
         ) {
-            Row {
+            Row (
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 //Paused games Button
                 Button(onClick = { expanded = true },
                     modifier = Modifier.weight(3f)) {

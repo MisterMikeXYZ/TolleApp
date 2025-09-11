@@ -2,18 +2,16 @@ package de.michael.tolleapp.presentation.skyjo
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import de.michael.tolleapp.data.games.presets.GamePresetRepository
+import de.michael.tolleapp.data.games.skyjo.SkyjoGame
+import de.michael.tolleapp.data.games.skyjo.SkyjoGameLoser
+import de.michael.tolleapp.data.games.skyjo.SkyjoGameRepository
+import de.michael.tolleapp.data.games.skyjo.SkyjoGameWinner
 import de.michael.tolleapp.data.player.Player
 import de.michael.tolleapp.data.player.PlayerRepository
-import de.michael.tolleapp.data.games.skyjo.SkyjoGameRepository
-import de.michael.tolleapp.data.games.skyjo.SkyjoGame
-import de.michael.tolleapp.data.games.presets.GamePresetRepository
-import de.michael.tolleapp.data.games.skyjo.SkyjoGameLoser
-import de.michael.tolleapp.data.games.skyjo.SkyjoGameWinner
-import de.michael.tolleapp.presentation.dart.DartState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -263,9 +261,7 @@ class SkyjoViewModel(
     fun endGame() {
         viewModelScope.launch {
             val gameId = _state.value.currentGameId
-            if (gameId.isNotEmpty()) {
-                gameRepo.markEnded(gameId)
-            }
+            gameRepo.markEnded(gameId)
         }
     }
 

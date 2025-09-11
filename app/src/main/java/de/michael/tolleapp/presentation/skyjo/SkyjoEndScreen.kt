@@ -1,5 +1,6 @@
 package de.michael.tolleapp.presentation.skyjo
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
@@ -11,23 +12,30 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
 import org.koin.compose.viewmodel.koinViewModel
-import androidx.compose.runtime.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkyjoEndScreen(
-    modifier: Modifier = Modifier,
     navigateTo: (Route) -> Unit,
     viewModel: SkyjoViewModel = koinViewModel(),
 ) {
@@ -43,122 +51,149 @@ fun SkyjoEndScreen(
             )
         )
     }
+    BackHandler {
+        navigateTo(Route.Main)
+        viewModel.resetGame()
+    }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(scrollState)
-    ) {
-        Text("Spiel beendet!", style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.height(12.dp))
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text(
+                    "Skyjo",
+                    color = MaterialTheme.colorScheme.onSurface
+                ) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+                modifier = Modifier
+                    .clip(
+                        shape = MaterialTheme.shapes.extraLarge.copy(
+                            topStart = CornerSize(0.dp),
+                            topEnd = CornerSize(0.dp),
+                        )
+                    ),
+            )
+        },
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp)
+                .verticalScroll(scrollState)
+        ) {
+            Text("Spiel beendet!", style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.height(12.dp))
 
-        // === ROUNDS GRID ===
-        Column(modifier = Modifier.fillMaxWidth()) {
-            // Header row
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(4.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Runde", style = MaterialTheme.typography.labelLarge)
-                }
-                state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                    val name = state.playerNames[playerId] ?: "?"
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(name.take(2), style = MaterialTheme.typography.labelLarge)
-                    }
-                }
-            }
-
-            // Round rows
-            val maxRounds = state.perPlayerRounds.values.maxOfOrNull { it.size } ?: 0
-            for (roundIndex in 1..maxRounds) {
+            // === ROUNDS GRID ===
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Header row
                 Row(modifier = Modifier.fillMaxWidth()) {
-                    // Round number cell
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .padding(4.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(roundIndex.toString())
+                        Text("Runde", style = MaterialTheme.typography.labelLarge)
                     }
-
-                    // Score cells
                     state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                        val list = state.perPlayerRounds[playerId]
-                        val value = list?.getOrNull(roundIndex - 1)?.toString() ?: ""
+                        val name = state.playerNames[playerId] ?: "?"
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(4.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(value)
+                            Text(name.take(2), style = MaterialTheme.typography.labelLarge)
                         }
                     }
                 }
-            }
-            HorizontalDivider()
-            // Totals row
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(4.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Σ", style = MaterialTheme.typography.labelLarge)
+
+                // Round rows
+                val maxRounds = state.perPlayerRounds.values.maxOfOrNull { it.size } ?: 0
+                for (roundIndex in 1..maxRounds) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        // Round number cell
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(roundIndex.toString())
+                        }
+
+                        // Score cells
+                        state.selectedPlayerIds.filterNotNull().forEach { playerId ->
+                            val list = state.perPlayerRounds[playerId]
+                            val value = list?.getOrNull(roundIndex - 1)?.toString() ?: ""
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(value)
+                            }
+                        }
+                    }
                 }
-                state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                    val total = state.totalPoints[playerId] ?: 0
+                HorizontalDivider()
+                // Totals row
+                Row(modifier = Modifier.fillMaxWidth()) {
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .padding(4.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(total.toString(), style = MaterialTheme.typography.labelLarge)
+                        Text("Σ", style = MaterialTheme.typography.labelLarge)
+                    }
+                    state.selectedPlayerIds.filterNotNull().forEach { playerId ->
+                        val total = state.totalPoints[playerId] ?: 0
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(total.toString(), style = MaterialTheme.typography.labelLarge)
+                        }
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        // Winner
-        val winnerNames = state.winnerId.mapNotNull { id -> state.playerNames[id] }
-            .ifEmpty { listOf("Niemand") }
-            .joinToString(", ")
-        Text("🏆 Gewinner: $winnerNames", style = MaterialTheme.typography.titleMedium)
+            // Winner
+            val winnerNames = state.winnerId.mapNotNull { id -> state.playerNames[id] }
+                .ifEmpty { listOf("Niemand") }
+                .joinToString(", ")
+            Text("🏆 Gewinner: $winnerNames", style = MaterialTheme.typography.titleMedium)
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        // Ranking
-        Text("Rangliste:", style = MaterialTheme.typography.titleMedium)
-        state.ranking.forEachIndexed { index, playerId ->
-            val playerName = state.playerNames[playerId] ?: playerId
-            val score = state.totalPoints[playerId] ?: 0
-            Text("${index + 1}. $playerName - $score Punkte")
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-        Button (
-            onClick = {
-                navigateTo(Route.Main)
-                viewModel.resetGame()
+            // Ranking
+            Text("Rangliste:", style = MaterialTheme.typography.titleMedium)
+            state.ranking.forEachIndexed { index, playerId ->
+                val playerName = state.playerNames[playerId] ?: playerId
+                val score = state.totalPoints[playerId] ?: 0
+                Text("${index + 1}. $playerName - $score Punkte")
             }
-        )
-        {
-            Text("Zurück zum Hauptmenü")
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = {
+                    navigateTo(Route.Main)
+                    viewModel.resetGame()
+                }
+            )
+            {
+                Text("Zurück zum Hauptmenü")
+            }
         }
     }
 }

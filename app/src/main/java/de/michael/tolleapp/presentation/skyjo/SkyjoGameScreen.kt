@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -32,6 +33,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -43,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
@@ -110,7 +113,21 @@ fun SkyjoGameScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Skyjo") },
+                title = { Text(
+                    "Skyjo",
+                    color = MaterialTheme.colorScheme.onSurface
+                ) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+                modifier = Modifier
+                    .clip(
+                        shape = MaterialTheme.shapes.extraLarge.copy(
+                            topStart = CornerSize(0.dp),
+                            topEnd = CornerSize(0.dp),
+                        )
+                    ),
                 navigationIcon = {
                     var resetPressedDelete by remember { mutableStateOf(false) }
                     LaunchedEffect(resetPressedDelete) {
@@ -170,7 +187,6 @@ fun SkyjoGameScreen(
                                 MaterialTheme.colorScheme.primary
                         )
                     }
-
                 }
             )
         },
@@ -179,7 +195,7 @@ fun SkyjoGameScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .padding(16.dp)
         ) {
             Text("Spieler:", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(1.dp))
@@ -254,7 +270,7 @@ fun SkyjoGameScreen(
                 ) {
                     Text("Dealer")
                 }
-                Spacer(modifier = Modifier.width(3.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = {
                         viewModel.endRound(points)

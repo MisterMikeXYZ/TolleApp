@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -23,6 +24,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
 import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStats
@@ -65,7 +68,21 @@ fun StatScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Statistik") },
+                title = { Text(
+                    "Statistik",
+                    color = MaterialTheme.colorScheme.onSurface
+                ) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+                modifier = Modifier
+                    .clip(
+                        shape = MaterialTheme.shapes.extraLarge.copy(
+                            topStart = CornerSize(0.dp),
+                            topEnd = CornerSize(0.dp),
+                        )
+                    ),
                 navigationIcon = {
                     IconButton(onClick = { navigateTo(Route.Main) }) {
                         Icon(
@@ -108,7 +125,7 @@ fun StatScreen(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(start = 8.dp)
+                .padding( 16.dp)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
@@ -148,8 +165,10 @@ fun StatScreen(
                 Text("Keine Spieler vorhanden")
             } else {
                 if (state.selectedGame == GameType.SKYJO) {
+                    @Suppress("UNCHECKED_CAST")
                     SkyjoStatsTable(players as List<SkyjoStats>, state.playerNames)
                 } else {
+                    @Suppress("UNCHECKED_CAST")
                     SchwimmenStatsTable(players as List<SchwimmenStats>, state.playerNames)
                 }
             }
