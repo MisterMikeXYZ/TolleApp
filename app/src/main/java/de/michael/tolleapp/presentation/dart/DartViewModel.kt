@@ -1,12 +1,19 @@
 package de.michael.tolleapp.presentation.dart
 
 import DartGameRepository
+import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.michael.tolleapp.data.games.dart.DartGame
 import de.michael.tolleapp.data.games.presets.GamePresetRepository
 import de.michael.tolleapp.data.player.Player
 import de.michael.tolleapp.data.player.PlayerRepository
+import de.michael.tolleapp.presentation.dart.components.PlayerState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,6 +21,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.update
+import kotlin.collections.emptyList
+import de.michael.tolleapp.presentation.dart.components.PlayerScoreDisplays
 
 class DartViewModel (
     private val playerRepo: PlayerRepository,
@@ -34,6 +43,9 @@ class DartViewModel (
         SharingStarted.WhileSubscribed(5_000),
         DartState()
     )
+
+    val _playerState = MutableStateFlow(PlayerState())
+    val playerState: StateFlow<PlayerState> = _playerState
 
     val presets = presetRepo.getPresets("dart")
 
@@ -87,6 +99,25 @@ class DartViewModel (
         _state.update { it.copy(selectedPlayerIds = listOf(null)) }
     }
 
+    @Composable
+    fun PlayerScoreDisplayFor(playerId: String, modifier: Modifier = Modifier) {
+        val dartState by state.collectAsState()
+        val playerState = dartState.toPlayerState(playerId)
+
+        PlayerScoreDisplays(
+            startValue = dartState.gameStyle, // 301, 501 etc.
+            isActive = dartState.selectedPlayerIds.getOrNull(dartState.activePlayerIndex) == playerId,
+            playerState = playerState,
+            modifier = modifier.height(60.dp)
+        )
+    }
+
+    fun insertThrow(value: String) {
+
+
+        advancePlayer()
+    }
+
     fun startGame(gameStyle: Int) {
         val players = _state.value.selectedPlayerIds.filterNotNull()
         if (players.isEmpty()) return
@@ -112,58 +143,6 @@ class DartViewModel (
         }
     }
 
-    fun endRound(roundScores: Map<String, List<Int>>) {
-        val gameId = _state.value.currentGameId
-        if (gameId.isEmpty()) return
-
-        _state.update { state ->
-            val updatedRounds = state.perPlayerRounds.toMutableMap()
-            val updatedTotals = state.totalPoints.toMutableMap()
-            val bestRounds = state.bestRound.toMutableMap()
-            val worstRounds = state.worstRound.toMutableMap()
-            val perfects = state.perfectRounds.toMutableMap()
-            val triple20s = state.tripleTwentyHits.toMutableMap()
-
-            state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                val darts = roundScores[playerId] ?: listOf(0, 0, 0)
-                // Save round
-                val playerRounds = updatedRounds[playerId]?.toMutableList() ?: mutableListOf()
-                playerRounds.add(darts)
-                updatedRounds[playerId] = playerRounds
-
-                // Update total points (subtract sum of darts)
-                val newTotal = (updatedTotals[playerId] ?: state.gameStyle) - darts.sum()
-                updatedTotals[playerId] = newTotal
-
-                // Update best/worst rounds
-                val roundSum = darts.sum()
-                bestRounds[playerId] = maxOf(bestRounds[playerId] ?: 0, roundSum)
-                worstRounds[playerId] = minOf(worstRounds[playerId] ?: Int.MAX_VALUE, roundSum)
-
-                // Update perfect rounds
-                if (darts.all { it == 60 }) {
-                    perfects[playerId] = (perfects[playerId] ?: 0) + 1
-                }
-
-                // Update triple 20 hits
-                triple20s[playerId] = (triple20s[playerId] ?: 0) + darts.count { it == 60 }
-            }
-
-            state.copy(
-                perPlayerRounds = updatedRounds,
-                totalPoints = updatedTotals,
-                bestRound = bestRounds,
-                worstRound = worstRounds,
-                perfectRounds = perfects,
-                tripleTwentyHits = triple20s,
-                currentGameRounds = state.currentGameRounds + 1,
-                activePlayerIndex = (state.activePlayerIndex + 1) % state.selectedPlayerIds.size
-            )
-        }
-
-        checkEndCondition()
-    }
-
     private fun checkEndCondition() {
         val totals = _state.value.totalPoints
         val winner = totals.entries.find { it.value <= 0 }?.key
@@ -176,35 +155,6 @@ class DartViewModel (
                     ranking = totals.entries.sortedBy { it.value }.map { e -> e.key }
                 )
             }
-        }
-    }
-
-    fun resumeGame(gameId: String) = viewModelScope.launch {
-        val (roundsByPlayer, gameStyle) = gameRepo.loadGame(gameId)
-
-        val players = roundsByPlayer.keys.toList()
-
-        val totals = players.associateWith { roundsByPlayer[it]?.sumOf { round -> round.sum() } ?: 0 }
-        val best = players.associateWith { roundsByPlayer[it]?.maxOfOrNull { it.sum() } ?: 0 }
-        val worst = players.associateWith { roundsByPlayer[it]?.minOfOrNull { it.sum() } ?: 0 }
-        val perfects = players.associateWith { roundsByPlayer[it]?.count { it.sum() == 180 } ?: 0 }
-        val triple20s = players.associateWith { roundsByPlayer[it]?.sumOf { it.count { d -> d == 60 } } ?: 0 }
-
-        _state.update {
-            it.copy(
-                currentGameId = gameId,
-                selectedPlayerIds = players,
-                perPlayerRounds = roundsByPlayer,
-                totalPoints = totals,
-                bestRound = best,
-                worstRound = worst,
-                perfectRounds = perfects,
-                tripleTwentyHits = triple20s,
-                currentGameRounds = roundsByPlayer.values.maxOfOrNull { it.size } ?: 1,
-                activePlayerIndex = 0,
-                gameStyle = gameStyle,
-                isGameEnded = false
-            )
         }
     }
 

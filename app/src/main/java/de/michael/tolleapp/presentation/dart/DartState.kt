@@ -1,5 +1,8 @@
 package de.michael.tolleapp.presentation.dart
 
+import de.michael.tolleapp.presentation.dart.components.PlayerState
+import de.michael.tolleapp.presentation.dart.components.ThrowData
+
 data class DartState(
 
     // --- Players ---
@@ -13,7 +16,7 @@ data class DartState(
     val gameStyle: Int = 301,
 
     // --- Rounds and scoring ---
-    val perPlayerRounds: Map<String, List<List<Int>>> = emptyMap(),
+    val perPlayerRounds: Map<String, List<List<ThrowData>>> = emptyMap(),
     val totalPoints: Map<String, Int> = emptyMap(),
     val bestRound: Map<String, Int> = emptyMap(),
     val worstRound: Map<String, Int> = emptyMap(),
@@ -28,3 +31,11 @@ data class DartState(
     // --- UI / state ---
     val isGameEnded: Boolean = false,
 )
+
+fun DartState.toPlayerState(playerId: String): PlayerState {
+    return PlayerState(
+        playerId = playerId, // only if playerId is numeric
+        playerName = playerNames[playerId] ?: "",
+        rounds = perPlayerRounds[playerId] ?: emptyList()
+    )
+}

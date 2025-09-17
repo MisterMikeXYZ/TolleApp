@@ -208,7 +208,7 @@ fun DartStartScreen(
                                 DropdownMenuItem(
                                     text = { Text("Spiel gestartet am ${formatter.format(date)}") },
                                     onClick = {
-                                        viewModel.resumeGame(game.id)
+                                        //viewModel.resumeGame(game.id)
                                         expanded = false
                                         //navigateTo(Route.DartGameScreen)
                                     }

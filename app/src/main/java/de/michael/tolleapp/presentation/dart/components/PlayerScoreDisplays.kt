@@ -8,20 +8,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import de.michael.tolleapp.presentation.dart.DartState
-import de.michael.tolleapp.presentation.dart.DartViewModel
 import de.michael.tolleapp.ui.theme.TolleAppTheme
-import org.koin.compose.viewmodel.koinViewModel
 
 @Preview
 @Composable
@@ -32,7 +25,7 @@ private fun PlayerScoreDisplaysPrev() {
                 startValue = 301,
                 isActive = true,
                 playerState = PlayerState(
-                    playerId = 1,
+                    playerId = "1",
                     playerName = "Michi",
                     rounds = listOf(
                         listOf(
@@ -84,7 +77,7 @@ fun PlayerScoreDisplays(
             Text(
                 text = playerState.playerName,
                 style = MaterialTheme.typography.headlineSmall,
-                color = if (isActive) MaterialTheme.colorScheme.primary
+                color = if (isActive) MaterialTheme.colorScheme.error
                     else Color.Unspecified,
 
             )
@@ -151,7 +144,7 @@ fun PlayerScoreDisplays(
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = (301 - totalRoundPoints).toString(),
+                    text = (startValue - totalRoundPoints).toString(),
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .align(Alignment.Center),
@@ -165,7 +158,7 @@ fun PlayerScoreDisplays(
             ) {
                 Text(
                     text = "∅ " + (totalRoundPoints / playerState.rounds.size.toFloat()).let {
-                        if (it.isNaN()) "—" else String.format("%.2f", it)
+                        if (it.isNaN()) "0.0" else String.format("%.2f", it)
                     },
                     textAlign = TextAlign.Center,
                     modifier = Modifier
