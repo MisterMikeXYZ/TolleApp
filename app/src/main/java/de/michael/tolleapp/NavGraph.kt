@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.michael.tolleapp.Route
+import de.michael.tolleapp.presentation.dart.DartGameScreen
 import de.michael.tolleapp.presentation.dart.DartStartScreen
 import de.michael.tolleapp.presentation.dart.DartViewModel
 import de.michael.tolleapp.presentation.main.MainScreen
@@ -44,7 +45,7 @@ fun NavGraph(
         popEnterTransition = { EnterTransition.None },
         popExitTransition = { ExitTransition.None },
     ) {
-        // Main Screen
+        // --- Main ---
         composable<Route.Main> {
             MainScreen(
                 navigateTo = { route ->
@@ -53,7 +54,7 @@ fun NavGraph(
             )
         }
 
-        // Skyjo Screen
+        // --- Skyjo ---
         composable<Route.Skyjo> {
             SkyjoStartScreen(
                 navigateTo = { route ->
@@ -63,8 +64,6 @@ fun NavGraph(
                 viewModel = skyjoViewModel
             )
         }
-
-        // Skyjo Game Screen
         composable<Route.SkyjoGame> {
             SkyjoGameScreen(
                 navigateTo = { route ->
@@ -73,8 +72,6 @@ fun NavGraph(
                 viewModel = skyjoViewModel,
             )
         }
-
-        // Skyjo End Game Screen
         composable<Route.SkyjoEnd> {
             SkyjoEndScreen(
                 navigateTo = { route ->
@@ -84,7 +81,7 @@ fun NavGraph(
             )
         }
 
-        // Statistics Screen
+        // --- Statistics ---
         composable<Route.Statistics> {
             StatScreen(
                 navigateTo = { route ->
@@ -94,7 +91,7 @@ fun NavGraph(
             )
         }
 
-        // Settings Screen
+        // --- Settings ---
         composable <Route.Settings> {
              SettingsScreen(
                  viewModel = settingsViewModel,
@@ -104,8 +101,6 @@ fun NavGraph(
                  },
              )
         }
-
-        // Player Delete Settings
         composable <Route.PlayerDeleteScreen> {
             PlayerDeleteScreen(
                 viewModel = settingsViewModel,
@@ -113,7 +108,7 @@ fun NavGraph(
             )
         }
 
-        // Schwimmen Startscreen
+        // --- Schwimmen ---
         composable<Route.Schwimmen> {
              SchwimmenStartScreen(
                  navigateTo = { route ->
@@ -123,8 +118,6 @@ fun NavGraph(
                  viewModel = schwimmenViewModel
              )
         }
-
-        // Schwimmen Game Screen with the boats
         composable<Route.SchwimmenGameScreenCanvas> {
              SchwimmenGameScreenCanvas(
                  viewModel = schwimmenViewModel,
@@ -133,8 +126,6 @@ fun NavGraph(
                  }
              )
          }
-
-        // Schwimmen Game Screen with a big circle
         composable<Route.SchwimmenGameScreenCircle> {
             SchwimmenGameScreenCircle(
                 viewModel = schwimmenViewModel,
@@ -144,7 +135,7 @@ fun NavGraph(
             )
         }
 
-        // Dart Startscreen
+        // --- Dart ---
         composable<Route.DartStartScreen> {
             DartStartScreen(
                 viewModel = dartViewModel,
@@ -152,6 +143,13 @@ fun NavGraph(
                     navController.navigate(route)
                 },
                 navigateBack = { navController.popBackStack() },
+            )
+        }
+        composable<Route.DartGameScreen> {
+            DartGameScreen(
+                viewModel = dartViewModel,
+                navigateTo = { route ->
+                    navController.navigate(route) }
             )
         }
     }

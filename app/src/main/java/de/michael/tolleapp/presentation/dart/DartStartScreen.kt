@@ -174,102 +174,112 @@ fun DartStartScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Row {
-                //Paused games Button
-                Button(
-                    onClick = { expanded = true },
-                    modifier = Modifier.weight(3f)
+            Row (modifier = Modifier.fillMaxWidth()) {
+                //Paused games
+                Box (modifier = Modifier
+                    .weight(3f)
+                    .fillMaxWidth()
                 ) {
-                    Text("Pausierte Spiele laden")
-                }
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    if (pausedGames.isEmpty()) {
-                        DropdownMenuItem(
-                            text = { Text("Keine pausierten Spiele") },
-                            onClick = { expanded = false }
-                        )
-                    } else {
-                        pausedGames.forEach { game: DartGame ->
-                            val date = Date(
-                                if (game.createdAt < 10_000_000_000L) {
-                                    // looks like seconds
-                                    game.createdAt * 1000
-                                } else {
-                                    // already millis
-                                    game.createdAt
-                                }
-                            )
+                    Button(
+                        onClick = { expanded = true },
+                    ) {
+                        Text("Pausierte Spiele laden")
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        if (pausedGames.isEmpty()) {
                             DropdownMenuItem(
-                                text = { Text("Spiel gestartet am ${formatter.format(date)}") },
-                                onClick = {
-                                    viewModel.resumeGame(game.id)
-                                    expanded = false
-                                    //navigateTo(Route.DartGameScreen)
-                                }
+                                text = { Text("Keine pausierten Spiele") },
+                                onClick = { expanded = false }
                             )
+                        } else {
+                            pausedGames.forEach { game: DartGame ->
+                                val date = Date(
+                                    if (game.createdAt < 10_000_000_000L) {
+                                        // looks like seconds
+                                        game.createdAt * 1000
+                                    } else {
+                                        // already millis
+                                        game.createdAt
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Spiel gestartet am ${formatter.format(date)}") },
+                                    onClick = {
+                                        viewModel.resumeGame(game.id)
+                                        expanded = false
+                                        //navigateTo(Route.DartGameScreen)
+                                    }
+                                )
+                            }
                         }
                     }
+
                 }
 
                 Spacer(modifier = Modifier.width(5.dp))
 
-                //Preset button
-                Button(
-                    onClick = { presetExpanded = true },
-                    modifier = Modifier.weight(2f)
+                //Presets
+                Box (modifier = Modifier
+                    .weight(2f)
+                    .fillMaxWidth()
                 ) {
-                    Text("Presets")
-                }
-                DropdownMenu(
-                    expanded = presetExpanded,
-                    onDismissRequest = { presetExpanded = false },
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Neues Preset erstellen") },
-                        onClick = {
-                            presetExpanded = false
-                            showPresetDialog = true
-                        }
-                    )
-                    presets.forEach { presetWithPlayers ->
+                    Button(
+                        onClick = { presetExpanded = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Presets")
+                    }
+                    DropdownMenu(
+                        expanded = presetExpanded,
+                        onDismissRequest = { presetExpanded = false },
+                    ) {
                         DropdownMenuItem(
-                            text = { Text(presetWithPlayers.preset.name) },
+                            text = { Text("Neues Preset erstellen") },
                             onClick = {
-                                viewModel.resetSelectedPlayers()
-                                presetWithPlayers.players.forEachIndexed { index, presetPlayer ->
-                                    viewModel.selectPlayer(index, presetPlayer.playerId)
-                                }
                                 presetExpanded = false
+                                showPresetDialog = true
                             },
-                            trailingIcon = {
-                                var resetPressedDelete by remember { mutableStateOf(false) }
-                                LaunchedEffect(resetPressedDelete) {
-                                    if (resetPressedDelete) {
-                                        delay(2000)
-                                        resetPressedDelete = false
-                                    }
-                                }
-                                IconButton(onClick = {
-                                    if (!resetPressedDelete) resetPressedDelete = true
-                                    else {
-                                        viewModel.deletePreset(presetWithPlayers.preset.id)
-                                        presetExpanded = false
-                                        resetPressedDelete = false
-                                    }
-                                }) {
-                                    Icon(
-                                        imageVector = if (!resetPressedDelete) Icons.Default.Delete
-                                        else Icons.Default.DeleteForever,
-                                        contentDescription = null,
-                                        tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
-                                        else MaterialTheme.colorScheme.error
-                                    )
-                                }
-                            }
                         )
+                        presets.forEach { presetWithPlayers ->
+                            DropdownMenuItem(
+                                text = { Text(presetWithPlayers.preset.name) },
+                                onClick = {
+                                    viewModel.resetSelectedPlayers()
+                                    presetWithPlayers.players.forEachIndexed { index, presetPlayer ->
+                                        viewModel.selectPlayer(index, presetPlayer.playerId)
+                                    }
+                                    presetExpanded = false
+                                },
+                                trailingIcon = {
+                                    var resetPressedDelete by remember { mutableStateOf(false) }
+                                    LaunchedEffect(resetPressedDelete) {
+                                        if (resetPressedDelete) {
+                                            delay(2000)
+                                            resetPressedDelete = false
+                                        }
+                                    }
+                                    IconButton(onClick = {
+                                        if (!resetPressedDelete) resetPressedDelete = true
+                                        else {
+                                            viewModel.deletePreset(presetWithPlayers.preset.id)
+                                            presetExpanded = false
+                                            resetPressedDelete = false
+                                        }
+                                    }) {
+                                        Icon(
+                                            imageVector = if (!resetPressedDelete) Icons.Default.Delete
+                                            else Icons.Default.DeleteForever,
+                                            contentDescription = null,
+                                            tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
+                                            else MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -372,7 +382,7 @@ fun DartStartScreen(
             Button(
                 onClick = {
                     viewModel.startGame(301)
-                    //navigateTo(Route.DartGameScree)
+                    navigateTo(Route.DartGameScreen)
                 },
                 enabled = distinctSelected,
                 modifier = Modifier

@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
+import de.michael.tolleapp.data.games.dart.DartGame
 import de.michael.tolleapp.data.games.schwimmen.game.GameScreenType
 import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGame
 import kotlinx.coroutines.delay
@@ -27,6 +28,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.collections.forEach
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -173,107 +175,114 @@ fun SchwimmenStartScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Button(
-                    onClick = { expanded = true },
-                    modifier = Modifier.weight(3f)
-
+            Row (modifier = Modifier.fillMaxWidth()) {
+                //Paused games
+                Box (modifier = Modifier
+                    .weight(3f)
+                    .fillMaxWidth()
                 ) {
-                    Text("Pausierte Spiele")
-                }
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    if (pausedGames.isEmpty()) {
-                        DropdownMenuItem(
-                            text = { Text("Keine pausierten Spiele") },
-                            onClick = { expanded = false }
-                        )
-                    } else {
-                        pausedGames.forEach { game: SchwimmenGame ->
-                            val date = Date(
-                                if (game.createdAt < 10_000_000_000L) {
-                                    game.createdAt * 1000
-                                } else game.createdAt
-                            )
+                    Button(
+                        onClick = { expanded = true },
+                    ) {
+                        Text("Pausierte Spiele laden")
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        if (pausedGames.isEmpty()) {
                             DropdownMenuItem(
-                                text = { Text("Spiel gestartet am ${formatter.format(date)}") },
-                                onClick = {
-                                    viewModel.resumeGame(game.id)
-                                    expanded = false
-                                    navigateTo(
-                                        if (game.screenType == GameScreenType.CANVAS) Route.SchwimmenGameScreenCanvas
-                                        else Route.SchwimmenGameScreenCircle
-                                    )
-                                }
+                                text = { Text("Keine pausierten Spiele") },
+                                onClick = { expanded = false }
                             )
+                        } else {
+                            pausedGames.forEach { game: SchwimmenGame ->
+                                val date = Date(
+                                    if (game.createdAt < 10_000_000_000L) {
+                                        // looks like seconds
+                                        game.createdAt * 1000
+                                    } else {
+                                        // already millis
+                                        game.createdAt
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Spiel gestartet am ${formatter.format(date)}") },
+                                    onClick = {
+                                        viewModel.resumeGame(game.id)
+                                        expanded = false
+                                        //navigateTo(Route.DartGameScreen)
+                                    }
+                                )
+                            }
                         }
                     }
+
                 }
 
                 Spacer(modifier = Modifier.width(5.dp))
 
-                Button(
-                    onClick = { presetExpanded = true },
-                    modifier = Modifier
-                        .width(150.dp)
-                        .weight(2f)
+                //Presets
+                Box (modifier = Modifier
+                    .weight(2f)
+                    .fillMaxWidth()
                 ) {
-                    Text("Presets")
-                }
-                DropdownMenu(
-                    expanded = presetExpanded,
-                    onDismissRequest = { presetExpanded = false },
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Neues Preset erstellen") },
-                        onClick = {
-                            presetExpanded = false
-                            showPresetDialog = true
-                        }
-                    )
-                    presets.forEach { presetWithPlayers ->
+                    Button(
+                        onClick = { presetExpanded = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Presets")
+                    }
+                    DropdownMenu(
+                        expanded = presetExpanded,
+                        onDismissRequest = { presetExpanded = false },
+                    ) {
                         DropdownMenuItem(
-                            text = { Text(presetWithPlayers.preset.name) },
+                            text = { Text("Neues Preset erstellen") },
                             onClick = {
-                                viewModel.resetSelectedPlayers()
-                                presetWithPlayers.players.forEachIndexed { index, presetPlayer ->
-                                    viewModel.selectPlayer(index, presetPlayer.playerId)
-                                }
                                 presetExpanded = false
+                                showPresetDialog = true
                             },
-                            trailingIcon = {
-                                var resetPressedDelete by remember { mutableStateOf(false) }
-                                LaunchedEffect(resetPressedDelete) {
-                                    if (resetPressedDelete) {
-                                        delay(2000)
-                                        resetPressedDelete = false
-                                    }
-                                }
-                                IconButton(onClick = {
-                                    if (!resetPressedDelete) resetPressedDelete = true
-                                    else {
-                                        viewModel.deletePreset(presetWithPlayers.preset.id)
-                                        presetExpanded = false
-                                        resetPressedDelete = false
-                                    }
-                                }) {
-                                    Icon(
-                                        imageVector = if (!resetPressedDelete) Icons.Default.Delete
-                                        else Icons.Default.DeleteForever,
-                                        contentDescription = null,
-                                        tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
-                                        else MaterialTheme.colorScheme.error
-                                    )
-                                }
-                            }
                         )
+                        presets.forEach { presetWithPlayers ->
+                            DropdownMenuItem(
+                                text = { Text(presetWithPlayers.preset.name) },
+                                onClick = {
+                                    viewModel.resetSelectedPlayers()
+                                    presetWithPlayers.players.forEachIndexed { index, presetPlayer ->
+                                        viewModel.selectPlayer(index, presetPlayer.playerId)
+                                    }
+                                    presetExpanded = false
+                                },
+                                trailingIcon = {
+                                    var resetPressedDelete by remember { mutableStateOf(false) }
+                                    LaunchedEffect(resetPressedDelete) {
+                                        if (resetPressedDelete) {
+                                            delay(2000)
+                                            resetPressedDelete = false
+                                        }
+                                    }
+                                    IconButton(onClick = {
+                                        if (!resetPressedDelete) resetPressedDelete = true
+                                        else {
+                                            viewModel.deletePreset(presetWithPlayers.preset.id)
+                                            presetExpanded = false
+                                            resetPressedDelete = false
+                                        }
+                                    }) {
+                                        Icon(
+                                            imageVector = if (!resetPressedDelete) Icons.Default.Delete
+                                            else Icons.Default.DeleteForever,
+                                            contentDescription = null,
+                                            tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
+                                            else MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
-
             }
 
             Row(

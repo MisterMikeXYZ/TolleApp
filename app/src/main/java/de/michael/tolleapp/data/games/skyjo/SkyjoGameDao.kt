@@ -108,10 +108,10 @@ interface SkyjoGameStatisticsDao {
     @Query("SELECT COUNT(*) FROM skyjo_game_rounds WHERE playerId = :playerId")
     suspend fun getRoundsPlayed(playerId: String): Int
 
-    @Query("SELECT MAX(roundScore) FROM skyjo_game_rounds WHERE playerId = :playerId")
+    @Query("SELECT MIN(roundScore) FROM skyjo_game_rounds WHERE playerId = :playerId")
     suspend fun getBestRoundScore(playerId: String): Int?
 
-    @Query("SELECT MIN(roundScore) FROM skyjo_game_rounds WHERE playerId = :playerId")
+    @Query("SELECT MAX(roundScore) FROM skyjo_game_rounds WHERE playerId = :playerId")
     suspend fun getWorstRoundScore(playerId: String): Int?
 
     @Query("SELECT AVG(roundScore) FROM skyjo_game_rounds WHERE playerId = :playerId")
