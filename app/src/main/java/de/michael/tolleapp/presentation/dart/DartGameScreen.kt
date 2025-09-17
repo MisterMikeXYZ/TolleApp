@@ -36,11 +36,11 @@ fun DartGameScreen(
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    PlayerScoreDisplays(
-                        playerId = playerId,
-                        viewModel = viewModel,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+//                    PlayerScoreDisplays(
+//                        playerId = playerId,
+//                        viewModel = viewModel,
+//                        modifier = Modifier.fillMaxWidth()
+//                    )
 
                     Button(
                         onClick = {

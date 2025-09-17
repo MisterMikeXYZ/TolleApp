@@ -2,8 +2,11 @@ package de.michael.tolleapp.presentation.dart.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -11,92 +14,164 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.michael.tolleapp.presentation.dart.DartState
 import de.michael.tolleapp.presentation.dart.DartViewModel
+import de.michael.tolleapp.ui.theme.TolleAppTheme
 import org.koin.compose.viewmodel.koinViewModel
+
+@Preview
+@Composable
+private fun PlayerScoreDisplaysPrev() {
+    TolleAppTheme {
+        Surface {
+            PlayerScoreDisplays(
+                startValue = 301,
+                isActive = true,
+                playerState = PlayerState(
+                    playerId = 1,
+                    playerName = "Michi",
+                    rounds = listOf(
+                        listOf(
+                            ThrowData(
+                                fieldValue = 20,
+                                isDouble = true,
+                                isTriple = false,
+                                throwIndex = 0
+                            ),
+                            ThrowData(
+                                fieldValue = 20,
+                                isDouble = false,
+                                isTriple = false,
+                                throwIndex = 1
+                            ),
+                            ThrowData(
+                                fieldValue = 5,
+                                isDouble = true,
+                                isTriple = false,
+                                throwIndex = 2
+                            ),
+                        )
+                    )
+                ),
+                modifier = Modifier
+                    .height(60.dp)
+            )
+        }
+    }
+}
 
 @Composable
 fun PlayerScoreDisplays(
-    playerId: String,
-    viewModel: DartViewModel = koinViewModel(),
+    startValue: Int,
+    isActive: Boolean,
+    playerState: PlayerState,
     modifier: Modifier = Modifier
 ) {
-    val state by viewModel.state.collectAsState()
-
-    val playerName = state.playerNames[playerId] ?: "Unknown"
-    val totalRemaining = state.totalPoints[playerId] ?: 0
-
-    val rounds = state.perPlayerRounds[playerId] ?: emptyList()
-    val currentThrows = rounds.lastOrNull().orEmpty()
-    val previousThrows = if (rounds.size > 1) rounds[rounds.size - 2] else emptyList()
-
-    Row (
-        modifier = modifier
-        .fillMaxWidth()
-        .padding(8.dp)
+    Row(
+        modifier
     ) {
-        //Name
-        Column (
-            modifier = Modifier.weight(1f),
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
         ) {
             Text(
-                text = playerName,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                text = playerState.playerName,
+                style = MaterialTheme.typography.headlineSmall,
+                color = if (isActive) MaterialTheme.colorScheme.primary
+                    else Color.Unspecified,
+
             )
         }
-        Column (
-            modifier = Modifier.weight(4f),
-            verticalArrangement = Arrangement.Top,
+        VerticalDivider(Modifier.padding(horizontal = 2.dp))
+        Column(
             horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
             ) {
-                currentThrows.forEach { throwValue ->
-                    Text(
-                        text = throwValue.toString(),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        }
-        //Totalpoints
-        Column (
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Text(
-                text = "$totalRemaining",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            )
-        }
-    }
-
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // Current throws row
-
-
-        // Previous throws row (greyed out)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            previousThrows.forEach { throwValue ->
                 Text(
-                    text = throwValue.toString(),
-                    fontSize = 16.sp,
-                    color = Color.Gray
+                    text = playerState.rounds.lastOrNull()?.getOrNull(0)?.calcScore()?.toString() ?: "",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .weight(1f)
+                )
+                VerticalDivider(Modifier.padding(horizontal = 2.dp))
+                Text(
+                    text = playerState.rounds.lastOrNull()?.getOrNull(1)?.calcScore()?.toString() ?: "",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .weight(1f)
+                )
+                VerticalDivider(Modifier.padding(horizontal = 2.dp))
+                Text(
+                    text = playerState.rounds.lastOrNull()?.getOrNull(2)?.calcScore()?.toString() ?: "",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .weight(1f)
+                )
+            }
+            HorizontalDivider(Modifier.padding(vertical = 2.dp))
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = playerState.rounds.lastOrNull()?.sumOf { it.calcScore() }?.toString() ?: "—",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                )
+            }
+        }
+        VerticalDivider(Modifier.padding(horizontal = 2.dp))
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+        ) {
+            val totalRoundPoints = playerState.rounds.sumOf { it.sumOf { throwData -> throwData.calcScore() } }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = (301 - totalRoundPoints).toString(),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .align(Alignment.Center),
+                )
+            }
+            HorizontalDivider(Modifier.padding(vertical = 2.dp))
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = "∅ " + (totalRoundPoints / playerState.rounds.size.toFloat()).let {
+                        if (it.isNaN()) "—" else String.format("%.2f", it)
+                    },
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .align(Alignment.Center),
                 )
             }
         }
     }
+}
