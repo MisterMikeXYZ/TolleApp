@@ -381,7 +381,7 @@ fun DartStartScreen(
             //Button to start the game
             Button(
                 onClick = {
-                    viewModel.startGame(301)
+                    viewModel.startGame(50)
                     navigateTo(Route.DartGameScreen)
                 },
                 enabled = distinctSelected,

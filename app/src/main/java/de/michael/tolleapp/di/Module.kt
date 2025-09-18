@@ -45,8 +45,8 @@ val appModule = module {
     single { get<AppDatabase>().schwimmenGameDao() }
     single { get<AppDatabase>().schwimmenGameRoundDao() }
 
-    // Dart
     single { get<AppDatabase>().dartGameDao() } // Dart
+    single { get<AppDatabase>().dartThrowDao() }
 
 
     // Repositories

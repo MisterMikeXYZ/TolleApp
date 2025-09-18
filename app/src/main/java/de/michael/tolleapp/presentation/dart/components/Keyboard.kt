@@ -10,16 +10,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun Keyboard(
-    onKeyClick: (String) -> Unit,
+    onThrow: (value: String, multiplier: String) -> Unit,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val numbers = (1..20).map { it.toString() } + "25"
     val chunkedRows = numbers.chunked(7) // 3 rows of 7
+    var activeMultiplier by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = modifier
@@ -34,13 +37,31 @@ fun Keyboard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 row.forEach { number ->
-                    KeyButton(
-                        text = number,
-                        onClick = { onKeyClick(number) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(1f)
-                    )
+                    if (number == "25") {
+                        KeyButton(
+                            text = number,
+                            enabled = activeMultiplier == null || activeMultiplier == "Double",
+                            onClick = {
+                                onThrow(number, activeMultiplier ?: "")
+                                activeMultiplier = null
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(1f)
+                        )
+                    }
+                    else {
+                        KeyButton(
+                            text = number,
+                            onClick = {
+                                onThrow(number, activeMultiplier ?: "")
+                                activeMultiplier = null
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(1f)
+                        )
+                    }
                 }
             }
         }
@@ -51,20 +72,45 @@ fun Keyboard(
         ) {
             KeyButton(
                 text = "0",
-                onClick = { onKeyClick("0") },
+                enabled = activeMultiplier == null,
+                onClick = { onThrow("0", "") },
                 modifier = Modifier
                     .weight(1f)
                     .aspectRatio(1f)
             )
-            listOf("Double", "Triple", "Back").forEach { label ->
-                KeyButton(
-                    text = label,
-                    onClick = { onKeyClick(label) },
-                    modifier = Modifier
-                        .weight(2f)
-                        .aspectRatio(2f)
-                )
-            }
+
+            KeyButton(
+                text = "Double",
+                enabled = activeMultiplier == null || activeMultiplier == "Double",
+                onClick = {
+                    if (activeMultiplier == null) activeMultiplier = "Double"
+                    else if (activeMultiplier == "Double") activeMultiplier = null
+                },
+                modifier = Modifier
+                    .weight(2f)
+                    .aspectRatio(2f)
+            )
+
+            KeyButton(
+                text = "Triple",
+                enabled = activeMultiplier == null || activeMultiplier == "Triple",
+                onClick = {
+                    if (activeMultiplier == null) activeMultiplier = "Triple"
+                    else if (activeMultiplier == "Triple") activeMultiplier = null
+                },
+                modifier = Modifier
+                    .weight(2f)
+                    .aspectRatio(2f)
+            )
+
+            KeyButton(
+                text = "Back",
+                enabled = activeMultiplier == null,
+                onClick = onBack,
+                modifier = Modifier
+                    .weight(2f)
+                    .aspectRatio(2f)
+            )
         }
     }
 }
@@ -72,15 +118,17 @@ fun Keyboard(
 
 @Composable
 fun KeyButton(
+    modifier: Modifier = Modifier,
     text: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    enabled: Boolean = true,
 ) {
+    val backgroundColor = if (enabled) MaterialTheme.colorScheme.surfaceVariant else Color.LightGray
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable { onClick() },
+            .background(backgroundColor)
+            .clickable (enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Text(

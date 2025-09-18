@@ -76,36 +76,36 @@ interface DartGameDao {
     @Query("SELECT COUNT(*) FROM dart_game_rounds WHERE playerId = :playerId")
     suspend fun getRoundsPlayed(playerId: String): Int
 
-    @Query("SELECT MAX(dart1 + dart2 + dart3) FROM dart_game_rounds WHERE playerId = :playerId")
-    suspend fun getBestRoundScore(playerId: String): Int?
-
-    @Query("SELECT MIN(dart1 + dart2 + dart3) FROM dart_game_rounds WHERE playerId = :playerId")
-    suspend fun getWorstRoundScore(playerId: String): Int?
-
-    @Query("SELECT AVG(dart1 + dart2 + dart3) FROM dart_game_rounds WHERE playerId = :playerId")
-    suspend fun getAverageRoundScore(playerId: String): Double?
-
-    @Query("SELECT AVG(dart1) FROM dart_game_rounds WHERE playerId = :playerId")
-    suspend fun getAverageFirstDart(playerId: String): Double?
-
-    @Query("SELECT AVG(dart2) FROM dart_game_rounds WHERE playerId = :playerId")
-    suspend fun getAverageSecondDart(playerId: String): Double?
-
-    @Query("SELECT AVG(dart3) FROM dart_game_rounds WHERE playerId = :playerId")
-    suspend fun getAverageThirdDart(playerId: String): Double?
-
-    @Query("""
-        SELECT COUNT(*) FROM dart_game_rounds 
-        WHERE playerId = :playerId AND dart1 = 60 AND dart2 = 60 AND dart3 = 60
-        """)
-    suspend fun getPerfectRounds(playerId: String): Int
-
-    @Query("""
-        SELECT (
-            (SELECT COUNT(*) FROM dart_game_rounds WHERE playerId = :playerId AND dart1 = 60) +
-            (SELECT COUNT(*) FROM dart_game_rounds WHERE playerId = :playerId AND dart2 = 60) +
-            (SELECT COUNT(*) FROM dart_game_rounds WHERE playerId = :playerId AND dart3 = 60)
-        )
-        """)
-    suspend fun getTripleTwentyHits(playerId: String): Int
+//    @Query("SELECT MAX(dart1 + dart2 + dart3) FROM dart_game_rounds WHERE playerId = :playerId")
+//    suspend fun getBestRoundScore(playerId: String): Int?
+//
+//    @Query("SELECT MIN(dart1 + dart2 + dart3) FROM dart_game_rounds WHERE playerId = :playerId")
+//    suspend fun getWorstRoundScore(playerId: String): Int?
+//
+//    @Query("SELECT AVG(dart1 + dart2 + dart3) FROM dart_game_rounds WHERE playerId = :playerId")
+//    suspend fun getAverageRoundScore(playerId: String): Double?
+//
+//    @Query("SELECT AVG(dart1) FROM dart_game_rounds WHERE playerId = :playerId")
+//    suspend fun getAverageFirstDart(playerId: String): Double?
+//
+//    @Query("SELECT AVG(dart2) FROM dart_game_rounds WHERE playerId = :playerId")
+//    suspend fun getAverageSecondDart(playerId: String): Double?
+//
+//    @Query("SELECT AVG(dart3) FROM dart_game_rounds WHERE playerId = :playerId")
+//    suspend fun getAverageThirdDart(playerId: String): Double?
+//
+//    @Query("""
+//        SELECT COUNT(*) FROM dart_game_rounds
+//        WHERE playerId = :playerId AND dart1 = 60 AND dart2 = 60 AND dart3 = 60
+//        """)
+//    suspend fun getPerfectRounds(playerId: String): Int
+//
+//    @Query("""
+//        SELECT (
+//            (SELECT COUNT(*) FROM dart_game_rounds WHERE playerId = :playerId AND dart1 = 60) +
+//            (SELECT COUNT(*) FROM dart_game_rounds WHERE playerId = :playerId AND dart2 = 60) +
+//            (SELECT COUNT(*) FROM dart_game_rounds WHERE playerId = :playerId AND dart3 = 60)
+//        )
+//        """)
+//    suspend fun getTripleTwentyHits(playerId: String): Int
 }

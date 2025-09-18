@@ -5,6 +5,8 @@ import androidx.room.RoomDatabase
 import de.michael.tolleapp.data.games.dart.DartGame
 import de.michael.tolleapp.data.games.dart.DartGameDao
 import de.michael.tolleapp.data.games.dart.DartGameRound
+import de.michael.tolleapp.data.games.dart.DartThrowDao
+import de.michael.tolleapp.data.games.dart.DartThrowData
 import de.michael.tolleapp.data.player.Player
 import de.michael.tolleapp.data.player.PlayerDao
 import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGame
@@ -47,9 +49,11 @@ import de.michael.tolleapp.data.settings.SettingsDao
 
         // Dart
         DartGame::class,
-        DartGameRound::class
+        DartGameRound::class,
+        DartThrowData::class
     ],
-    version = 17
+    version = 18,
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -74,4 +78,5 @@ abstract class AppDatabase : RoomDatabase() {
 
     // Dart
     abstract fun dartGameDao(): DartGameDao
+    abstract fun dartThrowDao(): DartThrowDao
 }

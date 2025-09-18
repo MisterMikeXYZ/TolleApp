@@ -39,18 +39,18 @@ class DartGameRepository(private val dao: DartGameDao) {
         dao.updateGame(game)
     }
 
-    suspend fun loadGame(gameId: String): Pair<Map<String, List<List<Int>>>, Int> {
-        val allRounds = dao.getRoundsForGame(gameId)
-        val gameStyle = dao.getGameById(gameId)?.gameStyle ?: 301
-
-        val roundsByPlayer = allRounds.groupBy { it.playerId }
-            .mapValues { entry ->
-                entry.value.sortedBy { it.roundIndex }
-                    .map { listOf(it.dart1, it.dart2, it.dart3) }
-            }
-
-        return roundsByPlayer to gameStyle
-    }
+//    suspend fun loadGame(gameId: String): Pair<Map<String, List<List<Int>>>, Int> {
+//        val allRounds = dao.getRoundsForGame(gameId)
+//        val gameStyle = dao.getGameById(gameId)?.gameStyle ?: 301
+//
+//        val roundsByPlayer = allRounds.groupBy { it.playerId }
+//            .mapValues { entry ->
+//                entry.value.sortedBy { it.roundIndex }
+//                    .map { listOf(it.dart1, it.dart2, it.dart3) }
+//            }
+//
+//        return roundsByPlayer to gameStyle
+//    }
 
     suspend fun deleteGame(game: DartGame) {
         dao.deleteGame(game)
@@ -63,24 +63,24 @@ class DartGameRepository(private val dao: DartGameDao) {
 
 
     // Rounds
-    suspend fun addRound(
-        gameId: String,
-        playerId: String,
-        roundIndex: Int,
-        dart1: Int,
-        dart2: Int,
-        dart3: Int
-    ) {
-        val round = DartGameRound(
-            gameId = gameId,
-            playerId = playerId,
-            roundIndex = roundIndex,
-            dart1 = dart1,
-            dart2 = dart2,
-            dart3 = dart3
-        )
-        dao.insertRound(round)
-    }
+//    suspend fun addRound(
+//        gameId: String,
+//        playerId: String,
+//        roundIndex: Int,
+//        dart1: Int,
+//        dart2: Int,
+//        dart3: Int
+//    ) {
+//        val round = DartGameRound(
+//            gameId = gameId,
+//            playerId = playerId,
+//            roundIndex = roundIndex,
+//            dart1 = dart1,
+//            dart2 = dart2,
+//            dart3 = dart3
+//        )
+//        dao.insertRound(round)
+//    }
 
     suspend fun getRoundsForGame(gameId: String): List<DartGameRound> {
         return dao.getRoundsForGame(gameId)
@@ -115,35 +115,35 @@ class DartGameRepository(private val dao: DartGameDao) {
         return dao.getRoundsPlayed(playerId)
     }
 
-    suspend fun getBestRoundScore(playerId: String): Int {
-        return dao.getBestRoundScore(playerId) ?: 0
-    }
-
-    suspend fun getWorstRoundScore(playerId: String): Int {
-        return dao.getWorstRoundScore(playerId) ?: 0
-    }
-
-    suspend fun getAverageRoundScore(playerId: String): Double {
-        return dao.getAverageRoundScore(playerId) ?: 0.0
-    }
-
-    suspend fun getAverageFirstDart(playerId: String): Double {
-        return dao.getAverageFirstDart(playerId) ?: 0.0
-    }
-
-    suspend fun getAverageSecondDart(playerId: String): Double {
-        return dao.getAverageSecondDart(playerId) ?: 0.0
-    }
-
-    suspend fun getAverageThirdDart(playerId: String): Double {
-        return dao.getAverageThirdDart(playerId) ?: 0.0
-    }
-
-    suspend fun getPerfectRounds(playerId: String): Int {
-        return dao.getPerfectRounds(playerId)
-    }
-
-    suspend fun getTripleTwentyHits(playerId: String): Int {
-        return dao.getTripleTwentyHits(playerId)
-    }
+//    suspend fun getBestRoundScore(playerId: String): Int {
+//        return dao.getBestRoundScore(playerId) ?: 0
+//    }
+//
+//    suspend fun getWorstRoundScore(playerId: String): Int {
+//        return dao.getWorstRoundScore(playerId) ?: 0
+//    }
+//
+//    suspend fun getAverageRoundScore(playerId: String): Double {
+//        return dao.getAverageRoundScore(playerId) ?: 0.0
+//    }
+//
+//    suspend fun getAverageFirstDart(playerId: String): Double {
+//        return dao.getAverageFirstDart(playerId) ?: 0.0
+//    }
+//
+//    suspend fun getAverageSecondDart(playerId: String): Double {
+//        return dao.getAverageSecondDart(playerId) ?: 0.0
+//    }
+//
+//    suspend fun getAverageThirdDart(playerId: String): Double {
+//        return dao.getAverageThirdDart(playerId) ?: 0.0
+//    }
+//
+//    suspend fun getPerfectRounds(playerId: String): Int {
+//        return dao.getPerfectRounds(playerId)
+//    }
+//
+//    suspend fun getTripleTwentyHits(playerId: String): Int {
+//        return dao.getTripleTwentyHits(playerId)
+//    }
 }

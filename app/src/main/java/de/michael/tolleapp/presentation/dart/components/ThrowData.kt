@@ -14,3 +14,9 @@ fun ThrowData.calcScore(): Int {
         else -> fieldValue
     }
 }
+
+data class ThrowAction(
+    val playerId: String,
+    val throwData: ThrowData,
+    val roundIndex: Int
+)

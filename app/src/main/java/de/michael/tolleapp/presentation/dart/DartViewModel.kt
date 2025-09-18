@@ -23,12 +23,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.update
 import kotlin.collections.emptyList
 import de.michael.tolleapp.presentation.dart.components.PlayerScoreDisplays
+import de.michael.tolleapp.presentation.dart.components.ThrowAction
+import de.michael.tolleapp.presentation.dart.components.ThrowData
+import de.michael.tolleapp.presentation.dart.components.calcScore
 
 class DartViewModel (
     private val playerRepo: PlayerRepository,
     private val gameRepo: DartGameRepository,
     private val presetRepo: GamePresetRepository,
 ) : ViewModel() {
+    private val throwStack = mutableListOf<ThrowAction>()
     private val _state = MutableStateFlow(DartState())
     private val allPlayers = playerRepo.getAllPlayers()
     val state = combine(
@@ -112,10 +116,92 @@ class DartViewModel (
         )
     }
 
-    fun insertThrow(value: String) {
+    fun insertThrow(playerId: String, value: String, multiplier: String) {
+        val fieldValue = value.toInt()
+        val isDouble = multiplier == "Double"
+        val isTriple = multiplier == "Triple"
 
+        val playerRounds: MutableList<MutableList<ThrowData>> =
+            state.value.perPlayerRounds[playerId]
+                ?.map { it.toMutableList() }
+                ?.toMutableList()
+                ?: mutableListOf()
 
+        if (playerRounds.isEmpty() || playerRounds.last().size == 3) {
+            playerRounds.add(mutableListOf())
+        }
+
+        val throwIndex = playerRounds.last().size
+        val throwData = ThrowData(fieldValue, isDouble, isTriple, throwIndex)
+
+        val totalRoundPoints = playerRounds.sumOf { it.sumOf { throwData -> throwData.calcScore() } }
+        if (_state.value.gameStyle - (totalRoundPoints + throwData.calcScore()) < 0) {
+            bust(playerId)
+            return
+        }
+
+        playerRounds.last().add(throwData)
+
+        throwStack.add(
+            ThrowAction(playerId, throwData, playerRounds.lastIndex)
+        )
+
+        _state.value = state.value.copy(
+            perPlayerRounds = state.value.perPlayerRounds.toMutableMap().apply {
+                this[playerId] = playerRounds
+            }
+        )
+
+        if (!checkEndConditionForPlayer(playerId) && throwIndex == 2) advancePlayer()
+    }
+
+    fun bust(playerId: String) {
+        val playerRounds: MutableList<MutableList<ThrowData>> =
+            state.value.perPlayerRounds[playerId]
+                ?.map { it.toMutableList() }
+                ?.toMutableList()
+                ?: mutableListOf()
+        playerRounds.removeLastOrNull()
         advancePlayer()
+    } //TODO: Würfe dürfen nicht gelöscht werden, aber dürfen auch nicht in der Rechnung auftauchen
+
+    fun undoThrow() {
+        val lastAction = throwStack.removeLastOrNull() ?: return
+
+        val playerRounds = state.value.perPlayerRounds[lastAction.playerId]
+            ?.map { it.toMutableList() }
+            ?.toMutableList() ?: return
+
+        // Remove the throw
+        playerRounds.getOrNull(lastAction.roundIndex)?.removeLastOrNull()
+
+        // Remove empty round
+        if (playerRounds.getOrNull(lastAction.roundIndex)?.isEmpty() == true) {
+            playerRounds.removeAt(lastAction.roundIndex)
+        }
+
+        // If undoing a throw would put the player "back in the game",
+        // we need to remove them from the ranking if they were marked finished.
+        val totalRoundPoints = playerRounds.sumOf { round -> round.sumOf { it.calcScore() } }
+        val remaining = state.value.gameStyle - totalRoundPoints
+
+        val newRanking = state.value.ranking.toMutableList()
+        if (remaining > 0 && newRanking.contains(lastAction.playerId)) {
+            newRanking.remove(lastAction.playerId)
+        }
+
+        // Update state
+        _state.update {
+            it.copy(
+                perPlayerRounds = it.perPlayerRounds.toMutableMap().apply {
+                    this[lastAction.playerId] = playerRounds
+                },
+                activePlayerIndex = state.value.selectedPlayerIds
+                    .filterNotNull()
+                    .indexOf(lastAction.playerId), // focus back on undone player
+                ranking = newRanking
+            )
+        }
     }
 
     fun startGame(gameStyle: Int) {
@@ -136,79 +222,45 @@ class DartViewModel (
                 gameStyle = gameStyle,
                 isGameEnded = false,
                 winnerId = null,
-                loserIds = emptyList(),
+                loserId = null,
                 ranking = emptyList(),
                 activePlayerIndex = 0
             )
         }
     }
 
-    private fun checkEndCondition() {
-        val totals = _state.value.totalPoints
-        val winner = totals.entries.find { it.value <= 0 }?.key
-        if (winner != null) {
-            _state.update {
-                it.copy(
-                    isGameEnded = true,
-                    winnerId = winner,
-                    loserIds = it.selectedPlayerIds.filterNotNull().filter { pid -> pid != winner },
-                    ranking = totals.entries.sortedBy { it.value }.map { e -> e.key }
-                )
-            }
+    private fun checkEndConditionForPlayer(playerId: String): Boolean {
+        val rounds = _state.value.perPlayerRounds[playerId]
+        val totalRoundPoints = rounds!!.sumOf { it.sumOf { throwData -> throwData.calcScore() } }
+        if (_state.value.gameStyle - totalRoundPoints != 0) return false
+
+        val ranking = _state.value.ranking.toMutableList()
+        if (!ranking.contains(playerId)) {
+            ranking.add(playerId)
         }
+        _state.update {
+            it.copy(
+                ranking = ranking,
+                winnerId = if (ranking.size == 1) playerId else it.winnerId,
+            )
+        }
+        advancePlayer()
+
+        if (_state.value.selectedPlayerIds.size == ranking.size) endGame()
+        return true
     }
 
     fun endGame() = viewModelScope.launch {
-        val stateCopy = _state.value
-        val totals = stateCopy.totalPoints
-
-        if (totals.isEmpty()) return@launch
-
-        val sorted = totals.entries.sortedByDescending { it.value }
-        val maxScore = sorted.first().value
-
-        val winners = sorted.filter { it.value == maxScore }.map { it.key }.firstOrNull()
-        val minScore = sorted.last().value
-        val losers = sorted.filter { it.value == minScore }.map { it.key }
-
+        val ranking = _state.value.ranking.toMutableList()
+        val loserId = ranking[ranking.size - 1]
         _state.update {
             it.copy(
                 isGameEnded = true,
-                winnerId = winners,
-                loserIds = losers,
-                ranking = sorted.map { it.key }
+                loserId = loserId,
             )
         }
-
-        // mark game as finished in DB
-        sorted.forEach { (playerId, _) ->
-            // Optional: could update stats repository if needed
-        }
     }
 
-    fun finishGame() {
-        viewModelScope.launch {
-            val gameId = _state.value.currentGameId
-            if (gameId.isEmpty()) return@launch
-
-            val totals = _state.value.totalPoints
-            val maxScore = totals.values.maxOrNull() ?: 0
-            val winner = totals.filter { it.value == maxScore }.keys.firstOrNull()
-
-            // Update DB
-            val game = gameRepo.getAllGames().find { it.id == gameId } ?: return@launch
-            gameRepo.updateGame(game.copy(isFinished = true, endedAt = System.currentTimeMillis(), winnerId = winner))
-
-            // Update state
-            _state.update {
-                it.copy(
-                    isGameEnded = true,
-                    winnerId = winner,
-                    ranking = totals.entries.sortedByDescending { e -> e.value }.map { it.key }
-                )
-            }
-        }
-    }
 
     fun deleteGame() {
         viewModelScope.launch {
@@ -232,7 +284,7 @@ class DartViewModel (
                 perfectRounds = emptyMap(),
                 tripleTwentyHits = emptyMap(),
                 winnerId = null,
-                loserIds = listOf(null),
+                loserId = null,
                 ranking = emptyList(),
                 isGameEnded = false,
                 activePlayerIndex = 0
@@ -243,6 +295,13 @@ class DartViewModel (
     fun advancePlayer() {
         val totalPlayers = _state.value.selectedPlayerIds.filterNotNull().size
         if (totalPlayers == 0) return
-        _state.update { it.copy(activePlayerIndex = (it.activePlayerIndex + 1) % totalPlayers) }
+        var newIndex = (_state.value.activePlayerIndex + 1) % totalPlayers
+        while (_state.value.ranking.contains(_state.value.selectedPlayerIds.filterNotNull()[newIndex])) {
+            newIndex = (newIndex + 1) % totalPlayers
+            if (_state.value.ranking.size == totalPlayers) {
+                return
+            }
+        }
+        _state.update { it.copy(activePlayerIndex = newIndex) }
     }
 }

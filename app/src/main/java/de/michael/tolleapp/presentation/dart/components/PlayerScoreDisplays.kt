@@ -22,7 +22,7 @@ private fun PlayerScoreDisplaysPrev() {
     TolleAppTheme {
         Surface {
             PlayerScoreDisplays(
-                startValue = 301,
+                startValue = 50,
                 isActive = true,
                 playerState = PlayerState(
                     playerId = "1",
@@ -64,9 +64,18 @@ fun PlayerScoreDisplays(
     playerState: PlayerState,
     modifier: Modifier = Modifier
 ) {
+    val lastRound = playerState.rounds.lastOrNull() ?: emptyList()
+    val displayRound: List<String> = if (isActive && lastRound.size == 3) {
+        listOf("", "", "")
+    } else {
+        List(3) { i -> lastRound.getOrNull(i)?.calcScore()?.toString() ?: "" }
+    }
+    val lastRoundSum = displayRound.sumOf { it.toIntOrNull() ?: 0 }
+
     Row(
         modifier
     ) {
+        // --- Name ---
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -76,60 +85,67 @@ fun PlayerScoreDisplays(
         ) {
             Text(
                 text = playerState.playerName,
-                style = MaterialTheme.typography.headlineSmall,
+                style = if (isActive) MaterialTheme.typography.headlineLarge else MaterialTheme.typography.headlineSmall,
                 color = if (isActive) MaterialTheme.colorScheme.error
                     else Color.Unspecified,
-
             )
         }
         VerticalDivider(Modifier.padding(horizontal = 2.dp))
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = playerState.rounds.lastOrNull()?.getOrNull(0)?.calcScore()?.toString() ?: "",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .weight(1f)
-                )
-                VerticalDivider(Modifier.padding(horizontal = 2.dp))
-                Text(
-                    text = playerState.rounds.lastOrNull()?.getOrNull(1)?.calcScore()?.toString() ?: "",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .weight(1f)
-                )
-                VerticalDivider(Modifier.padding(horizontal = 2.dp))
-                Text(
-                    text = playerState.rounds.lastOrNull()?.getOrNull(2)?.calcScore()?.toString() ?: "",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .weight(1f)
-                )
-            }
-            HorizontalDivider(Modifier.padding(vertical = 2.dp))
+
+        // --- Points ---
+        if (playerState.hasFinished) {
+            // Player finished
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = playerState.rounds.lastOrNull()?.sumOf { it.calcScore() }?.toString() ?: "—",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.Center)
+                    text = "DONE: " + playerState.position.toString() + ".",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.primary
                 )
+            }
+        } else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    for (i in 0..2) {
+                        Text(
+                            text = displayRound.getOrElse(i) { "" },
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (i < 2) VerticalDivider(Modifier.padding(horizontal = 2.dp))
+                    }
+                }
+                HorizontalDivider(Modifier.padding(vertical = 2.dp))
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        text = lastRoundSum.toString(),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                    )
+                }
             }
         }
         VerticalDivider(Modifier.padding(horizontal = 2.dp))
+
+        // --- Totals ---
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,

@@ -25,7 +25,7 @@ data class DartState(
 
     // --- Game result ---
     val winnerId: String? = null,
-    val loserIds: List<String?> = emptyList(),
+    val loserId: String? = null,
     val ranking: List<String> = emptyList(),
 
     // --- UI / state ---
@@ -34,8 +34,10 @@ data class DartState(
 
 fun DartState.toPlayerState(playerId: String): PlayerState {
     return PlayerState(
-        playerId = playerId, // only if playerId is numeric
+        playerId = playerId,
         playerName = playerNames[playerId] ?: "",
+        hasFinished = ranking.contains(playerId),
+        position = ranking.indexOf(playerId) + 1,
         rounds = perPlayerRounds[playerId] ?: emptyList()
     )
 }

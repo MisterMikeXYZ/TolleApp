@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 17,
-    "identityHash": "9d8d96878ef68af78c566f343456a6d7",
+    "version": 18,
+    "identityHash": "1e854034c1b7cb39a458d9f8788006ec",
     "entities": [
       {
         "tableName": "players",
@@ -676,11 +676,83 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "dart_throws",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `roundId` INTEGER NOT NULL, `throwIndex` INTEGER NOT NULL, `fieldValue` INTEGER NOT NULL, `isDouble` INTEGER NOT NULL, `isTriple` INTEGER NOT NULL, FOREIGN KEY(`roundId`) REFERENCES `dart_game_rounds`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "roundId",
+            "columnName": "roundId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "throwIndex",
+            "columnName": "throwIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fieldValue",
+            "columnName": "fieldValue",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isDouble",
+            "columnName": "isDouble",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isTriple",
+            "columnName": "isTriple",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_dart_throws_roundId",
+            "unique": false,
+            "columnNames": [
+              "roundId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_dart_throws_roundId` ON `${TABLE_NAME}` (`roundId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "dart_game_rounds",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "roundId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9d8d96878ef68af78c566f343456a6d7')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1e854034c1b7cb39a458d9f8788006ec')"
     ]
   }
 }

@@ -131,7 +131,7 @@ fun DartGameScreen(
             )
         },
     ) { innerPadding ->
-        Column {
+        Column (Modifier.padding(top = 2.dp)) {
             LazyColumn (
                 modifier = Modifier
                     .weight(4f)
@@ -149,14 +149,20 @@ fun DartGameScreen(
                     }
                 }
             }
-            Keyboard(
-                onKeyClick = { key ->
-                //TODO
-            },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(2f)
-            )
+            if (!state.isGameEnded) {
+                Keyboard(
+                    onThrow = { value, multiplier ->
+                        val activePlayerId = players[state.activePlayerIndex] // get current player
+                        viewModel.insertThrow(activePlayerId, value, multiplier)
+                    },
+                    onBack = {
+                        viewModel.undoThrow()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(2f)
+                )
+            }
 //            Button(
 //                onClick = { viewModel.advancePlayer() },
 //                modifier = Modifier.weight(1f)
