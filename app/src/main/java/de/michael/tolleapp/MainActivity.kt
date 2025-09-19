@@ -12,8 +12,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import de.michael.tolleapp.di.appModule
-import de.michael.tolleapp.presentation.settings.SettingsState
-import de.michael.tolleapp.presentation.settings.SettingsViewModel
+import de.michael.tolleapp.settings.presentation.settings.SettingsState
+import de.michael.tolleapp.settings.presentation.settings.SettingsViewModel
 import de.michael.tolleapp.ui.theme.TolleAppTheme
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.ext.android.getViewModel

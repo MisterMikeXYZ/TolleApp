@@ -2,31 +2,31 @@ package de.michael.tolleapp.data
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import de.michael.tolleapp.data.games.dart.DartGame
-import de.michael.tolleapp.data.games.dart.DartGameDao
-import de.michael.tolleapp.data.games.dart.DartGameRound
-import de.michael.tolleapp.data.games.dart.DartThrowDao
-import de.michael.tolleapp.data.games.dart.DartThrowData
-import de.michael.tolleapp.data.player.Player
-import de.michael.tolleapp.data.player.PlayerDao
-import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGame
-import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGameDao
-import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGameRound
-import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGameRoundDao
-import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStats
-import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStatsDao
-import de.michael.tolleapp.data.games.skyjo.SkyjoGame
-import de.michael.tolleapp.data.games.skyjo.SkyjoGameDao
-import de.michael.tolleapp.data.games.skyjo.SkyjoGameRound
-import de.michael.tolleapp.data.games.skyjo.SkyjoGameRoundDao
-import de.michael.tolleapp.data.games.presets.GamePreset
-import de.michael.tolleapp.data.games.presets.GamePresetDao
-import de.michael.tolleapp.data.games.presets.GamePresetPlayer
-import de.michael.tolleapp.data.games.skyjo.SkyjoGameLoser
-import de.michael.tolleapp.data.games.skyjo.SkyjoGameStatisticsDao
-import de.michael.tolleapp.data.games.skyjo.SkyjoGameWinner
-import de.michael.tolleapp.data.settings.Settings
-import de.michael.tolleapp.data.settings.SettingsDao
+import de.michael.tolleapp.games.dart.data.DartGame
+import de.michael.tolleapp.games.dart.data.DartGameDao
+import de.michael.tolleapp.games.dart.data.DartGameRound
+import de.michael.tolleapp.games.dart.data.DartThrowDao
+import de.michael.tolleapp.games.dart.data.DartThrowData
+import de.michael.tolleapp.games.player.Player
+import de.michael.tolleapp.games.player.PlayerDao
+import de.michael.tolleapp.games.presets.GamePreset
+import de.michael.tolleapp.games.presets.GamePresetDao
+import de.michael.tolleapp.games.presets.GamePresetPlayer
+import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGame
+import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameDao
+import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameRound
+import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameRoundDao
+import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStats
+import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStatsDao
+import de.michael.tolleapp.games.skyjo.data.SkyjoGame
+import de.michael.tolleapp.games.skyjo.data.SkyjoGameDao
+import de.michael.tolleapp.games.skyjo.data.SkyjoGameLoser
+import de.michael.tolleapp.games.skyjo.data.SkyjoGameRound
+import de.michael.tolleapp.games.skyjo.data.SkyjoGameRoundDao
+import de.michael.tolleapp.games.skyjo.data.SkyjoGameStatisticsDao
+import de.michael.tolleapp.games.skyjo.data.SkyjoGameWinner
+import de.michael.tolleapp.settings.data.settings.Settings
+import de.michael.tolleapp.settings.data.settings.SettingsDao
 
 @Database(
     entities = [
@@ -52,7 +52,7 @@ import de.michael.tolleapp.data.settings.SettingsDao
         DartGameRound::class,
         DartThrowData::class
     ],
-    version = 18,
+    version = 19,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {

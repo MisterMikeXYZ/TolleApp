@@ -2,22 +2,22 @@ package de.michael.tolleapp.di
 
 import DartGameRepository
 import androidx.room.Room
+import de.michael.tolleapp.games.player.PlayerRepository
 import de.michael.tolleapp.data.AppDatabase
-import de.michael.tolleapp.data.player.PlayerRepository
-import de.michael.tolleapp.data.games.schwimmen.game.SchwimmenGameRepository
-import de.michael.tolleapp.data.games.schwimmen.stats.SchwimmenStatsRepository
-import de.michael.tolleapp.data.games.skyjo.SkyjoGameRepository
-import de.michael.tolleapp.data.games.presets.GamePresetRepository
-import de.michael.tolleapp.data.settings.SettingsRepository
-import de.michael.tolleapp.presentation.main.MainViewModel
-import de.michael.tolleapp.presentation.schwimmen.SchwimmenViewModel
-import de.michael.tolleapp.presentation.settings.SettingsViewModel
-import de.michael.tolleapp.presentation.skyjo.SkyjoViewModel
-import de.michael.tolleapp.presentation.statistics.StatViewModel
+import de.michael.tolleapp.settings.data.settings.SettingsRepository
+import de.michael.tolleapp.main.MainViewModel
+import de.michael.tolleapp.settings.presentation.settings.SettingsViewModel
+import de.michael.tolleapp.statistics.StatViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
-import de.michael.tolleapp.presentation.dart.DartViewModel
+import de.michael.tolleapp.games.dart.presentation.DartViewModel
+import de.michael.tolleapp.games.presets.GamePresetRepository
+import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameRepository
+import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStatsRepository
+import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenViewModel
+import de.michael.tolleapp.games.skyjo.data.SkyjoGameRepository
+import de.michael.tolleapp.games.skyjo.presentation.SkyjoViewModel
 
 val appModule = module {
 
@@ -60,7 +60,7 @@ val appModule = module {
     single { SchwimmenStatsRepository(get(), get()) } // Schwimmen
     single { SchwimmenGameRepository(get(), get()) }
 
-    single { DartGameRepository(get()) } // Dart
+    single { DartGameRepository(get(), get()) } // Dart
 
 
     // ViewModels
@@ -69,5 +69,5 @@ val appModule = module {
     viewModel { StatViewModel(get(), get(), get()) }
     viewModel { SchwimmenViewModel(get(), get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get()) }
-    viewModel { DartViewModel(get(), get(), get())}
+    viewModel { DartViewModel(get(), get(), get()) }
 }
