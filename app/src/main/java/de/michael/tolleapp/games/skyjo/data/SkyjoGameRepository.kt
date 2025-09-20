@@ -62,6 +62,10 @@ class SkyjoGameRepository(
         skyjoGameDao.markEnded(gameId, System.currentTimeMillis())
     }
 
+    suspend fun markNotEnded(gameId: String) {
+        skyjoGameDao.markNotEnded(gameId)
+    }
+
     suspend fun deleteGameCompletely(gameId: String) {
         skyjoGameRoundDao.deleteRoundsForGame(gameId)
         val game = skyjoGameDao.getGameById(gameId)
@@ -71,6 +75,13 @@ class SkyjoGameRepository(
     }
 
     fun getPausedGames(): Flow<List<SkyjoGame>> = skyjoGameDao.getPausedGames()
+
+    suspend fun removeLastRound(gameId: String, playerId: String) {
+        val rounds = skyjoGameRoundDao.getRoundsForPlayerInGame(gameId, playerId)
+        if (rounds.isEmpty()) return
+        val lastRound = rounds.maxByOrNull { it.roundIndex } ?: return
+        skyjoGameRoundDao.deleteRoundById(lastRound.id)
+    }
 
     suspend fun saveSnapshot(gameId: String, perPlayerRounds: Map<String, List<Int>>) {
         withContext(Dispatchers.IO) {

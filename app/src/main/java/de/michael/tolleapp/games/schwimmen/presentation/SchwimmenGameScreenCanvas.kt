@@ -98,7 +98,7 @@ fun SchwimmenGameScreenCanvas(
                             onClick = {
                                 if (!resetPressedDelete) resetPressedDelete = true
                                 else {
-                                    viewModel.deleteGame()
+                                    viewModel.deleteGame(null)
                                     navigateTo(Route.Main)
                                     resetPressedDelete = false
                                 }
@@ -307,7 +307,7 @@ fun SchwimmenGameScreenCanvas(
                 Button(
                     onClick = {
                         navigateTo(Route.Main)
-                        viewModel.deleteGame()},
+                        viewModel.deleteGame(null)},
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)

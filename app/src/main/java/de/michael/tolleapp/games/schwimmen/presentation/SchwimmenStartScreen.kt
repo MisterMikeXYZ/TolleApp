@@ -27,6 +27,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.collections.forEach
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,8 +47,6 @@ fun SchwimmenStartScreen(
     }
 
     val pausedGames = pausedGamesState.value
-    var screenChange by remember {mutableStateOf(false)}
-    val screenType = if (screenChange) GameScreenType.CANVAS else GameScreenType.CIRCLE
     var expanded by remember { mutableStateOf(false) }
     val formatter = DateFormat.getDateTimeInstance(
         DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault()
@@ -56,11 +55,13 @@ fun SchwimmenStartScreen(
     var newPlayerName by remember { mutableStateOf("") }
     var pendingRowIndex by remember { mutableStateOf<Int?>(null) }
 
+    val presets by viewModel.presets.collectAsState(initial = emptyList())
+    var presetExpanded by remember { mutableStateOf(false) }
     var showPresetDialog by remember { mutableStateOf(false) }
     var newPresetName by remember { mutableStateOf("") }
-    var presetExpanded by remember { mutableStateOf(false) }
-    val presets by viewModel.presets.collectAsState(initial = emptyList())
 
+    var screenChange by remember {mutableStateOf(false)}
+    val screenType = if (screenChange) GameScreenType.CANVAS else GameScreenType.CIRCLE
 
     LaunchedEffect(Unit) {
         viewModel.resetGame()
@@ -197,19 +198,46 @@ fun SchwimmenStartScreen(
                             pausedGames.forEach { game: SchwimmenGame ->
                                 val date = Date(
                                     if (game.createdAt < 10_000_000_000L) {
-                                        // looks like seconds
                                         game.createdAt * 1000
                                     } else {
-                                        // already millis
                                         game.createdAt
                                     }
                                 )
+                                var resetPressedDelete by remember { mutableStateOf(false) }
+                                LaunchedEffect(resetPressedDelete) {
+                                    if (resetPressedDelete) {
+                                        delay(2000)
+                                        resetPressedDelete = false
+                                    }
+                                }
+
                                 DropdownMenuItem(
                                     text = { Text("Spiel gestartet am ${formatter.format(date)}") },
                                     onClick = {
                                         viewModel.resumeGame(game.id)
                                         expanded = false
-                                        //navigateTo(Route.DartGameScreen)
+                                        val screen = if (game.screenType == GameScreenType.CIRCLE) Route.SchwimmenGameScreenCircle else Route.SchwimmenGameScreenCanvas
+                                        navigateTo(screen)
+                                    },
+                                    trailingIcon = {
+                                        IconButton(
+                                            onClick = {
+                                                if (!resetPressedDelete) resetPressedDelete = true
+                                                else {
+                                                    viewModel.deleteGame(game.id)
+                                                    expanded = false
+                                                    resetPressedDelete = false
+                                                }
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = if (!resetPressedDelete) Icons.Default.Delete
+                                                else Icons.Default.DeleteForever,
+                                                contentDescription = null,
+                                                tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
+                                                else MaterialTheme.colorScheme.error
+                                            )
+                                        }
                                     }
                                 )
                             }

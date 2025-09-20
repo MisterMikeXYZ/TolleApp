@@ -52,7 +52,7 @@ fun SkyjoStartScreen(
     val formatter = DateFormat.getDateTimeInstance(
         DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault()
     )
-    var showDialog by remember { mutableStateOf(false) }
+    var showCreatePlayerDialog by remember { mutableStateOf(false) }
     var newPlayerName by remember { mutableStateOf("") }
     var pendingRowIndex by remember { mutableStateOf<Int?>(null) }
 
@@ -65,9 +65,9 @@ fun SkyjoStartScreen(
         viewModel.resetGame()
     }
 
-    if (showDialog) {
+    if (showCreatePlayerDialog) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = { showCreatePlayerDialog = false },
             title = { Text("Neuen Spieler erstellen") },
             text = {
                 TextField(
@@ -86,7 +86,7 @@ fun SkyjoStartScreen(
                             viewModel.addPlayer(name, pendingRowIndex!!)
                         }
                         newPlayerName = ""
-                        showDialog = false
+                        showCreatePlayerDialog = false
                     }
                 ) {
                     Text("Erstellen")
@@ -96,7 +96,7 @@ fun SkyjoStartScreen(
                 TextButton(
                     onClick = {
                         newPlayerName = ""
-                        showDialog = false
+                        showCreatePlayerDialog = false
                     }
                 ) {
                     Text("Abbrechen")
@@ -196,19 +196,45 @@ fun SkyjoStartScreen(
                             pausedGames.forEach { game: SkyjoGame ->
                                 val date = Date(
                                     if (game.createdAt < 10_000_000_000L) {
-                                        // looks like seconds
                                         game.createdAt * 1000
                                     } else {
-                                        // already millis
                                         game.createdAt
                                     }
                                 )
+                                var resetPressedDelete by remember { mutableStateOf(false) }
+                                LaunchedEffect(resetPressedDelete) {
+                                    if (resetPressedDelete) {
+                                        delay(2000)
+                                        resetPressedDelete = false
+                                    }
+                                }
+
                                 DropdownMenuItem(
                                     text = { Text("Spiel gestartet am ${formatter.format(date)}") },
                                     onClick = {
                                         viewModel.resumeGame(game.id)
                                         expanded = false
                                         navigateTo(Route.SkyjoGame)
+                                    },
+                                    trailingIcon = {
+                                        IconButton(
+                                            onClick = {
+                                                if (!resetPressedDelete) resetPressedDelete = true
+                                                else {
+                                                    viewModel.deleteGame(game.id)
+                                                    expanded = false
+                                                    resetPressedDelete = false
+                                                }
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = if (!resetPressedDelete) Icons.Default.Delete
+                                                else Icons.Default.DeleteForever,
+                                                contentDescription = null,
+                                                tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
+                                                else MaterialTheme.colorScheme.error
+                                            )
+                                        }
                                     }
                                 )
                             }
@@ -332,7 +358,7 @@ fun SkyjoStartScreen(
                                     onClick = {
                                         expanded = false
                                         pendingRowIndex = index
-                                        showDialog = true
+                                        showCreatePlayerDialog = true
                                     }
                                 )
                                 state.playerNames.filter { (id, _) -> id !in state.selectedPlayerIds } //THIS

@@ -85,7 +85,7 @@ fun DartGameScreen(
                         onClick = {
                             if (!resetPressedDelete) resetPressedDelete = true
                             else {
-                                viewModel.deleteGame()
+                                viewModel.deleteGame(null)
                                 navigateTo(Route.Main)
                                 resetPressedDelete = false
                             }

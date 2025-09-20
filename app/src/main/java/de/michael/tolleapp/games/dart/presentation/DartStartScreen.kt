@@ -9,6 +9,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
@@ -30,6 +31,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.draw.clip
 import de.michael.tolleapp.games.dart.data.DartGame
 import kotlinx.coroutines.delay
+import kotlin.collections.forEach
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,6 +63,9 @@ fun DartStartScreen(
     var presetExpanded by remember { mutableStateOf(false) }
     var showPresetDialog by remember { mutableStateOf(false) }
     var newPresetName by remember { mutableStateOf("") }
+
+    var gameChange by remember {mutableStateOf(false)}
+    val startValue = if (gameChange) 501 else 301
 
     LaunchedEffect(Unit) {
         viewModel.resetGame()
@@ -198,19 +203,45 @@ fun DartStartScreen(
                             pausedGames.forEach { game: DartGame ->
                                 val date = Date(
                                     if (game.createdAt < 10_000_000_000L) {
-                                        // looks like seconds
                                         game.createdAt * 1000
                                     } else {
-                                        // already millis
                                         game.createdAt
                                     }
                                 )
+                                var resetPressedDelete by remember { mutableStateOf(false) }
+                                LaunchedEffect(resetPressedDelete) {
+                                    if (resetPressedDelete) {
+                                        delay(2000)
+                                        resetPressedDelete = false
+                                    }
+                                }
+
                                 DropdownMenuItem(
                                     text = { Text("Spiel gestartet am ${formatter.format(date)}") },
                                     onClick = {
                                         viewModel.resumeGame(game.id)
                                         expanded = false
                                         navigateTo(Route.DartGameScreen)
+                                    },
+                                    trailingIcon = {
+                                        IconButton(
+                                            onClick = {
+                                                if (!resetPressedDelete) resetPressedDelete = true
+                                                else {
+                                                    viewModel.deleteGame(game.id)
+                                                    expanded = false
+                                                    resetPressedDelete = false
+                                                }
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = if (!resetPressedDelete) Icons.Default.Delete
+                                                else Icons.Default.DeleteForever,
+                                                contentDescription = null,
+                                                tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
+                                                else MaterialTheme.colorScheme.error
+                                            )
+                                        }
                                     }
                                 )
                             }
@@ -284,79 +315,103 @@ fun DartStartScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(3.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Switch(
+                    checked = gameChange,
+                    onCheckedChange = { gameChange = !gameChange },
+                    thumbContent = if (gameChange) {
+                        {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(SwitchDefaults.IconSize),
+                            )
+                        }
+                    } else null
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    "501",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
             HorizontalDivider()
 
             Spacer(modifier = Modifier.height(8.dp))
             Text("Spieler:", style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(2.dp))
+
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
                     .requiredHeight(450.dp)
                     .weight(6f, fill = true)
             ) {
-                state.selectedPlayerIds.forEachIndexed { index, selectedId ->
+                state.selectedPlayerIds.forEachIndexed { index, _ ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
-                            .verticalScroll(rememberScrollState())
                     ) {
-                        var expanded by remember { mutableStateOf(false) }
+                        var playerExpanded by remember { mutableStateOf(false) }
                         val selectedPlayer =
                             state.selectedPlayerIds[index]?.let { state.playerNames[it] }
                                 ?: "Spieler auswählen"
 
                         ExposedDropdownMenuBox(
-                            expanded = expanded,
+                            expanded = playerExpanded,
                             onExpandedChange = {
                                 if (index == 0 || state.selectedPlayerIds[index - 1] != null) {
-                                    expanded = !expanded
+                                    playerExpanded = !playerExpanded
                                 }
                             },
-                            modifier = Modifier
-                                .weight(1f)
+                            modifier = Modifier.weight(1f)
                         ) {
                             TextField(
                                 value = selectedPlayer,
                                 onValueChange = {},
                                 readOnly = true,
                                 label = { Text("Spieler") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = playerExpanded)
+                                },
                                 modifier = Modifier
                                     .menuAnchor()
                                     .fillMaxWidth()
                             )
                             ExposedDropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
+                                expanded = playerExpanded,
+                                onDismissRequest = { playerExpanded = false }
                             ) {
                                 DropdownMenuItem(
                                     text = { Text("Neuen Spieler erstellen…") },
                                     onClick = {
-                                        expanded = false
+                                        playerExpanded = false
                                         pendingRowIndex = index
                                         showDialog = true
                                     }
                                 )
-                                state.playerNames.filter { (id, _) -> id !in state.selectedPlayerIds }
-                                    .forEach { (id, name) ->
-                                        DropdownMenuItem(
-                                            text = { Text(name) },
-                                            onClick = {
-                                                viewModel.selectPlayer(index, id)
-                                                expanded = false
-                                            }
-                                        )
-                                    }
-
+                                state.playerNames.filter { (id, _) ->
+                                    id !in state.selectedPlayerIds
+                                }.forEach { (id, name) ->
+                                    DropdownMenuItem(
+                                        text = { Text(name) },
+                                        onClick = {
+                                            viewModel.selectPlayer(index, id)
+                                            playerExpanded = false
+                                        }
+                                    )
+                                }
                             }
                         }
-
-                        //X Button to remove player
-                        if (index >= 2) {
+                        // Enabling the delete of a new row
+                        if (index >= 1) {
                             IconButton(
                                 onClick = { viewModel.removePlayer(index) },
                                 enabled = index < state.selectedPlayerIds.size - 1
@@ -376,12 +431,12 @@ fun DartStartScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
             val distinctSelected =
-                state.selectedPlayerIds.filterNotNull().distinct().size >= 2
+                state.selectedPlayerIds.filterNotNull().distinct().isNotEmpty()
 
             //Button to start the game
             Button(
                 onClick = {
-                    viewModel.startGame(50) //TODO StartValue hardcoded here
+                    viewModel.startGame(startValue) //TODO StartValue hardcoded here
                     navigateTo(Route.DartGameScreen)
                 },
                 enabled = distinctSelected,

@@ -250,11 +250,9 @@ class SkyjoViewModel(
         _state.update { SkyjoState() }
     }
 
-    fun deleteGame() {
-        val gameId = _state.value.currentGameId
-        if (gameId.isNotEmpty()) {
-            viewModelScope.launch { gameRepo.deleteGameCompletely(gameId) }
-        }
+    fun deleteGame(gameId: String?) {
+        val newGameId = if (gameId.isNullOrEmpty()) _state.value.currentGameId else gameId
+        viewModelScope.launch { gameRepo.deleteGameCompletely(newGameId) }
         resetGame()
     }
 
@@ -283,6 +281,54 @@ class SkyjoViewModel(
                 if (currentIndex == -1 || currentIndex + 1 >= players.size) 0 else currentIndex + 1
             val nextDealerId = players[nextIndex]
             setDealer(nextDealerId)
+        }
+    }
+
+    fun undoLastRound(): Boolean {
+        viewModelScope.launch {
+            val stateValue = _state.value
+            if (stateValue.perPlayerRounds.isEmpty()) return@launch
+
+            if (stateValue.isGameEnded) gameRepo.markNotEnded(stateValue.currentGameId)
+
+            val updatedRounds = stateValue.perPlayerRounds.toMutableMap()
+            val updatedTotals = stateValue.totalPoints.toMutableMap()
+
+            val lastRoundIndex = updatedRounds.values.maxOfOrNull { it.size } ?: return@launch
+            if (lastRoundIndex == 0) return@launch
+
+            stateValue.selectedPlayerIds.filterNotNull().forEach { playerId ->
+                val currentRounds = updatedRounds[playerId]?.toMutableList() ?: return@forEach
+                if (currentRounds.isNotEmpty()) {
+                    val removedScore = currentRounds.removeAt(currentRounds.lastIndex)
+                    updatedRounds[playerId] = currentRounds
+                    updatedTotals[playerId] = (updatedTotals[playerId] ?: 0) - removedScore
+
+                    gameRepo.removeLastRound(stateValue.currentGameId, playerId)
+                }
+            }
+
+            _state.update {
+                it.copy(
+                    perPlayerRounds = updatedRounds,
+                    totalPoints = updatedTotals,
+                    isGameEnded = false,
+                )
+            }
+            reverseDealer()
+        }
+        return true
+    }
+
+    fun reverseDealer() {
+        val currentDealerId = _state.value.currentDealerId
+        val players = _state.value.selectedPlayerIds.filterNotNull()
+        if (players.isNotEmpty()) {
+            val currentIndex = players.indexOf(currentDealerId)
+            val prevIndex =
+                if (currentIndex <= 0) players.lastIndex else currentIndex - 1
+            val prevDealerId = players[prevIndex]
+            setDealer(prevDealerId)
         }
     }
 }

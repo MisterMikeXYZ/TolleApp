@@ -74,8 +74,10 @@ class DartViewModel (
 
     fun addPlayer(name: String, rowIndex: Int) = viewModelScope.launch {
         val newPlayer = Player(name = name)
-        playerRepo.addPlayer(name)
-        selectPlayer(rowIndex, newPlayer.id)
+        val added = gameRepo.addPlayer(newPlayer)
+        if (added) {
+            selectPlayer(rowIndex, newPlayer.id)
+        }
     }
 
     fun selectPlayer(rowIndex: Int, playerId: String) {
@@ -266,13 +268,10 @@ class DartViewModel (
         return true
     }
 
-    fun deleteGame() {
-        viewModelScope.launch {
-            val gameId = _state.value.currentGameId
-            val game = gameRepo.getAllGames().find { it.id == gameId } ?: return@launch
-            gameRepo.deleteGame(game)
-            resetGame()
-        }
+    fun deleteGame(gameId: String?) {
+        val newGameId = if (gameId.isNullOrEmpty()) _state.value.currentGameId else gameId
+        viewModelScope.launch { gameRepo.deleteGameCompletely(newGameId) }
+        resetGame()
     }
 
     fun resetGame() {

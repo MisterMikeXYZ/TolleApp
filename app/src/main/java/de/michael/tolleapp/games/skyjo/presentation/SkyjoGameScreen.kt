@@ -5,13 +5,16 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
@@ -21,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material3.Button
@@ -34,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -85,19 +90,13 @@ fun SkyjoGameScreen(
         }
     }
 
-    // Disable back button while in game
     BackHandler {
     }
 
-    // Keep only the per-round input fields in sync with the selected players.
     LaunchedEffect(state.selectedPlayerIds) {
         val selected = state.selectedPlayerIds.filterNotNull().toSet()
-
-        // Remove inputs for de-selected players
         val stale = (points.keys - selected).toList()
         stale.forEach { points.remove(it) }
-
-        // Ensure an input entry exists for every selected player
         selected.forEach { id ->
             points.getOrPut(id) { "" }
         }
@@ -140,7 +139,7 @@ fun SkyjoGameScreen(
                         onClick = {
                             if (!resetPressedDelete) resetPressedDelete = true
                             else {
-                                viewModel.deleteGame()
+                                viewModel.deleteGame(null)
                                 navigateTo(Route.Main)
                                 resetPressedDelete = false
                             }
@@ -156,8 +155,18 @@ fun SkyjoGameScreen(
                     }
                 },
                 actions = {
-                    var resetPressedSave by remember { mutableStateOf(false) }
                     val hasAtLeastOneRound = state.perPlayerRounds.values.any { it.isNotEmpty() }
+                    IconButton(
+                        onClick = { viewModel.undoLastRound() },
+                        enabled = !state.isGameEnded && hasAtLeastOneRound
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Undo",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    var resetPressedSave by remember { mutableStateOf(false) }
                     LaunchedEffect(resetPressedSave) {
                         if (resetPressedSave) {
                             delay(2000)
@@ -197,9 +206,6 @@ fun SkyjoGameScreen(
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-            Text("Spieler:", style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(1.dp))
-
             Column (
                 modifier = modifier
                     .fillMaxWidth()
@@ -274,8 +280,7 @@ fun SkyjoGameScreen(
                 Button(
                     onClick = {
                         viewModel.endRound(points)
-                        points.keys.toList().forEach { id -> points[id] = "" } // clear inputs
-                        //Move the focus to the top input field
+                        points.keys.toList().forEach { id -> points[id] = "" }
                         focusManager.moveFocus(FocusDirection.Down)
                         keyboardManager?.hide()
                     },
@@ -300,27 +305,40 @@ fun SkyjoGameScreen(
                     )
                 )
             }
-
-            // Header Row for the names that is not scrollable
-            Row {
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min)
+            ) {
                 Spacer(modifier = Modifier.width(17.dp))
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                        val playerName = state.playerNames[playerId] ?: ""
-                        Box(
+
+                val players = state.selectedPlayerIds.filterNotNull()
+                players.forEachIndexed { index, playerId ->
+                    val playerName = state.playerNames[playerId] ?: ""
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            playerName.take(2),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+
+                    // Divider only between items
+                    if (index < players.lastIndex) {
+                        VerticalDivider(
                             modifier = Modifier
-                                .weight(1f)
-                                .padding(4.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                playerName.take(2), //THIS
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                        }
+                                .fillMaxHeight()
+                                .width(1.dp),
+                        )
                     }
                 }
             }
+
             HorizontalDivider()
             Column (
                 modifier = Modifier

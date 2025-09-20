@@ -1,10 +1,14 @@
 package de.michael.tolleapp.games.dart.data
 
 import androidx.room.*
+import de.michael.tolleapp.games.player.Player
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface DartGameDao {
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPlayer(player: Player)
 
     // Game handling
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -13,8 +17,11 @@ interface DartGameDao {
     @Update
     suspend fun updateGame(game: DartGame)
 
-    @Delete
-    suspend fun deleteGame(game: DartGame)
+    @Query("DELETE FROM dart_games WHERE id = :gameId")
+    suspend fun deleteGame(gameId: String)
+
+    @Query("DELETE FROM dart_game_rounds WHERE gameId = :gameId")
+    suspend fun deleteRoundsForGame(gameId: String)
 
     @Query("SELECT * FROM dart_games WHERE id = :gameId LIMIT 1")
     suspend fun getGameById(gameId: String): DartGame?

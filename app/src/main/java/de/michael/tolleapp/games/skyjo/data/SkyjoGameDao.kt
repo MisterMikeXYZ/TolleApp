@@ -17,10 +17,10 @@ interface SkyjoGameDao {
     fun getAllPlayers(): Flow<List<Player>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertGame(game: SkyjoGame) // Unit return type
+    suspend fun insertGame(game: SkyjoGame)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertPlayer(player: Player) // Unit return type
+    suspend fun insertPlayer(player: Player)
     @Update
     suspend fun updateGame(game: SkyjoGame)
 
@@ -38,6 +38,9 @@ interface SkyjoGameDao {
 
     @Query("UPDATE skyjo_games SET isFinished = 1, endedAt = :endedAt WHERE id = :gameId")
     suspend fun markEnded(gameId: String, endedAt: Long)
+
+    @Query("UPDATE skyjo_games SET isFinished = 0, endedAt = null WHERE id = :gameId")
+    suspend fun markNotEnded(gameId: String)
 
     @Query("UPDATE skyjo_games SET dealerId = :dealerId WHERE id = :gameId")
     suspend fun setDealer(gameId: String, dealerId: String)
@@ -74,6 +77,9 @@ interface SkyjoGameDao {
 interface SkyjoGameRoundDao {
     @Insert
     suspend fun insertRound(round: SkyjoGameRound)
+
+    @Query("DELETE FROM skyjo_game_rounds WHERE id = :roundId")
+    suspend fun deleteRoundById(roundId: Long)
 
     @Update
     suspend fun updateRound(round: SkyjoGameRound)

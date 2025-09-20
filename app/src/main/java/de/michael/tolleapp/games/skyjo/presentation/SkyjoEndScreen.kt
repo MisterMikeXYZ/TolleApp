@@ -11,13 +11,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -26,11 +33,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
+import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.collections.get
 
@@ -75,6 +86,46 @@ fun SkyjoEndScreen(
                             topEnd = CornerSize(0.dp),
                         )
                     ),
+                navigationIcon = {
+                    var resetPressedDelete by remember { mutableStateOf(false) }
+                    LaunchedEffect(resetPressedDelete) {
+                        if (resetPressedDelete) {
+                            delay(2000)
+                            resetPressedDelete = false
+                        }
+                    }
+                    IconButton(
+                        onClick = {
+                            if (!resetPressedDelete) resetPressedDelete = true
+                            else {
+                                viewModel.deleteGame(null)
+                                navigateTo(Route.Main)
+                                resetPressedDelete = false
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (!resetPressedDelete) Icons.Default.Delete
+                            else Icons.Default.DeleteForever,
+                            contentDescription = null,
+                            tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
+                            else MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            if (viewModel.undoLastRound()) navigateTo(Route.SkyjoGame)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Undo",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
             )
         },
     ) { innerPadding ->

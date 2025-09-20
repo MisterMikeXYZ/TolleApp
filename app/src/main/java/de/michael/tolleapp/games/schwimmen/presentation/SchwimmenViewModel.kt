@@ -19,7 +19,6 @@ class SchwimmenViewModel(
     private val gameRepository: SchwimmenGameRepository,
     private val presetRepo: GamePresetRepository,
 ) : ViewModel() {
-
     private val _state = MutableStateFlow(SchwimmenState())
     val state: StateFlow<SchwimmenState> = _state.asStateFlow()
     val presets = presetRepo.getPresets("schwimmen")
@@ -63,7 +62,7 @@ class SchwimmenViewModel(
 
     fun resumeGame(gameId: String, onResumed: (() -> Unit)? = null) {
         viewModelScope.launch {
-            val rounds = gameRepository.loadGame(gameId) // List<SchwimmenGameRound>
+            val rounds = gameRepository.loadGame(gameId)
             val currentLives = rounds.associate { it.playerId to it.lives }
             val players = if (currentLives.isNotEmpty()) {
                 currentLives.keys.toMutableList<String?>()
@@ -73,7 +72,7 @@ class SchwimmenViewModel(
             if (players.isEmpty() || players.lastOrNull() != null) {
                 players.add(null)
             }
-            val loserId = state.value.losers.first()
+            val loserId = state.value.losers.firstOrNull()
             _state.update {
                 it.copy(
                     currentGameId = gameId,
@@ -242,7 +241,6 @@ class SchwimmenViewModel(
         }
     }
 
-
     fun resetGame() {
         _state.update { state ->
             state.copy(
@@ -260,11 +258,9 @@ class SchwimmenViewModel(
         }
     }
 
-    fun deleteGame() {
-        val gameId = _state.value.currentGameId
-        if (gameId.isNotEmpty()) {
-            viewModelScope.launch { gameRepository.deleteGameCompletely(gameId) }
-        }
+    fun deleteGame(gameId: String?) {
+        val newGameId = if (gameId.isNullOrEmpty()) _state.value.currentGameId else gameId
+        viewModelScope.launch { gameRepository.deleteGameCompletely(newGameId) }
         resetGame()
     }
 
