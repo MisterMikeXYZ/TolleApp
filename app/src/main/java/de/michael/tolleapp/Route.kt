@@ -38,4 +38,7 @@ sealed interface Route {
 
     @Serializable
     data object DartGameScreen : Route
+
+    @Serializable
+    data object RandomizerScreen : Route
 }

@@ -172,12 +172,12 @@ fun SchwimmenStartScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding( horizontal = 8.dp, vertical = 3.dp)
         ) {
             Row (modifier = Modifier.fillMaxWidth()) {
                 //Paused games
                 Box (modifier = Modifier
-                    .weight(3f)
+                    .weight(1.5f)
                     .fillMaxWidth()
                 ) {
                     Button(
@@ -246,11 +246,9 @@ fun SchwimmenStartScreen(
 
                 }
 
-                Spacer(modifier = Modifier.width(5.dp))
-
                 //Presets
                 Box (modifier = Modifier
-                    .weight(2f)
+                    .weight(1.1f)
                     .fillMaxWidth()
                 ) {
                     Button(

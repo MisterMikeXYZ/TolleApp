@@ -187,11 +187,8 @@ class SkyjoViewModel(
     }
 
     fun addPlayer(name: String, rowIndex: Int) = viewModelScope.launch {
-        val newPlayer = Player(name = name)
-        val added = gameRepo.addPlayer(newPlayer)
-        if (added) {
-            selectPlayer(rowIndex, newPlayer.id)
-        }
+        val added = playerRepo.addPlayer(name)
+        selectPlayer(rowIndex, added.id)
     }
 
     fun selectPlayer(rowIndex: Int, playerId: String) {

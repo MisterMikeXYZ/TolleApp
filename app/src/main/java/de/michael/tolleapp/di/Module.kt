@@ -13,6 +13,7 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import de.michael.tolleapp.games.dart.presentation.DartViewModel
 import de.michael.tolleapp.games.presets.GamePresetRepository
+import de.michael.tolleapp.games.randomizer.presentation.RandomizerViewModel
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameRepository
 import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStatsRepository
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenViewModel
@@ -70,4 +71,5 @@ val appModule = module {
     viewModel { SchwimmenViewModel(get(), get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get()) }
     viewModel { DartViewModel(get(), get(), get()) }
+    viewModel { RandomizerViewModel(get(), get()) }
 }

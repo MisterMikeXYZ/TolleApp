@@ -10,6 +10,8 @@ import de.michael.tolleapp.Route
 import de.michael.tolleapp.games.dart.presentation.DartGameScreen
 import de.michael.tolleapp.games.dart.presentation.DartStartScreen
 import de.michael.tolleapp.games.dart.presentation.DartViewModel
+import de.michael.tolleapp.games.randomizer.presentation.RandomizerScreen
+import de.michael.tolleapp.games.randomizer.presentation.RandomizerViewModel
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenGameScreenCanvas
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenGameScreenCircle
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenStartScreen
@@ -36,6 +38,7 @@ fun NavGraph(
     val schwimmenViewModel = koinViewModel<SchwimmenViewModel>()
     val settingsViewModel = koinViewModel<SettingsViewModel>()
     val dartViewModel = koinViewModel<DartViewModel>()
+    val randomizerViewModel = koinViewModel<RandomizerViewModel>()
 
     NavHost(
         navController = navController,
@@ -150,6 +153,16 @@ fun NavGraph(
                 viewModel = dartViewModel,
                 navigateTo = { route ->
                     navController.navigate(route) }
+            )
+        }
+
+        composable<Route.RandomizerScreen> {
+            RandomizerScreen(
+                viewModel = randomizerViewModel,
+                navigateTo = { route ->
+                    navController.navigate(route)
+                },
+                navigateBack = { navController.popBackStack() },
             )
         }
     }
