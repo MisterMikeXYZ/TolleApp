@@ -1,6 +1,8 @@
 package de.michael.tolleapp.games.skyjo.presentation
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.text.KeyboardOptions
@@ -308,23 +310,20 @@ fun SkyjoStartScreen(
 
             Spacer(modifier = Modifier.height(3.dp))
             HorizontalDivider()
-
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Spieler:", style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(2.dp))
-            Column (
+
+            LazyColumn (
                 modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .requiredHeight(450.dp)
-                    .weight(6f, fill = true)
+                    .fillMaxWidth()
+                    .weight(1f)
             ){
-                state.selectedPlayerIds.forEachIndexed { index, selectedId ->
+                itemsIndexed(state.selectedPlayerIds) { index, selectedId ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
-                            .verticalScroll(rememberScrollState())
+                            //.verticalScroll(rememberScrollState())
                     ) {
                         var expanded by remember { mutableStateOf(false) }
                         val selectedPlayer = state.selectedPlayerIds[index]?.let { state.playerNames[it] } ?: "Spieler auswählen"
@@ -392,7 +391,7 @@ fun SkyjoStartScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             val distinctSelected =
                 state.selectedPlayerIds.filterNotNull().distinct().size >= 2
 
@@ -403,10 +402,13 @@ fun SkyjoStartScreen(
                     navigateTo(Route.SkyjoGame)
                 },
                 enabled = distinctSelected,
-                modifier = Modifier.fillMaxWidth().weight(1f).requiredHeight(50.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .requiredHeight(50.dp)
             ) {
                 Text("Spiel starten")
             }
+            Spacer(modifier = Modifier.height(3.dp))
         }
     }
 }

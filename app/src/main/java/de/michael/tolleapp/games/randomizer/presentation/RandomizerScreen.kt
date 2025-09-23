@@ -322,7 +322,7 @@ fun RandomizerScreen(
             }
             if (state.randomizerType == "Names") {
                 Box (modifier = Modifier
-                    //.weight(1f)
+
                     .fillMaxWidth()
                 ) {
                     Button(
@@ -387,9 +387,7 @@ fun RandomizerScreen(
                 Column (
                     modifier = Modifier
                         .verticalScroll(rememberScrollState())
-                        .fillMaxSize() //HERE
-                        //.weight(1f)
-
+                        .fillMaxSize()
                 ){
                     state.selectedPlayerIds.forEachIndexed { index, selectedId ->
                         Row(
@@ -397,7 +395,6 @@ fun RandomizerScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp)
-                                //.verticalScroll(rememberScrollState())
                         ) {
                             var expanded by remember { mutableStateOf(false) }
                             val selectedPlayer = state.selectedPlayerIds[index]?.let { state.playerNames[it] } ?: "Spieler auswählen"

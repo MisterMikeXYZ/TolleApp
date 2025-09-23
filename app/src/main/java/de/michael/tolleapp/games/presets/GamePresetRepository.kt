@@ -2,8 +2,9 @@ package de.michael.tolleapp.games.presets
 
 import kotlinx.coroutines.flow.Flow
 
-class GamePresetRepository(private val dao: GamePresetDao) {
-
+class GamePresetRepository(
+    private val dao: GamePresetDao
+) {
     fun getPresets(gameType: String): Flow<List<GamePresetWithPlayers>> = dao.getPresets(gameType)
 
     suspend fun createPreset(gameType: String, name: String, playerIds: List<String>) {

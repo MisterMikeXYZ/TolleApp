@@ -69,7 +69,7 @@ val appModule = module {
     viewModel { SkyjoViewModel(get(), get(), get()) }
     viewModel { StatViewModel(get(), get(), get()) }
     viewModel { SchwimmenViewModel(get(), get(), get(), get()) }
-    viewModel { SettingsViewModel(get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get()) }
     viewModel { DartViewModel(get(), get(), get()) }
     viewModel { RandomizerViewModel(get(), get()) }
 }

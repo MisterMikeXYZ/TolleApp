@@ -5,6 +5,7 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,6 +89,23 @@ fun SettingsScreen (
                     Icon(
                         imageVector = Icons.Default.ArrowForwardIos,
                         contentDescription = "Spieler löschen",
+                    )
+                }
+            }
+
+            HorizontalDivider()
+
+            Row (
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Test Presets erstellen", modifier = Modifier.weight(1f))
+                IconButton(
+                    onClick = { viewModel.createPresets() },
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.GroupAdd,
+                        contentDescription = null,
                     )
                 }
             }

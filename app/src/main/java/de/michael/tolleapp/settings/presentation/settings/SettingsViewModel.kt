@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.michael.tolleapp.games.player.Player
 import de.michael.tolleapp.games.player.PlayerRepository
+import de.michael.tolleapp.games.presets.GamePresetRepository
 import de.michael.tolleapp.settings.data.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,8 +12,9 @@ import kotlinx.coroutines.launch
 import kotlin.collections.toMutableList
 
 class SettingsViewModel (
-    private val playerRepository: PlayerRepository,
-    private val settingsRepository: SettingsRepository
+    private val playerRepo: PlayerRepository,
+    private val settingsRepo: SettingsRepository,
+    private val presetRepo: GamePresetRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())
@@ -26,14 +28,14 @@ class SettingsViewModel (
     private fun loadSettings() {
         viewModelScope.launch {
             _state.value = _state.value.copy(
-                isDarkmode = settingsRepository.isDarkmode()
+                isDarkmode = settingsRepo.isDarkmode()
             )
         }
     }
 
     private fun loadPlayers() {
         viewModelScope.launch {
-            playerRepository.getAllPlayers().collect { players ->
+            playerRepo.getAllPlayers().collect { players ->
                 _state.value = _state.value.copy(players = players)
             }
         }
@@ -42,14 +44,14 @@ class SettingsViewModel (
     fun toggleDarkMode() {
         val newValue = !_state.value.isDarkmode
         viewModelScope.launch {
-            settingsRepository.changeDarkmode(newValue)
+            settingsRepo.changeDarkmode(newValue)
             _state.value = _state.value.copy(isDarkmode = newValue)
         }
     }
 
     private fun deletePlayer(player: Player) {
         viewModelScope.launch {
-            playerRepository.deletePlayer(player)
+            playerRepo.deletePlayer(player)
             loadPlayers() // refresh after deletion
         }
     }
@@ -70,5 +72,9 @@ class SettingsViewModel (
         selectedPlayers.remove(player)
         _state.value = _state.value.copy(playersToDelete = selectedPlayers)
 
+    }
+
+    fun createPresets() {
+        //viewModelScope.launch { if (playerRepo.createPlayers().isNotEmpty()) presetRepo.createPreset() }
     }
 }
