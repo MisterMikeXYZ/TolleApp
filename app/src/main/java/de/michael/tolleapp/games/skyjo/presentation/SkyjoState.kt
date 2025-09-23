@@ -13,4 +13,5 @@ data class SkyjoState(
     val ranking: List<String> = emptyList(),
     val isGameEnded: Boolean = false,
     val currentDealerId: String? = null,
+    val neleModus: Boolean = false,
 )

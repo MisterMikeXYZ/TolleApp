@@ -30,6 +30,7 @@ fun BetterOutlinedTextField(
     label: @Composable () -> Unit = {},
     textColor: Color = MaterialTheme.colorScheme.onSurface,
     textStyle: TextStyle = LocalTextStyle.current,
+    readOnly: Boolean,
 ) {
     Column(
         modifier = modifier
@@ -46,6 +47,8 @@ fun BetterOutlinedTextField(
                         textStyle = textStyle.copy(color = textColor),
                         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                         modifier = Modifier.fillMaxWidth(),
+                        enabled = true,
+                        readOnly = readOnly
                     )
                 } else {
                     Text(

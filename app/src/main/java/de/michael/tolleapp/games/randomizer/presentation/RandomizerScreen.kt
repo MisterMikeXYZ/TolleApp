@@ -183,7 +183,10 @@ fun RandomizerScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(state.randomizerType) },
+                title = { Text(
+                    state.randomizerType,
+                    color = MaterialTheme.colorScheme.onSurface
+                ) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,

@@ -67,17 +67,6 @@ fun PlayerScoreDisplays(
     playerState: PlayerState,
     modifier: Modifier = Modifier
 ) {
-//    val lastRound = playerState.rounds.lastOrNull() ?: emptyList()
-//
-//    val displayRound: List<String> = List(3) { i ->
-//        val throwData = lastRound.getOrNull(i)
-//        when {
-//            throwData == null -> "" // not thrown yet
-//            throwData.isBust -> throwData.fieldValue.toString() // or "B" if you prefer
-//            else -> throwData.calcScore()?.toString() ?: ""
-//        }
-//    }
-
     val lastRound = playerState.rounds.lastOrNull() ?: emptyList()
 
     val displayRound: List<String> = if (lastRound.isNotEmpty()) {
@@ -112,7 +101,7 @@ fun PlayerScoreDisplays(
             Text(
                 text = playerState.playerName,
                 style = if (isActive) MaterialTheme.typography.headlineLarge else MaterialTheme.typography.headlineSmall,
-                color = if (isActive) MaterialTheme.colorScheme.error
+                color = if (isActive) MaterialTheme.colorScheme.primary
                     else Color.Unspecified,
             )
         }

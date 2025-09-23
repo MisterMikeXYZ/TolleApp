@@ -35,6 +35,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.collections.get
 
@@ -114,9 +116,13 @@ fun SkyjoEndScreen(
                     }
                 },
                 actions = {
+                    val scope = rememberCoroutineScope()
                     IconButton(
                         onClick = {
-                            if (viewModel.undoLastRound()) navigateTo(Route.SkyjoGame)
+                            scope.launch {
+                                val undone = viewModel.undoLastRound()
+                                if (undone) navigateTo(Route.SkyjoGame)
+                            }
                         }
                     ) {
                         Icon(

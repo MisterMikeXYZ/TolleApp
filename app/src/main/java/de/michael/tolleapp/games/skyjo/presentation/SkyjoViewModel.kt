@@ -230,13 +230,14 @@ class SkyjoViewModel(
         }
     }
 
-    fun startGame(dealerId: String? = null) {
+    fun startGame(dealerId: String? = null, neleModus: Boolean) {
         val newGameId = UUID.randomUUID().toString()
         _state.update { state ->
             state.copy(
                 currentGameId = newGameId,
                 selectedPlayerIds = state.selectedPlayerIds.filterNotNull(),
-                currentDealerId = dealerId
+                currentDealerId = dealerId,
+                neleModus = neleModus,
             )
         }
         viewModelScope.launch { gameRepo.startGame(newGameId, dealerId) }
@@ -280,39 +281,39 @@ class SkyjoViewModel(
         }
     }
 
-    fun undoLastRound(): Boolean {
-        viewModelScope.launch {
-            val stateValue = _state.value
-            if (stateValue.perPlayerRounds.isEmpty()) return@launch
+    suspend fun undoLastRound(): Boolean {
+        val stateValue = _state.value
+        if (stateValue.perPlayerRounds.isEmpty()) return false
 
-            if (stateValue.isGameEnded) gameRepo.markNotEnded(stateValue.currentGameId)
+        if (stateValue.isGameEnded) gameRepo.markNotEnded(stateValue.currentGameId)
 
-            val updatedRounds = stateValue.perPlayerRounds.toMutableMap()
-            val updatedTotals = stateValue.totalPoints.toMutableMap()
+        val updatedRounds = stateValue.perPlayerRounds.toMutableMap()
+        val updatedTotals = stateValue.totalPoints.toMutableMap()
 
-            val lastRoundIndex = updatedRounds.values.maxOfOrNull { it.size } ?: return@launch
-            if (lastRoundIndex == 0) return@launch
+        val lastRoundIndex = updatedRounds.values.maxOfOrNull { it.size } ?: return false
+        if (lastRoundIndex == 0) return false
 
-            stateValue.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                val currentRounds = updatedRounds[playerId]?.toMutableList() ?: return@forEach
-                if (currentRounds.isNotEmpty()) {
-                    val removedScore = currentRounds.removeAt(currentRounds.lastIndex)
-                    updatedRounds[playerId] = currentRounds
-                    updatedTotals[playerId] = (updatedTotals[playerId] ?: 0) - removedScore
+        stateValue.selectedPlayerIds.filterNotNull().forEach { playerId ->
+            val currentRounds = updatedRounds[playerId]?.toMutableList() ?: return@forEach
+            if (currentRounds.isNotEmpty()) {
+                val removedScore = currentRounds.removeAt(currentRounds.lastIndex)
+                updatedRounds[playerId] = currentRounds
+                updatedTotals[playerId] = (updatedTotals[playerId] ?: 0) - removedScore
 
-                    gameRepo.removeLastRound(stateValue.currentGameId, playerId)
-                }
+                gameRepo.removeLastRound(stateValue.currentGameId, playerId)
             }
-
-            _state.update {
-                it.copy(
-                    perPlayerRounds = updatedRounds,
-                    totalPoints = updatedTotals,
-                    isGameEnded = false,
-                )
-            }
-            reverseDealer()
         }
+
+        _state.update {
+            it.copy(
+                perPlayerRounds = updatedRounds,
+                totalPoints = updatedTotals,
+                isGameEnded = false,
+                winnerId = listOf(null),
+                loserId = listOf(null),
+            )
+        }
+        reverseDealer()
         return true
     }
 
