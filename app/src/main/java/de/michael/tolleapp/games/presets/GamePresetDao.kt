@@ -30,8 +30,13 @@ interface GamePresetDao {
     @Insert
     suspend fun insertPresetPlayers(players: List<GamePresetPlayer>)
 
+    @Query("SELECT * FROM game_presets WHERE gameType = :gameType AND name = :name LIMIT 1")
+    suspend fun getPresetByNameAndGameType(gameType: String, name: String): GamePreset?
+
     @Transaction
     suspend fun insertPresetWithPlayers(gameType: String, preset: GamePreset, playerIds: List<String>) {
+        val existing = getPresetByNameAndGameType(gameType, preset.name)
+        if (existing != null) return
         val presetId = insertPreset(preset)
         val playerEntities = playerIds.map { pid ->
             GamePresetPlayer(presetId = presetId, playerId = pid)
@@ -41,4 +46,24 @@ interface GamePresetDao {
 
     @Query("DELETE FROM game_presets WHERE id = :presetId")
     suspend fun deletePresetById(presetId: Long)
+
+    @Transaction
+    @Query("SELECT * FROM game_presets WHERE name = :name")
+    suspend fun getPresetsByName(name: String): List<GamePresetWithPlayers>
+
+    @Query("DELETE FROM game_preset_players WHERE presetId = :presetId")
+    suspend fun deletePresetPlayersByPresetId(presetId: Long)
+
+
+    @Transaction
+    suspend fun deleteTestPresets() {
+        val testPresetNames = listOf("Test", "Test Extrem", "Viebegs")
+        val presetsToDelete = testPresetNames.flatMap { name ->
+            getPresetsByName(name)
+        }
+        presetsToDelete.forEach { presetWithPlayers ->
+            deletePresetPlayersByPresetId(presetWithPlayers.preset.id)
+            deletePresetById(presetWithPlayers.preset.id)
+        }
+    }
 }

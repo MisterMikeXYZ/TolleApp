@@ -74,7 +74,32 @@ class SettingsViewModel (
 
     }
 
-    fun createPresets() {
-        //viewModelScope.launch { if (playerRepo.createPlayers().isNotEmpty()) presetRepo.createPreset() }
+    fun createTestPresets() {
+        viewModelScope.launch {
+            val players = playerRepo.createPlayers()
+            if (players.isEmpty()) return@launch
+            val playerMap = players.associateBy { it.name }
+
+            val presets = listOf(
+                "Test" to listOf("Michi", "Malte", "Nele"),
+                "Test Extrem" to listOf("Michi", "Malte", "Nele", "Papa", "Mama", "Raphi"),
+                "Viebegs" to listOf("Michi", "Papa", "Mama", "Raphi")
+            )
+
+            val games = listOf("skyjo", "schwimmen", "randomizer", "dart")
+
+            games.forEach { gameType ->
+                presets.forEach { (presetName, playerNames) ->
+                    val playerIds = playerNames.mapNotNull { playerMap[it]?.id }
+                    if (playerIds.isNotEmpty()) {
+                        presetRepo.createPreset(gameType, presetName, playerIds)
+                    }
+                }
+            }
+        }
+    }
+
+    fun deleteTestPresets() {
+        viewModelScope.launch { presetRepo.deleteTestPresets() }
     }
 }

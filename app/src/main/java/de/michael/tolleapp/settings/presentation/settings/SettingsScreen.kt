@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.GroupAdd
+import androidx.compose.material.icons.filled.GroupRemove
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -101,10 +102,27 @@ fun SettingsScreen (
             ) {
                 Text("Test Presets erstellen", modifier = Modifier.weight(1f))
                 IconButton(
-                    onClick = { viewModel.createPresets() },
+                    onClick = { viewModel.createTestPresets() },
                 ) {
                     Icon(
                         imageVector = Icons.Default.GroupAdd,
+                        contentDescription = null,
+                    )
+                }
+            }
+
+            HorizontalDivider()
+
+            Row (
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Test Presets löschen", modifier = Modifier.weight(1f))
+                IconButton(
+                    onClick = { viewModel.deleteTestPresets() },
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.GroupRemove,
                         contentDescription = null,
                     )
                 }

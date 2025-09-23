@@ -18,4 +18,8 @@ class GamePresetRepository(
     suspend fun deletePreset(presetId: Long) {
         dao.deletePresetById(presetId)
     }
+
+    suspend fun deleteTestPresets() {
+        dao.deleteTestPresets()
+    }
 }
