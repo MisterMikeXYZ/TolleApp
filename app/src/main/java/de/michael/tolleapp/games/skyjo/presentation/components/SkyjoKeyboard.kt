@@ -1,5 +1,6 @@
 package de.michael.tolleapp.games.skyjo.presentation.components
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,19 +29,17 @@ fun SkyjoKeyboard(
     val total = selectedValues.sum()
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 8.dp),
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             if (selectedValues.isEmpty()) Text("Wähle Karten aus") else {
                 Text(
                     selectedValues.joinToString(", "),
                     maxLines = 1,
+                    modifier = Modifier.padding(top = 3.dp)
                 )
             }
         }
@@ -76,16 +75,16 @@ fun SkyjoKeyboard(
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .aspectRatio(2f),
+                    .aspectRatio(2.5f),
                 enabled = true,
             )
 
             SkyjoKeyButton(
-                text = "Back",
-                onClick = onBack,
+                text = "Remove",
+                onClick = { selectedValues = selectedValues.dropLast(1) },
                 modifier = Modifier
                     .weight(1f)
-                    .aspectRatio(2f),
+                    .aspectRatio(2.5f),
                 enabled = true
             )
         }

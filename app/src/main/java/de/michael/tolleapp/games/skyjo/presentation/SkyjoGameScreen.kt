@@ -3,6 +3,9 @@ package de.michael.tolleapp.games.skyjo.presentation
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -58,10 +61,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.michael.tolleapp.Route
@@ -115,6 +121,10 @@ fun SkyjoGameScreen(
             navigateTo(Route.SkyjoEnd)
         }
     }
+
+    var topHeightFraction by remember { mutableStateOf(0.5f) }
+    val minFraction = 0.1f
+    val maxFraction = 0.9f
 
     Scaffold(
         topBar = {
@@ -173,7 +183,9 @@ fun SkyjoGameScreen(
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Undo",
-                            tint = if (!hasAtLeastOneRound) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                            tint = if (!hasAtLeastOneRound) MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.3f
+                            )
                             else MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -199,7 +211,9 @@ fun SkyjoGameScreen(
                             imageVector = if (!resetPressedSave) Icons.Default.Save
                             else Icons.Default.SaveAs,
                             contentDescription = null,
-                            tint = if (!hasAtLeastOneRound) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                            tint = if (!hasAtLeastOneRound) MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.3f
+                            )
                             else if (!resetPressedSave) MaterialTheme.colorScheme.onSurface
                             else MaterialTheme.colorScheme.primary
                         )
@@ -208,39 +222,24 @@ fun SkyjoGameScreen(
             )
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-            // === SCROLLABLE GAME CONTENT ===
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            Column(Modifier.fillMaxWidth()) {
+                Box(
+                    Modifier
                         .fillMaxWidth()
-                        .clickable { showPlayerInputs = !showPlayerInputs }
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.secondaryContainer)
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .weight(topHeightFraction)
+                        .padding(8.dp),
+                    contentAlignment = Alignment.TopStart
                 ) {
-                    Text(
-                        "Spieler",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Icon(
-                        imageVector = if (showPlayerInputs) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = "Toggle Spieler Inputs"
-                    )
-                }
-                // --- Player Inputs ---
-                if (showPlayerInputs) {
                     val playerScrollState = rememberScrollState()
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 350.dp)
+                            .heightIn(max = 500.dp)
                             .verticalScroll(playerScrollState)
                     ) {
                         state.selectedPlayerIds.filterNotNull().forEach { playerId ->
@@ -269,7 +268,7 @@ fun SkyjoGameScreen(
                             ) {
                                 BetterOutlinedTextField(
                                     value = playerName,
-                                    label = { Text("Spieler") },
+                                    //label = { Text("Spieler") },
                                     modifier = Modifier.weight(1f),
                                     textColor = if (isDealer) MaterialTheme.colorScheme.primary
                                     else MaterialTheme.colorScheme.onSurface,
@@ -321,72 +320,100 @@ fun SkyjoGameScreen(
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row {
-                        Button(
-                            onClick = { viewModel.advanceDealer() },
-                            modifier = Modifier.weight(1f)
-                        ) { Text("Dealer") }
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Button(
-                            onClick = {
-                                viewModel.endRound(points)
-                                points.keys.forEach { id -> points[id] = "" }
-                                focusManager.moveFocus(FocusDirection.Down)
-                                keyboardManager?.hide()
-                            },
-                            modifier = Modifier.fillMaxWidth().weight(2f),
-                            enabled = allInputsFilled
-                        ) { Text("Runde beenden") }
-                    }
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // === ROUNDS GRID ===
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { showRoundsGrid = !showRoundsGrid }
-                        .clip(RoundedCornerShape(12.dp)) // rounded corners
-                        .background(MaterialTheme.colorScheme.secondaryContainer)
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .background(
+                            MaterialTheme.colorScheme.surface,
+                            shape = MaterialTheme.shapes.medium.copy(topStart = CornerSize(0.dp), topEnd = CornerSize(0.dp))
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        "Runden",
-                        style = MaterialTheme.typography.titleMedium,
+                    Button(
+                        onClick = { viewModel.advanceDealer() },
                         modifier = Modifier.weight(1f)
-                    )
-                    Icon(
-                        imageVector = if (showRoundsGrid) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = "Toggle Runden Grid"
+                    ) { Text("Dealer") }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            viewModel.endRound(points)
+                            points.keys.forEach { id -> points[id] = "" }
+                            focusManager.moveFocus(FocusDirection.Down)
+                            keyboardManager?.hide()
+                        },
+                        modifier = Modifier.weight(2f),
+                        enabled = allInputsFilled
+                    ) { Text("Runde beenden") }
+                }
+
+                val dragState = rememberDraggableState { delta ->
+                    val parentHeight = 1f // normalized since we use weight
+                    val change = delta / 1700f // tune sensitivity
+                    topHeightFraction = (topHeightFraction + change)
+                        .coerceIn(minFraction, maxFraction)
+                }
+                // --- DIVIDER ---
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(12.dp)
+                        .draggable(
+                            orientation = Orientation.Vertical,
+                            state = dragState
+                        )
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Spacer(
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                shape = MaterialTheme.shapes.small
+                            )
+                            .height(4.dp)
+                            .width(64.dp)
+                            .align(Alignment.Center)
+
                     )
                 }
-                Column(
-                    modifier = Modifier
-                        //.fillMaxWidth()
-                        .weight(1f) // take the remaining space
-                        .verticalScroll(rememberScrollState())
+
+                // --- GRID ---
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(1f - topHeightFraction)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .background(
+                            MaterialTheme.colorScheme.surface,
+                            shape = MaterialTheme.shapes.medium.copy(bottomStart = CornerSize(0.dp), bottomEnd = CornerSize(0.dp))
+                        )
+                        .padding(8.dp)
                 ) {
-                    if (showRoundsGrid) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                    ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .fillMaxHeight(if (!showRoundsGrid) 0.1f else 0.4f)
-                                .fillMaxHeight(1f)
-                        ) {
+                                .height(IntrinsicSize.Min)
+                        ){
                             Spacer(modifier = Modifier.width(20.dp))
+
+                            VerticalDivider(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .width(3.dp),
+                            )
 
                             val players = state.selectedPlayerIds.filterNotNull()
                             players.forEachIndexed { index, playerId ->
                                 val playerName = state.playerNames[playerId] ?: ""
-
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
@@ -398,28 +425,27 @@ fun SkyjoGameScreen(
                                         style = MaterialTheme.typography.labelLarge
                                     )
                                 }
-
-                                // Divider only between items
-                                if (index < players.lastIndex) {
+                                if (index < players.size - 1) {
                                     VerticalDivider(
                                         modifier = Modifier
                                             .fillMaxHeight()
-                                            .width(1.dp),
+                                            .width(3.dp),
                                     )
                                 }
                             }
                         }
 
-
                         HorizontalDivider()
+
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .weight(1f)
                                 .verticalScroll(rememberScrollState())
                         ) {
                             Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-                                Column {
+                                Column (
+                                    modifier = Modifier.width(20.dp)
+                                ){
                                     for (roundIndex in 1..visibleRoundRows)
                                         Box(
                                             modifier = Modifier
@@ -462,7 +488,7 @@ fun SkyjoGameScreen(
                                                     VerticalDivider(
                                                         modifier = Modifier
                                                             .fillMaxHeight()
-                                                            .width(1.dp),
+                                                            .width(3.dp),
                                                     )
                                                 }
                                             }
@@ -474,18 +500,19 @@ fun SkyjoGameScreen(
                     }
                 }
             }
-
             if (neleModus && activePlayerId != null) {
+                var containerSize by remember{mutableStateOf(IntSize.Zero)}
+                Lau
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
-                        .padding(8.dp)
                 ) {
                     if (keyboardExpanded) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .padding(8.dp)
                                 .background(MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.medium)
                                 .padding(8.dp)
                                 .align(Alignment.BottomCenter)
@@ -500,9 +527,7 @@ fun SkyjoGameScreen(
                                     activePlayerId = null
                                     keyboardExpanded = false
                                 },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(300.dp)
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
