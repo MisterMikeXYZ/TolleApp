@@ -8,9 +8,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -20,11 +17,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -71,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import de.michael.tolleapp.games.skyjo.presentation.components.BetterOutlinedTextField
 import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoKeyboard
 import de.michael.tolleapp.games.util.CustomTopBar
+import de.michael.tolleapp.games.util.DividedScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -106,9 +102,6 @@ fun SkyjoGameScreen(
     var keyboardExpanded by remember { mutableStateOf(false) }
     var activePlayerId by remember { mutableStateOf<String?>(null) }
 
-    var showPlayerInputs by remember { mutableStateOf(true) }
-    var showRoundsGrid by remember { mutableStateOf(true) }
-
     BackHandler {}
 
     LaunchedEffect(state.selectedPlayerIds) {
@@ -124,10 +117,6 @@ fun SkyjoGameScreen(
             navigateToEnd()
         }
     }
-
-    var topHeightFraction by remember { mutableStateOf(0.5f) }
-    val minFraction = 0.1f
-    val maxFraction = 0.9f
 
     Scaffold(
         topBar = {
@@ -217,269 +206,222 @@ fun SkyjoGameScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            Column(Modifier.fillMaxWidth()) {
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .weight(topHeightFraction)
-                        .padding(8.dp),
-                    contentAlignment = Alignment.TopStart
-                ) {
-                    val playerScrollState = rememberScrollState()
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 500.dp)
-                            .verticalScroll(playerScrollState)
-                    ) {
-                        state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                            val playerName = state.playerNames[playerId] ?: "Spieler auswählen"
-                            val isDealer = playerId == state.currentDealerId
-
-                            val isActivePlayer = playerId == activePlayerId
-                            val backgroundColor =
-                                if (isActivePlayer && neleModus) MaterialTheme.colorScheme.primary.copy(
-                                    alpha = 0.2f
-                                )
-                                else Color.Transparent
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .padding(top = 8.dp)
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(backgroundColor)
-                                    .clickable(enabled = neleModus) {
-                                        activePlayerId = playerId
-                                        keyboardExpanded = true
-                                    }
-                                    .padding(4.dp) // inner padding
-                            ) {
-                                BetterOutlinedTextField(
-                                    value = playerName,
-                                    //label = { Text("Spieler") },
-                                    modifier = Modifier.weight(1f),
-                                    textColor = if (isDealer) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurface,
-                                    textStyle = if (isDealer) MaterialTheme.typography.bodyLarge.copy(
-                                        fontSize = 20.sp
-                                    )
-                                    else LocalTextStyle.current,
-                                    readOnly = false
-                                )
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                BetterOutlinedTextField(
-                                    value = points[playerId] ?: "",
-                                    onValueChange = { new ->
-                                        if (!neleModus) {
-                                            if (new.isEmpty() || new == "-" || new.toIntOrNull() in -17..140) {
-                                                points[playerId] = new
-                                            }
-                                        }
-                                    },
-                                    readOnly = neleModus,
-                                    label = "Punkte",
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clickable(enabled = neleModus) {
-                                            activePlayerId = playerId
-                                            keyboardExpanded = true
-                                        },
-                                    keyboardOptions = if (!neleModus) KeyboardOptions(
-                                        keyboardType = KeyboardType.Phone,
-                                        imeAction = ImeAction.Next,
-                                        showKeyboardOnFocus = true
-                                    ) else KeyboardOptions.Default,
-                                    keyboardActions = if (!neleModus) KeyboardActions(
-                                        onNext = { focusManager.moveFocus(FocusDirection.Down) },
-                                        onDone = { keyboardManager?.hide() }
-                                    ) else KeyboardActions.Default
-                                )
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                BetterOutlinedTextField(
-                                    value = (totalPoints[playerId] ?: 0).toString(),
-                                    label = "Gesamt",
-                                    modifier = Modifier.weight(1f),
-                                    readOnly = true
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .background(
-                            MaterialTheme.colorScheme.surface,
-                            shape = MaterialTheme.shapes.medium.copy(topStart = CornerSize(0.dp), topEnd = CornerSize(0.dp))
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = { viewModel.advanceDealer() },
-                        modifier = Modifier.weight(1f)
-                    ) { Text("Dealer") }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Button(
-                        onClick = {
-                            viewModel.endRound(points)
-                            points.keys.forEach { id -> points[id] = "" }
-                            focusManager.moveFocus(FocusDirection.Down)
-                            keyboardManager?.hide()
-                        },
-                        modifier = Modifier.weight(2f),
-                        enabled = allInputsFilled
-                    ) { Text("Runde beenden") }
-                }
-
-                val dragState = rememberDraggableState { delta ->
-                    val parentHeight = 1f // normalized since we use weight
-                    val change = delta / 1700f // tune sensitivity
-                    topHeightFraction = (topHeightFraction + change)
-                        .coerceIn(minFraction, maxFraction)
-                }
-                // --- DIVIDER ---
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(12.dp)
-                        .draggable(
-                            orientation = Orientation.Vertical,
-                            state = dragState
-                        )
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                ) {
-                    Spacer(
-                        modifier = Modifier
-                            .background(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                                shape = MaterialTheme.shapes.small
-                            )
-                            .height(4.dp)
-                            .width(64.dp)
-                            .align(Alignment.Center)
-
-                    )
-                }
-
-                // --- GRID ---
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .weight(1f - topHeightFraction)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .background(
-                            MaterialTheme.colorScheme.surface,
-                            shape = MaterialTheme.shapes.medium.copy(bottomStart = CornerSize(0.dp), bottomEnd = CornerSize(0.dp))
-                        )
-                        .padding(8.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(IntrinsicSize.Min)
-                        ){
-                            Spacer(modifier = Modifier.width(20.dp))
-
-                            VerticalDivider(
-                                modifier = Modifier
-                                    .fillMaxHeight()
-                                    .width(3.dp),
-                            )
-
-                            val players = state.selectedPlayerIds.filterNotNull()
-                            players.forEachIndexed { index, playerId ->
-                                val playerName = state.playerNames[playerId] ?: ""
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(4.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        playerName.take(2),
-                                        style = MaterialTheme.typography.labelLarge
-                                    )
-                                }
-                                if (index < players.size - 1) {
-                                    VerticalDivider(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .width(3.dp),
-                                    )
-                                }
-                            }
-                        }
-
-                        HorizontalDivider()
-
+            DividedScreen(
+                modifier = Modifier.fillMaxSize(),
+                topPart = {
+                    Column(Modifier.fillMaxSize()) {
+                        val playerScrollState = rememberScrollState()
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .verticalScroll(rememberScrollState())
+                                .weight(1f)
+                                .verticalScroll(playerScrollState)
                         ) {
-                            Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-                                Column (
-                                    modifier = Modifier.width(20.dp)
-                                ){
-                                    for (roundIndex in 1..visibleRoundRows)
-                                        Box(
-                                            modifier = Modifier
-                                                .padding(4.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(roundIndex.toString())
+                            state.selectedPlayerIds.filterNotNull().forEach { playerId ->
+                                val playerName = state.playerNames[playerId] ?: "Spieler auswählen"
+                                val isDealer = playerId == state.currentDealerId
+
+                                val isActivePlayer = playerId == activePlayerId
+                                val backgroundColor =
+                                    if (isActivePlayer && neleModus) MaterialTheme.colorScheme.primary.copy(
+                                        alpha = 0.2f
+                                    )
+                                    else Color.Transparent
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .padding(top = 8.dp)
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(backgroundColor)
+                                        .clickable(enabled = neleModus) {
+                                            activePlayerId = playerId
+                                            keyboardExpanded = true
                                         }
+                                        .padding(4.dp) // inner padding
+                                ) {
+                                    BetterOutlinedTextField(
+                                        value = playerName,
+                                        //label = { Text("Spieler") },
+                                        modifier = Modifier.weight(1f),
+                                        textColor = if (isDealer) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurface,
+                                        textStyle = if (isDealer) MaterialTheme.typography.bodyLarge.copy(
+                                            fontSize = 20.sp
+                                        )
+                                        else LocalTextStyle.current,
+                                        readOnly = false
+                                    )
+
+                                    Spacer(modifier = Modifier.width(12.dp))
+
+                                    BetterOutlinedTextField(
+                                        value = points[playerId] ?: "",
+                                        onValueChange = if (!neleModus) { { new ->
+                                            if (new.isEmpty() || new == "-" || new.toIntOrNull() in -17..140) {
+                                                points[playerId] = new
+                                            }
+                                        } } else null,
+                                        label = "Punkte",
+                                        keyboardOptions = if (!neleModus) KeyboardOptions(
+                                            keyboardType = KeyboardType.Phone,
+                                            imeAction = ImeAction.Next,
+                                            showKeyboardOnFocus = true
+                                        ) else KeyboardOptions.Default,
+                                        keyboardActions = if (!neleModus) KeyboardActions(
+                                            onNext = { focusManager.moveFocus(FocusDirection.Down) },
+                                            onDone = { keyboardManager?.hide() }
+                                        ) else KeyboardActions.Default,
+                                        modifier = Modifier
+                                            .weight(1f),
+                                    )
+
+                                    Spacer(modifier = Modifier.width(12.dp))
+
+                                    BetterOutlinedTextField(
+                                        value = (totalPoints[playerId] ?: 0).toString(),
+                                        label = "Gesamt",
+                                        modifier = Modifier.weight(1f),
+                                        readOnly = true
+                                    )
                                 }
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    start = 8.dp,
+                                    end = 8.dp,
+                                    bottom = 4.dp,
+                                ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Button(
+                                onClick = { viewModel.advanceDealer() },
+                                modifier = Modifier.weight(1f)
+                            ) { Text("Dealer") }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Button(
+                                onClick = {
+                                    viewModel.endRound(points)
+                                    points.keys.forEach { id -> points[id] = "" }
+                                    focusManager.moveFocus(FocusDirection.Down)
+                                    keyboardManager?.hide()
+                                },
+                                modifier = Modifier.weight(2f),
+                                enabled = allInputsFilled
+                            ) { Text("Runde beenden") }
+                        }
+                    }
+                },
+                bottomPart = {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(IntrinsicSize.Min)
+                            ){
+                                Spacer(modifier = Modifier.width(20.dp))
+
                                 VerticalDivider(
                                     modifier = Modifier
                                         .fillMaxHeight()
                                         .width(3.dp),
                                 )
 
-                                Column {
-                                    // Round rows
-                                    for (roundIndex in 1..visibleRoundRows) {
-                                        Row(
+                                val players = state.selectedPlayerIds.filterNotNull()
+                                players.forEachIndexed { index, playerId ->
+                                    val playerName = state.playerNames[playerId] ?: ""
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(4.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            playerName.take(2),
+                                            style = MaterialTheme.typography.labelLarge
+                                        )
+                                    }
+                                    if (index < players.size - 1) {
+                                        VerticalDivider(
                                             modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(IntrinsicSize.Min)
-                                        ) {
-                                            val players = state.selectedPlayerIds.filterNotNull()
-                                            players.forEachIndexed { index, playerId ->
-                                                val list = perPlayerRounds[playerId]
-                                                val value =
-                                                    list?.getOrNull(roundIndex - 1)?.toString()
-                                                        ?: ""
-                                                Box(
-                                                    modifier = Modifier
-                                                        .weight(1f)
-                                                        .padding(4.dp),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Text(value)
-                                                }
+                                                .fillMaxHeight()
+                                                .width(3.dp),
+                                        )
+                                    }
+                                }
+                            }
 
-                                                if (index < players.lastIndex) {
-                                                    VerticalDivider(
+                            HorizontalDivider()
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .verticalScroll(rememberScrollState())
+                            ) {
+                                Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+                                    Column (
+                                        modifier = Modifier.width(20.dp)
+                                    ){
+                                        for (roundIndex in 1..visibleRoundRows)
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(4.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(roundIndex.toString())
+                                            }
+                                    }
+                                    VerticalDivider(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .width(3.dp),
+                                    )
+
+                                    Column {
+                                        // Round rows
+                                        for (roundIndex in 1..visibleRoundRows) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(IntrinsicSize.Min)
+                                            ) {
+                                                val players = state.selectedPlayerIds.filterNotNull()
+                                                players.forEachIndexed { index, playerId ->
+                                                    val list = perPlayerRounds[playerId]
+                                                    val value =
+                                                        list?.getOrNull(roundIndex - 1)?.toString()
+                                                            ?: ""
+                                                    Box(
                                                         modifier = Modifier
-                                                            .fillMaxHeight()
-                                                            .width(3.dp),
-                                                    )
+                                                            .weight(1f)
+                                                            .padding(4.dp),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Text(value)
+                                                    }
+
+                                                    if (index < players.lastIndex) {
+                                                        VerticalDivider(
+                                                            modifier = Modifier
+                                                                .fillMaxHeight()
+                                                                .width(3.dp),
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
@@ -489,7 +431,7 @@ fun SkyjoGameScreen(
                         }
                     }
                 }
-            }
+            )
             if (neleModus) {
                 AnimatedVisibility(
                     visible = keyboardExpanded,
