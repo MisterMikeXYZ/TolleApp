@@ -1,0 +1,25 @@
+package de.michael.tolleapp.games.util.presets
+
+import kotlinx.coroutines.flow.Flow
+
+class GamePresetRepository(
+    private val dao: GamePresetDao
+) {
+    fun getPresets(gameType: String): Flow<List<GamePresetWithPlayers>> = dao.getPresets(gameType)
+
+    suspend fun createPreset(gameType: String, name: String, playerIds: List<String>) {
+        dao.insertPresetWithPlayers(
+            gameType,
+            GamePreset(name = name, gameType = gameType),
+            playerIds
+        )
+    }
+
+    suspend fun deletePreset(presetId: Long) {
+        dao.deletePresetById(presetId)
+    }
+
+    suspend fun deleteTestPresets() {
+        dao.deleteTestPresets()
+    }
+}

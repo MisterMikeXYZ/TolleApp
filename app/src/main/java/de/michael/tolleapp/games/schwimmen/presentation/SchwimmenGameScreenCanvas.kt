@@ -6,16 +6,38 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SaveAs
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.runtime.*
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,17 +51,15 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.Route
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
-import kotlin.collections.get
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SchwimmenGameScreenCanvas(
     viewModel: SchwimmenViewModel = koinViewModel(),
-    navigateTo: (Route) -> Unit,
+    navigateToMainMenu: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
     var canvasSize by remember { mutableStateOf(IntSize(0, 0)) }
@@ -99,7 +119,7 @@ fun SchwimmenGameScreenCanvas(
                                 if (!resetPressedDelete) resetPressedDelete = true
                                 else {
                                     viewModel.deleteGame(null)
-                                    navigateTo(Route.Main)
+                                    navigateToMainMenu()
                                     resetPressedDelete = false
                                 }
                             },
@@ -128,7 +148,7 @@ fun SchwimmenGameScreenCanvas(
                                 if (!resetPressedSave) resetPressedSave = true
                                 else {
                                     viewModel.pauseCurrentGame()
-                                    navigateTo(Route.Main)
+                                    navigateToMainMenu()
                                     resetPressedSave = false
                                 }
                             },
@@ -306,7 +326,7 @@ fun SchwimmenGameScreenCanvas(
                 Spacer(Modifier.height(16.dp))
                 Button(
                     onClick = {
-                        navigateTo(Route.Main)
+                        navigateToMainMenu()
                         viewModel.deleteGame(null)},
                     modifier = Modifier
                         .fillMaxWidth()

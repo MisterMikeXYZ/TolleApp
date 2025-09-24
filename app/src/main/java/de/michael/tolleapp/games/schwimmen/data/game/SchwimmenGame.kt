@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import de.michael.tolleapp.Route
 
 @Entity(tableName = "schwimmen_games")
 data class SchwimmenGame(
@@ -17,6 +18,15 @@ data class SchwimmenGame(
 enum class GameScreenType {
     CIRCLE,
     CANVAS
+    ;
+
+    val route: Route.Schwimmen
+        get() {
+            return when (this) {
+                CIRCLE -> Route.Schwimmen.Game(false)
+                CANVAS -> Route.Schwimmen.Game(true)
+            }
+        }
 }
 
 @Entity(

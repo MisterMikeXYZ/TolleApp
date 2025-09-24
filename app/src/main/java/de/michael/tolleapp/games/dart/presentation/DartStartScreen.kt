@@ -53,7 +53,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.Route
 import de.michael.tolleapp.games.dart.data.DartGame
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
@@ -66,8 +65,8 @@ import java.util.Locale
 @Composable
 fun DartStartScreen(
     viewModel: DartViewModel = koinViewModel(),
-    navigateTo: (Route) -> Unit,
-    navigateBack: () -> Unit,
+    navigateToGameScreen: () -> Unit,
+    navigateToMainMenu: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -177,10 +176,7 @@ fun DartStartScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(
-                    "Dart",
-                    color = MaterialTheme.colorScheme.onSurface
-                ) },
+                title = { Text("Dart") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -193,7 +189,7 @@ fun DartStartScreen(
                         )
                     ),
                 navigationIcon = {
-                    IconButton(onClick = navigateBack) {
+                    IconButton(onClick = navigateToMainMenu) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
@@ -253,7 +249,7 @@ fun DartStartScreen(
                                     onClick = {
                                         viewModel.resumeGame(game.id)
                                         expanded = false
-                                        navigateTo(Route.DartGameScreen)
+                                        navigateToGameScreen()
                                     },
                                     trailingIcon = {
                                         IconButton(
@@ -396,54 +392,58 @@ fun DartStartScreen(
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
                     ) {
-                        var expanded by remember { mutableStateOf(false) }
-                        val selectedPlayer = state.selectedPlayerIds[index]?.let { state.playerNames[it] } ?: "Spieler auswählen"
+                        var playerExpanded by remember { mutableStateOf(false) }
+                        val selectedPlayer =
+                            state.selectedPlayerIds[index]?.let { state.playerNames[it] }
+                                ?: "Spieler auswählen"
 
                         ExposedDropdownMenuBox(
-                            expanded = expanded,
+                            expanded = playerExpanded,
                             onExpandedChange = {
                                 if (index == 0 || state.selectedPlayerIds[index - 1] != null) {
-                                    expanded = !expanded
+                                    playerExpanded = !playerExpanded
                                 }
                             },
-                            modifier = Modifier
-                                .weight(1f)
+                            modifier = Modifier.weight(1f)
                         ) {
                             TextField(
                                 value = selectedPlayer,
                                 onValueChange = {},
                                 readOnly = true,
                                 label = { Text("Spieler") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                modifier = Modifier.menuAnchor().fillMaxWidth()
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = playerExpanded)
+                                },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth()
                             )
                             ExposedDropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
+                                expanded = playerExpanded,
+                                onDismissRequest = { playerExpanded = false }
                             ) {
                                 DropdownMenuItem(
                                     text = { Text("Neuen Spieler erstellen…") },
                                     onClick = {
-                                        expanded = false
+                                        playerExpanded = false
                                         pendingRowIndex = index
                                         showCreatePlayerDialog = true
                                     }
                                 )
-                                state.playerNames.filter { (id, _) -> id !in state.selectedPlayerIds }
-                                    .forEach { (id, name) ->
-                                        DropdownMenuItem(
-                                            text = { Text(name) },
-                                            onClick = {
-                                                viewModel.selectPlayer(index, id)
-                                                expanded = false
-                                            }
-                                        )
-                                    }
-
+                                state.playerNames.filter { (id, _) ->
+                                    id !in state.selectedPlayerIds
+                                }.forEach { (id, name) ->
+                                    DropdownMenuItem(
+                                        text = { Text(name) },
+                                        onClick = {
+                                            viewModel.selectPlayer(index, id)
+                                            playerExpanded = false
+                                        }
+                                    )
+                                }
                             }
                         }
-
-                        //X Button to remove player
+                        // Enabling the delete of a new row
                         if (index >= 1) {
                             IconButton(
                                 onClick = { viewModel.removePlayer(index) },
@@ -469,12 +469,13 @@ fun DartStartScreen(
             //Button to start the game
             Button(
                 onClick = {
-                    viewModel.startGame(startValue)
-                    navigateTo(Route.DartGameScreen)
+                    viewModel.startGame(startValue) //TODO StartValue hardcoded here
+                    navigateToGameScreen()
                 },
                 enabled = distinctSelected,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .weight(1f)
                     .requiredHeight(50.dp)
             ) {
                 Text("Spiel starten")

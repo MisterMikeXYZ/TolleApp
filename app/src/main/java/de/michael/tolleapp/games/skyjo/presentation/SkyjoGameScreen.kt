@@ -2,8 +2,6 @@ package de.michael.tolleapp.games.skyjo.presentation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
@@ -23,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -35,15 +32,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.KeyboardHide
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -52,7 +46,6 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -69,19 +62,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerIcon
-import androidx.compose.ui.input.pointer.pointerHoverIcon
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.michael.tolleapp.Route
 import de.michael.tolleapp.games.skyjo.presentation.components.BetterOutlinedTextField
 import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoKeyboard
+import de.michael.tolleapp.games.util.CustomTopBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -90,21 +79,26 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun SkyjoGameScreen(
     modifier: Modifier = Modifier,
-    navigateTo: (Route) -> Unit,
+    navigateToMainMenu: () -> Unit,
+    navigateToEnd: () -> Unit,
     viewModel: SkyjoViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
     val keyboardManager = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
+    // Local UI state to hold per-player current round input
     val points = remember { mutableStateMapOf<String, String>() }
+
     val perPlayerRounds = state.perPlayerRounds
     val totalPoints = state.totalPoints
     val visibleRoundRows = state.visibleRoundRows
 
     val allInputsFilled by remember {
         derivedStateOf {
-            state.selectedPlayerIds.filterNotNull().all { id -> !points[id].isNullOrEmpty() }
+            state.selectedPlayerIds
+                .filterNotNull()
+                .all { id -> !points[id].isNullOrEmpty() }
         }
     }
 
@@ -127,7 +121,7 @@ fun SkyjoGameScreen(
     LaunchedEffect(state.isGameEnded) {
         if (state.isGameEnded) {
             viewModel.endGame()
-            navigateTo(Route.SkyjoEnd)
+            navigateToEnd()
         }
     }
 
@@ -137,19 +131,8 @@ fun SkyjoGameScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Skyjo", color = MaterialTheme.colorScheme.onSurface) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
-                modifier = Modifier
-                    .clip(
-                        shape = MaterialTheme.shapes.extraLarge.copy(
-                            topStart = CornerSize(0.dp),
-                            topEnd = CornerSize(0.dp),
-                        )
-                    ),
+            CustomTopBar(
+                title = "Skyjo",
                 navigationIcon = {
                     var resetPressedDelete by remember { mutableStateOf(false) }
                     LaunchedEffect(resetPressedDelete) {
@@ -163,7 +146,7 @@ fun SkyjoGameScreen(
                             if (!resetPressedDelete) resetPressedDelete = true
                             else {
                                 viewModel.deleteGame(null)
-                                navigateTo(Route.Main)
+                                navigateToMainMenu()
                                 resetPressedDelete = false
                             }
                         }
@@ -183,8 +166,7 @@ fun SkyjoGameScreen(
                     IconButton(
                         onClick = {
                             scope.launch {
-                                val undone = viewModel.undoLastRound()
-                                if (undone) navigateTo(Route.SkyjoGame)
+                                viewModel.undoLastRound()
                             }
                         },
                         enabled = !state.isGameEnded && hasAtLeastOneRound
@@ -192,10 +174,9 @@ fun SkyjoGameScreen(
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Undo",
-                            tint = if (!hasAtLeastOneRound) MaterialTheme.colorScheme.onSurface.copy(
-                                alpha = 0.3f
+                            tint =  MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = if (!hasAtLeastOneRound) 0.3f else 1f
                             )
-                            else MaterialTheme.colorScheme.onSurface
                         )
                     }
                     var resetPressedSave by remember { mutableStateOf(false) }
@@ -210,7 +191,7 @@ fun SkyjoGameScreen(
                             if (!resetPressedSave) resetPressedSave = true
                             else {
                                 viewModel.pauseCurrentGame()
-                                navigateTo(Route.Main)
+                                navigateToMainMenu()
                                 resetPressedSave = false
                             }
                         },
@@ -300,7 +281,7 @@ fun SkyjoGameScreen(
                                         }
                                     },
                                     readOnly = neleModus,
-                                    label = { Text("Punkte") },
+                                    label = "Punkte",
                                     modifier = Modifier
                                         .weight(1f)
                                         .clickable(enabled = neleModus) {
@@ -322,7 +303,7 @@ fun SkyjoGameScreen(
 
                                 BetterOutlinedTextField(
                                     value = (totalPoints[playerId] ?: 0).toString(),
-                                    label = { Text("Gesamt") },
+                                    label = "Gesamt",
                                     modifier = Modifier.weight(1f),
                                     readOnly = true
                                 )

@@ -2,12 +2,12 @@ package de.michael.tolleapp.games.skyjo.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.michael.tolleapp.games.player.PlayerRepository
-import de.michael.tolleapp.games.presets.GamePresetRepository
 import de.michael.tolleapp.games.skyjo.data.SkyjoGame
 import de.michael.tolleapp.games.skyjo.data.SkyjoGameLoser
 import de.michael.tolleapp.games.skyjo.data.SkyjoGameRepository
 import de.michael.tolleapp.games.skyjo.data.SkyjoGameWinner
+import de.michael.tolleapp.games.util.player.PlayerRepository
+import de.michael.tolleapp.games.util.presets.GamePresetRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

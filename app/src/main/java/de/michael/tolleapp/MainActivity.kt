@@ -11,12 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import de.michael.tolleapp.ui.newTheme2.AppTheme2
 import de.michael.tolleapp.di.appModule
-import de.michael.tolleapp.settings.presentation.settings.SettingsState
-import de.michael.tolleapp.settings.presentation.settings.SettingsViewModel
-import de.michael.tolleapp.ui.ownTheme.AppTheme
+import de.michael.tolleapp.settings.presentation.SettingsState
+import de.michael.tolleapp.settings.presentation.SettingsViewModel
+import de.michael.tolleapp.ui.theme.AppTheme
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.ext.android.getViewModel
 import org.koin.core.context.startKoin
@@ -33,12 +31,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settingsViewModel: SettingsViewModel = getViewModel()
             val settingsState by settingsViewModel.state.collectAsState(initial = SettingsState())
-//            TolleAppTheme(darkTheme = settingsState.isDarkmode) {
-//                NavGraph()
-//            }
-//            AppTheme(darkTheme = settingsState.isDarkmode || isSystemInDarkTheme()) { NavGraph()}
-            AppTheme2(darkTheme = settingsState.isDarkmode || isSystemInDarkTheme()) { NavGraph()}
-
+            AppTheme(darkTheme = settingsState.isDarkmode || isSystemInDarkTheme()) { NavGraph() }
         }
     }
 }
@@ -49,13 +42,4 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
         text = "Hello $name!",
         modifier = modifier
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-//    TolleAppTheme {
-//        Greeting("Android")
-//    }
-    AppTheme { Greeting ("Android")}
 }

@@ -48,7 +48,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.Route
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -62,7 +61,7 @@ import kotlin.math.sqrt
 @Composable
 fun SchwimmenGameScreenCircle(
     viewModel: SchwimmenViewModel = koinViewModel(),
-    navigateTo: (Route) -> Unit,
+    navigateToMainMenu: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
     var canvasSize by remember { mutableStateOf(IntSize(0, 0)) }
@@ -112,7 +111,7 @@ fun SchwimmenGameScreenCircle(
                                 if (!resetPressedDelete) resetPressedDelete = true
                                 else {
                                     viewModel.deleteGame(null)
-                                    navigateTo(Route.Main)
+                                    navigateToMainMenu()
                                     resetPressedDelete = false
                                 }
                             },
@@ -141,7 +140,7 @@ fun SchwimmenGameScreenCircle(
                                 if (!resetPressedSave) resetPressedSave = true
                                 else {
                                     viewModel.pauseCurrentGame()
-                                    navigateTo(Route.Main)
+                                    navigateToMainMenu()
                                     resetPressedSave = false
                                 }
                             },
@@ -338,7 +337,7 @@ fun SchwimmenGameScreenCircle(
                 Spacer(Modifier.height(16.dp))
                 Button(
                     onClick = {
-                        navigateTo(Route.Main)
+                        navigateToMainMenu()
                         viewModel.deleteGame(null)
                     },
                     modifier = Modifier

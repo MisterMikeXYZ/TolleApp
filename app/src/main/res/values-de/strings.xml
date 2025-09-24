@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_name">Spielername</string>
+    <string name="predicted_tricks">Vorhergesagte Stiche</string>
+    <string name="actual_tricks">Tatsächliche Stiche</string>
+    <string name="total_points">Gesamtpunkte</string>
+    <string name="bid">Gebot</string>
+    <string name="won">Gewonnen</string>
+    <string name="total">Gesamt</string>
+    <string name="finish_bidding">Gebote abschließen</string>
+    <string name="finish_round">Runde abschließen</string>
+    <string name="main_menu">Hauptmenü</string>
+</resources>

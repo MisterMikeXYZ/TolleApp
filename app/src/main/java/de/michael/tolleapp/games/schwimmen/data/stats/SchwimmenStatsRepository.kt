@@ -1,7 +1,7 @@
 package de.michael.tolleapp.games.schwimmen.data.stats
 
-import de.michael.tolleapp.games.player.Player
-import de.michael.tolleapp.games.player.PlayerDao
+import de.michael.tolleapp.games.util.player.Player
+import de.michael.tolleapp.games.util.player.PlayerDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 

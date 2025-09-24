@@ -11,6 +11,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -27,10 +28,13 @@ fun BetterOutlinedTextField(
     onValueChange: ((String) -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    label: @Composable () -> Unit = {},
+    label: String = "",
     textColor: Color = MaterialTheme.colorScheme.onSurface,
     textStyle: TextStyle = LocalTextStyle.current,
-    readOnly: Boolean,
+    enabled: Boolean = true,
+    highlight: Boolean = false,
+    singleLine: Boolean = true,
+    readOnly: Boolean = false,
 ) {
     Column(
         modifier = modifier
@@ -42,28 +46,39 @@ fun BetterOutlinedTextField(
                     BasicTextField(
                         value = value,
                         onValueChange = onValueChange,
+                        enabled = enabled,
+                        readOnly = readOnly,
+                        singleLine = singleLine,
                         keyboardOptions = keyboardOptions,
                         keyboardActions = keyboardActions,
                         textStyle = textStyle.copy(color = textColor),
                         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = true,
-                        readOnly = readOnly
                     )
                 } else {
                     Text(
                         text = value,
                         color = textColor,
                         style = textStyle,
+                        maxLines = if (singleLine) 1 else Int.MAX_VALUE,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
             },
-            enabled = true,
-            singleLine = true,
+            enabled = enabled,
+            singleLine = singleLine,
             visualTransformation = VisualTransformation.None,
             interactionSource = remember { MutableInteractionSource() },
-            label = label,
+            colors = if (highlight) TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
+                unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
+            ) else OutlinedTextFieldDefaults.colors(),
+            label = {
+                Text(
+                    text = label,
+                    maxLines = 1,
+                )
+            },
         )
     }
 }

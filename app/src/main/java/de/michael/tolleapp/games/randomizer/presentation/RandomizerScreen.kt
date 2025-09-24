@@ -33,7 +33,6 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.Route
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.math.PI
@@ -43,8 +42,7 @@ import kotlin.math.atan2
 @Composable
 fun RandomizerScreen(
     viewModel: RandomizerViewModel = koinViewModel(),
-    navigateTo: (Route) -> Unit,
-    navigateBack: () -> Unit,
+    navigateToMainMenu: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -176,7 +174,7 @@ fun RandomizerScreen(
         if (state.randomizerType != "Zufallsgenerator") {
             viewModel.reset()
         } else {
-            navigateBack()
+            navigateToMainMenu()
         }
     }
 
@@ -204,7 +202,7 @@ fun RandomizerScreen(
                             if (state.randomizerType != "Zufallsgenerator") {
                                 viewModel.reset()
                             } else {
-                                navigateBack()
+                                navigateToMainMenu()
                             }
                         }
                     ) {

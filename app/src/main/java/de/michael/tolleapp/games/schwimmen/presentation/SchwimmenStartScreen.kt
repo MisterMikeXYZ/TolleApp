@@ -53,7 +53,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.Route
 import de.michael.tolleapp.games.schwimmen.data.game.GameScreenType
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGame
 import kotlinx.coroutines.delay
@@ -67,7 +66,7 @@ import java.util.Locale
 @Composable
 fun SchwimmenStartScreen(
     viewModel: SchwimmenViewModel = koinViewModel(),
-    navigateTo: (Route) -> Unit,
+    navigateToGame: (canvas: Boolean) -> Unit,
     navigateBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
@@ -250,8 +249,7 @@ fun SchwimmenStartScreen(
                                     onClick = {
                                         viewModel.resumeGame(game.id)
                                         expanded = false
-                                        val screen = if (game.screenType == GameScreenType.CIRCLE) Route.SchwimmenGameScreenCircle else Route.SchwimmenGameScreenCanvas
-                                        navigateTo(screen)
+                                        navigateToGame(game.screenType == GameScreenType.CANVAS)
                                     },
                                     trailingIcon = {
                                         IconButton(
@@ -459,8 +457,7 @@ fun SchwimmenStartScreen(
             Button(
                 onClick = {
                     viewModel.startGame(screenType)
-                    navigateTo(if (screenType == GameScreenType.CANVAS) Route.SchwimmenGameScreenCanvas
-                    else Route.SchwimmenGameScreenCircle)
+                    navigateToGame(screenType == GameScreenType.CANVAS)
                 },
                 enabled = distinctSelected,
                 modifier = Modifier

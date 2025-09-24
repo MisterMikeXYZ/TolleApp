@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 19,
-    "identityHash": "71027651555f2b760efa2d26e8627193",
+    "identityHash": "ccbe6cc19e2d18c2866a4503eb2de78a",
     "entities": [
       {
         "tableName": "players",
@@ -765,11 +765,214 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "WizardGameEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `roundsToPlay` INTEGER NOT NULL, `finished` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "roundsToPlay",
+            "columnName": "roundsToPlay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "finished",
+            "columnName": "finished",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "WizardGamePlayerEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`gameId` TEXT NOT NULL, `playerId` TEXT NOT NULL, PRIMARY KEY(`gameId`, `playerId`), FOREIGN KEY(`gameId`) REFERENCES `WizardGameEntity`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`playerId`) REFERENCES `players`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "gameId",
+            "columnName": "gameId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "playerId",
+            "columnName": "playerId",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "gameId",
+            "playerId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_WizardGamePlayerEntity_gameId",
+            "unique": false,
+            "columnNames": [
+              "gameId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_WizardGamePlayerEntity_gameId` ON `${TABLE_NAME}` (`gameId`)"
+          },
+          {
+            "name": "index_WizardGamePlayerEntity_playerId",
+            "unique": false,
+            "columnNames": [
+              "playerId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_WizardGamePlayerEntity_playerId` ON `${TABLE_NAME}` (`playerId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "WizardGameEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "gameId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "players",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "playerId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "WizardRoundEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`gameId` TEXT NOT NULL, `roundNumber` INTEGER NOT NULL, `dealerId` TEXT, `bids` TEXT NOT NULL, `bidsFinal` INTEGER NOT NULL, `tricksWon` TEXT NOT NULL, `scores` TEXT NOT NULL, PRIMARY KEY(`gameId`, `roundNumber`), FOREIGN KEY(`gameId`) REFERENCES `WizardGameEntity`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`dealerId`) REFERENCES `players`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "gameId",
+            "columnName": "gameId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "roundNumber",
+            "columnName": "roundNumber",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dealerId",
+            "columnName": "dealerId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "bids",
+            "columnName": "bids",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bidsFinal",
+            "columnName": "bidsFinal",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tricksWon",
+            "columnName": "tricksWon",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scores",
+            "columnName": "scores",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "gameId",
+            "roundNumber"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_WizardRoundEntity_gameId",
+            "unique": false,
+            "columnNames": [
+              "gameId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_WizardRoundEntity_gameId` ON `${TABLE_NAME}` (`gameId`)"
+          },
+          {
+            "name": "index_WizardRoundEntity_dealerId",
+            "unique": false,
+            "columnNames": [
+              "dealerId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_WizardRoundEntity_dealerId` ON `${TABLE_NAME}` (`dealerId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "WizardGameEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "gameId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "players",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "dealerId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '71027651555f2b760efa2d26e8627193')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ccbe6cc19e2d18c2866a4503eb2de78a')"
     ]
   }
 }

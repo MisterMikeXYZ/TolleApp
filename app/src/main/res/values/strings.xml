@@ -1,3 +1,13 @@
 <resources>
-    <string name="app_name">TolleApp</string>
+    <string name="app_name" translatable="false">TolleApp</string>
+    <string name="player_name">Player name</string>
+    <string name="predicted_tricks">Predicted tricks</string>
+    <string name="actual_tricks">Actual tricks</string>
+    <string name="total_points">Total points</string>
+    <string name="bid">Bid</string>
+    <string name="won">Won</string>
+    <string name="total">Total</string>
+    <string name="finish_bidding">Finish bidding</string>
+    <string name="finish_round">Finish round</string>
+    <string name="main_menu">Main menu</string>
 </resources>

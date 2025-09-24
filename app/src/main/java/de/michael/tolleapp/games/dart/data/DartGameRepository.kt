@@ -3,7 +3,7 @@ import de.michael.tolleapp.games.dart.data.DartGameDao
 import de.michael.tolleapp.games.dart.data.DartGameRound
 import de.michael.tolleapp.games.dart.data.DartThrowDao
 import de.michael.tolleapp.games.dart.data.DartThrowData
-import de.michael.tolleapp.games.player.Player
+import de.michael.tolleapp.games.util.player.Player
 import kotlinx.coroutines.flow.Flow
 
 class DartGameRepository(

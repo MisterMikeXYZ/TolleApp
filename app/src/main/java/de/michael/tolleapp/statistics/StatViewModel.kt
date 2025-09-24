@@ -2,8 +2,8 @@ package de.michael.tolleapp.statistics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.michael.tolleapp.games.player.Player
-import de.michael.tolleapp.games.player.PlayerRepository
+import de.michael.tolleapp.games.util.player.Player
+import de.michael.tolleapp.games.util.player.PlayerRepository
 import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStats
 import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStatsRepository
 import de.michael.tolleapp.games.skyjo.data.SkyjoGameRepository

@@ -7,7 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
-import de.michael.tolleapp.games.player.Player
+import de.michael.tolleapp.games.util.player.Player
 import kotlinx.coroutines.flow.Flow
 
 @Dao

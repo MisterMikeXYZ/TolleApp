@@ -85,7 +85,7 @@ fun StatScreen(
                         )
                     ),
                 navigationIcon = {
-                    IconButton(onClick = { navigateTo(Route.Main) }) {
+                    IconButton(onClick = { navigateTo(Route.Before.StartScreen) }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"

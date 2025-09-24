@@ -41,16 +41,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.Route
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
-import kotlin.collections.get
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkyjoEndScreen(
-    navigateTo: (Route) -> Unit,
+    navigateToGameScreen: () -> Unit,
+    navigateToMainMenu: () -> Unit,
     viewModel: SkyjoViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -66,7 +65,7 @@ fun SkyjoEndScreen(
         )
     }
     BackHandler {
-        navigateTo(Route.Main)
+        navigateToMainMenu()
         viewModel.resetGame()
     }
 
@@ -101,7 +100,7 @@ fun SkyjoEndScreen(
                             if (!resetPressedDelete) resetPressedDelete = true
                             else {
                                 viewModel.deleteGame(null)
-                                navigateTo(Route.Main)
+                                navigateToMainMenu()
                                 resetPressedDelete = false
                             }
                         }
@@ -121,7 +120,7 @@ fun SkyjoEndScreen(
                         onClick = {
                             scope.launch {
                                 val undone = viewModel.undoLastRound()
-                                if (undone) navigateTo(Route.SkyjoGame)
+                                if (undone) navigateToGameScreen()
                             }
                         }
                     ) {
@@ -245,7 +244,7 @@ fun SkyjoEndScreen(
             Spacer(modifier = Modifier.height(24.dp))
             Button(
                 onClick = {
-                    navigateTo(Route.Main)
+                    navigateToMainMenu()
                     viewModel.resetGame()
                 }
             )

@@ -7,11 +7,11 @@ import de.michael.tolleapp.games.dart.data.DartGameDao
 import de.michael.tolleapp.games.dart.data.DartGameRound
 import de.michael.tolleapp.games.dart.data.DartThrowDao
 import de.michael.tolleapp.games.dart.data.DartThrowData
-import de.michael.tolleapp.games.player.Player
-import de.michael.tolleapp.games.player.PlayerDao
-import de.michael.tolleapp.games.presets.GamePreset
-import de.michael.tolleapp.games.presets.GamePresetDao
-import de.michael.tolleapp.games.presets.GamePresetPlayer
+import de.michael.tolleapp.games.util.player.Player
+import de.michael.tolleapp.games.util.player.PlayerDao
+import de.michael.tolleapp.games.util.presets.GamePreset
+import de.michael.tolleapp.games.util.presets.GamePresetDao
+import de.michael.tolleapp.games.util.presets.GamePresetPlayer
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGame
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameDao
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameRound
@@ -25,8 +25,12 @@ import de.michael.tolleapp.games.skyjo.data.SkyjoGameRound
 import de.michael.tolleapp.games.skyjo.data.SkyjoGameRoundDao
 import de.michael.tolleapp.games.skyjo.data.SkyjoGameStatisticsDao
 import de.michael.tolleapp.games.skyjo.data.SkyjoGameWinner
-import de.michael.tolleapp.settings.data.settings.Settings
-import de.michael.tolleapp.settings.data.settings.SettingsDao
+import de.michael.tolleapp.games.wizard.data.WizardDao
+import de.michael.tolleapp.games.wizard.data.entities.WizardGameEntity
+import de.michael.tolleapp.games.wizard.data.entities.WizardGamePlayerEntity
+import de.michael.tolleapp.games.wizard.data.entities.WizardRoundEntity
+import de.michael.tolleapp.settings.data.Settings
+import de.michael.tolleapp.settings.data.SettingsDao
 
 @Database(
     entities = [
@@ -50,9 +54,14 @@ import de.michael.tolleapp.settings.data.settings.SettingsDao
         // Dart
         DartGame::class,
         DartGameRound::class,
-        DartThrowData::class
+        DartThrowData::class,
+
+        // Wizard
+        WizardGameEntity::class,
+        WizardGamePlayerEntity::class,
+        WizardRoundEntity::class,
     ],
-    version = 19,
+    version = 20,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -79,4 +88,7 @@ abstract class AppDatabase : RoomDatabase() {
     // Dart
     abstract fun dartGameDao(): DartGameDao
     abstract fun dartThrowDao(): DartThrowDao
+
+    // Wizard
+    abstract fun WizardDao(): WizardDao
 }

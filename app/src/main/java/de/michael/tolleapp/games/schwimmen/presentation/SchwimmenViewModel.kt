@@ -2,9 +2,9 @@ package de.michael.tolleapp.games.schwimmen.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.michael.tolleapp.games.player.Player
-import de.michael.tolleapp.games.player.PlayerRepository
-import de.michael.tolleapp.games.presets.GamePresetRepository
+import de.michael.tolleapp.games.util.player.Player
+import de.michael.tolleapp.games.util.player.PlayerRepository
+import de.michael.tolleapp.games.util.presets.GamePresetRepository
 import de.michael.tolleapp.games.schwimmen.data.game.GameScreenType
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGame
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameRepository

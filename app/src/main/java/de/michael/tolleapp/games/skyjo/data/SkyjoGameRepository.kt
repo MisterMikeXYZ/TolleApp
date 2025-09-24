@@ -1,6 +1,6 @@
 package de.michael.tolleapp.games.skyjo.data
 
-import de.michael.tolleapp.games.player.Player
+import de.michael.tolleapp.games.util.player.Player
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext

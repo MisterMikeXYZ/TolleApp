@@ -37,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.Route
 import de.michael.tolleapp.games.dart.presentation.components.Keyboard
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
@@ -46,7 +45,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun DartGameScreen(
     viewModel: DartViewModel = koinViewModel(),
-    navigateTo: (Route) -> Unit,
+    navigateToMainMenu: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
     val playerState by viewModel.playerState.collectAsState()
@@ -90,7 +89,7 @@ fun DartGameScreen(
                             if (!resetPressedDelete) resetPressedDelete = true
                             else {
                                 viewModel.deleteGame(null)
-                                navigateTo(Route.Main)
+                                navigateToMainMenu()
                                 resetPressedDelete = false
                             }
                         }
@@ -118,7 +117,7 @@ fun DartGameScreen(
                             if (!resetPressedSave) resetPressedSave = true
                             else {
                                 viewModel.saveCurrentGame()
-                                navigateTo(Route.Main)
+                                navigateToMainMenu()
                                 resetPressedSave = false
                             }
                         },
@@ -182,7 +181,7 @@ fun DartGameScreen(
                 ) {
                     Button(
                         onClick = {
-                            navigateTo(Route.Main)
+                            navigateToMainMenu()
                             viewModel.resetGame()
                         }
                     )
