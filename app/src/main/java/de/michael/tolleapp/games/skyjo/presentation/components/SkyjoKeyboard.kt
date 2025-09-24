@@ -4,9 +4,12 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -35,13 +38,17 @@ fun SkyjoKeyboard(
         Row(
             modifier = Modifier.fillMaxWidth(),
         ) {
-            if (selectedValues.isEmpty()) Text("Wähle Karten aus") else {
-                Text(
-                    selectedValues.joinToString(", "),
-                    maxLines = 1,
-                    modifier = Modifier.padding(top = 3.dp)
-                )
+            val scrollState = rememberScrollState()
+            LaunchedEffect(selectedValues) {
+                scrollState.animateScrollTo(scrollState.maxValue)
             }
+            Text(
+                selectedValues.takeUnless { it.isEmpty() }?.joinToString(", ") ?: "Wähle Kartenwerte aus",
+                maxLines = 1,
+                modifier = Modifier
+                    .padding(top = 2.dp, end = 16.dp)
+                    .horizontalScroll(scrollState)
+            )
         }
         chunkedRows.forEach { row ->
             Row(

@@ -1,6 +1,13 @@
 package de.michael.tolleapp.games.skyjo.presentation
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -16,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -63,6 +71,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
@@ -500,15 +509,22 @@ fun SkyjoGameScreen(
                     }
                 }
             }
-            if (neleModus && activePlayerId != null) {
-                var containerSize by remember{mutableStateOf(IntSize.Zero)}
-                Lau
-                Box(
+            if (neleModus) {
+                AnimatedVisibility(
+                    visible = keyboardExpanded,
+                    enter = slideInVertically(
+                        initialOffsetY = { fullHeight -> fullHeight },
+                        animationSpec = tween(durationMillis = 200, easing = LinearEasing)
+                    ),
+                    exit = slideOutVertically(
+                        targetOffsetY = { fullHeight -> fullHeight },
+                        animationSpec = tween(durationMillis = 200, easing = LinearEasing)
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
                 ) {
-                    if (keyboardExpanded) {
+                    Box {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -519,9 +535,11 @@ fun SkyjoGameScreen(
                         ) {
                             SkyjoKeyboard(
                                 onSubmit = { total ->
-                                    points[activePlayerId!!] = total
-                                    activePlayerId = null
-                                    keyboardExpanded = false
+                                    activePlayerId?.let { id ->
+                                        points[id] = total
+                                        activePlayerId = null
+                                        keyboardExpanded = false
+                                    }
                                 },
                                 onBack = {
                                     activePlayerId = null
@@ -530,23 +548,23 @@ fun SkyjoGameScreen(
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
-                    }
 
-                    IconButton(
-                        onClick = {
-                            keyboardExpanded = !keyboardExpanded
-                            if (!keyboardExpanded) {
-                                activePlayerId = null
-                            }
-                        },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                    ) {
-                        Icon(
-                            imageVector = if (keyboardExpanded) Icons.Default.KeyboardHide
-                            else Icons.Default.Keyboard,
-                            contentDescription = "Toggle keyboard"
-                        )
+                        IconButton(
+                            onClick = {
+                                keyboardExpanded = !keyboardExpanded
+                                if (!keyboardExpanded) {
+                                    activePlayerId = null
+                                }
+                            },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                        ) {
+                            Icon(
+                                imageVector = if (keyboardExpanded) Icons.Default.KeyboardHide
+                                else Icons.Default.Keyboard,
+                                contentDescription = "Toggle keyboard"
+                            )
+                        }
                     }
                 }
             }
