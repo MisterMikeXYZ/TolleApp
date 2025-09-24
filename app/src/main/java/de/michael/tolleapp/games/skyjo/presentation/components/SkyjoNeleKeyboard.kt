@@ -1,6 +1,5 @@
 package de.michael.tolleapp.games.skyjo.presentation.components
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,7 +8,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -20,7 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun SkyjoKeyboard(
+fun SkyjoNeleKeyboard(
     onSubmit: (total: String) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
@@ -43,7 +41,8 @@ fun SkyjoKeyboard(
                 scrollState.animateScrollTo(scrollState.maxValue)
             }
             Text(
-                selectedValues.takeUnless { it.isEmpty() }?.joinToString(", ") ?: "Wähle Kartenwerte aus",
+                selectedValues.takeUnless { it.isEmpty() }?.joinToString(", ")
+                    ?: "Wähle Kartenwerte aus",
                 maxLines = 1,
                 modifier = Modifier
                     .padding(top = 2.dp, end = 16.dp)
@@ -60,7 +59,9 @@ fun SkyjoKeyboard(
                         text = number,
                         enabled = true,
                         onClick = {
-                            number.toIntOrNull()?.let { if (selectedValues.size < 12) selectedValues = selectedValues + it }
+                            number.toIntOrNull()?.let {
+                                if (selectedValues.size < 12) selectedValues = selectedValues + it
+                            }
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -95,34 +96,5 @@ fun SkyjoKeyboard(
                 enabled = true
             )
         }
-    }
-}
-
-@Composable
-fun SkyjoKeyButton(
-    modifier: Modifier = Modifier,
-    text: String,
-    onClick: () -> Unit,
-    enabled: Boolean,
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.secondary)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = LocalIndication.current,
-                enabled = enabled,
-                onClick = onClick
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSecondary,
-            textAlign = TextAlign.Center
-        )
     }
 }

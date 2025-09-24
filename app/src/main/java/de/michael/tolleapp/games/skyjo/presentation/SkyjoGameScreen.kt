@@ -64,7 +64,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.michael.tolleapp.games.skyjo.presentation.components.BetterOutlinedTextField
-import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoKeyboard
+import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoNeleKeyboard
+import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoNormalKeyboard
 import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.games.util.DividedScreen
 import kotlinx.coroutines.delay
@@ -223,7 +224,7 @@ fun SkyjoGameScreen(
 
                                 val isActivePlayer = playerId == activePlayerId
                                 val backgroundColor =
-                                    if (isActivePlayer && neleModus) MaterialTheme.colorScheme.primary.copy(
+                                    if (isActivePlayer) MaterialTheme.colorScheme.primary.copy(
                                         alpha = 0.2f
                                     )
                                     else Color.Transparent
@@ -235,7 +236,7 @@ fun SkyjoGameScreen(
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(12.dp))
                                         .background(backgroundColor)
-                                        .clickable(enabled = neleModus) {
+                                        .clickable(enabled = true) {
                                             activePlayerId = playerId
                                             keyboardExpanded = true
                                         }
@@ -258,21 +259,21 @@ fun SkyjoGameScreen(
 
                                     BetterOutlinedTextField(
                                         value = points[playerId] ?: "",
-                                        onValueChange = if (!neleModus) { { new ->
-                                            if (new.isEmpty() || new == "-" || new.toIntOrNull() in -17..140) {
-                                                points[playerId] = new
-                                            }
-                                        } } else null,
+//                                        onValueChange = if (!neleModus) { { new ->
+//                                            if (new.isEmpty() || new == "-" || new.toIntOrNull() in -17..140) {
+//                                                points[playerId] = new
+//                                            }
+//                                        } } else null,
                                         label = "Punkte",
-                                        keyboardOptions = if (!neleModus) KeyboardOptions(
-                                            keyboardType = KeyboardType.Phone,
-                                            imeAction = ImeAction.Next,
-                                            showKeyboardOnFocus = true
-                                        ) else KeyboardOptions.Default,
-                                        keyboardActions = if (!neleModus) KeyboardActions(
-                                            onNext = { focusManager.moveFocus(FocusDirection.Down) },
-                                            onDone = { keyboardManager?.hide() }
-                                        ) else KeyboardActions.Default,
+//                                        keyboardOptions = if (!neleModus) KeyboardOptions(
+//                                            keyboardType = KeyboardType.Phone,
+//                                            imeAction = ImeAction.Next,
+//                                            showKeyboardOnFocus = true
+//                                        ) else KeyboardOptions.Default,
+//                                        keyboardActions = if (!neleModus) KeyboardActions(
+//                                            onNext = { focusManager.moveFocus(FocusDirection.Down) },
+//                                            onDone = { keyboardManager?.hide() }
+//                                        ) else KeyboardActions.Default,
                                         modifier = Modifier
                                             .weight(1f),
                                     )
@@ -432,36 +433,41 @@ fun SkyjoGameScreen(
                     }
                 }
             )
-            if (neleModus) {
-                AnimatedVisibility(
-                    visible = keyboardExpanded,
-                    enter = slideInVertically(
-                        initialOffsetY = { fullHeight -> fullHeight },
-                        animationSpec = tween(durationMillis = 200, easing = LinearEasing)
-                    ),
-                    exit = slideOutVertically(
-                        targetOffsetY = { fullHeight -> fullHeight },
-                        animationSpec = tween(durationMillis = 200, easing = LinearEasing)
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                ) {
-                    Box {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                                .background(MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.medium)
-                                .padding(8.dp)
-                                .align(Alignment.BottomCenter)
-                        ) {
-                            SkyjoKeyboard(
+            AnimatedVisibility(
+                visible = keyboardExpanded,
+                enter = slideInVertically(
+                    initialOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = tween(durationMillis = 200, easing = LinearEasing)
+                ),
+                exit = slideOutVertically(
+                    targetOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = tween(durationMillis = 200, easing = LinearEasing)
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+            ) {
+                Box {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.medium)
+                            .padding(8.dp)
+                            .align(Alignment.BottomCenter)
+                    ) {
+                        if (neleModus) {
+                            SkyjoNeleKeyboard(
                                 onSubmit = { total ->
                                     activePlayerId?.let { id ->
                                         points[id] = total
-                                        activePlayerId = null
-                                        keyboardExpanded = false
+                                        val nextId = state.selectedPlayerIds[(state.selectedPlayerIds.indexOf(activePlayerId) + 1) % state.selectedPlayerIds.size]
+                                        activePlayerId = if (points[nextId].isNullOrEmpty()) {
+                                            nextId
+                                        } else null
+                                        keyboardExpanded = if (points[nextId].isNullOrEmpty()) {
+                                            true
+                                        } else false
                                     }
                                 },
                                 onBack = {
@@ -470,27 +476,44 @@ fun SkyjoGameScreen(
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             )
-                        }
-
-                        IconButton(
-                            onClick = {
-                                keyboardExpanded = !keyboardExpanded
-                                if (!keyboardExpanded) {
-                                    activePlayerId = null
-                                }
-                            },
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                        ) {
-                            Icon(
-                                imageVector = if (keyboardExpanded) Icons.Default.KeyboardHide
-                                else Icons.Default.Keyboard,
-                                contentDescription = "Toggle keyboard"
+                        } else {
+                            SkyjoNormalKeyboard(
+                                onSubmit = { total ->
+                                    activePlayerId?.let { id ->
+                                        points[id] = total
+                                        val nextId = state.selectedPlayerIds[(state.selectedPlayerIds.indexOf(activePlayerId) + 1) % state.selectedPlayerIds.size]
+                                        activePlayerId = if (points[nextId].isNullOrEmpty()) {
+                                            nextId
+                                        } else null
+                                        keyboardExpanded = if (points[nextId].isNullOrEmpty()) {
+                                            true
+                                        } else false
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
+
+                    IconButton(
+                        onClick = {
+                            keyboardExpanded = !keyboardExpanded
+                            if (!keyboardExpanded) {
+                                activePlayerId = null
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                    ) {
+                        Icon(
+                            imageVector = if (keyboardExpanded) Icons.Default.KeyboardHide
+                            else Icons.Default.Keyboard,
+                            contentDescription = "Toggle keyboard"
+                        )
+                    }
                 }
             }
+
         }
     }
 }
