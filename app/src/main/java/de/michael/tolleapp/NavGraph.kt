@@ -192,7 +192,7 @@ fun NavGraph(
                     state = state.toStartState(),
                     onAction = { action ->
                         when (action) {
-                            StartAction.NavigateBack -> navController.navigateWithPop<Route.WizardNav>(Route.BeforeNav)
+                            StartAction.NavigateToMainMenu -> navController.navigateWithPop<Route.WizardNav>(Route.BeforeNav)
                             StartAction.NavigateToGame -> navController.navigate(Route.Wizard.Game)
                             else -> viewModel.onStartAction(action)
                         }
@@ -206,6 +206,7 @@ fun NavGraph(
                     state = state,
                     onAction = { action ->
                         when (action) {
+                            WizardAction.NavigateToMainMenu -> navController.navigateWithPop<Route.WizardNav>(Route.BeforeNav)
                             WizardAction.OnGameFinished -> {
                                 navController.navigate(Route.Wizard.End)
                             }

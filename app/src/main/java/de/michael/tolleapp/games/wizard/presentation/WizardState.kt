@@ -11,6 +11,7 @@ data class WizardState(
     val allPlayers: List<Player> = emptyList(),
     val presets: List<GamePresetWithPlayers> = emptyList(),
     val pausedGames: List<PausedGame> = emptyList(),
+
     val selectedPlayers: List<Player?> = listOf(null, null, null),
 
     val currentGameId: String? = null,

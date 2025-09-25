@@ -23,6 +23,6 @@ fun WizardRoundEntity.toDomain(): WizardRoundData {
         bids = Json.decodeFromString(this.bids),
         bidsFinal = this.bidsFinal,
         tricksWon = Json.decodeFromString(this.tricksWon),
-        scores = Json.decodeFromString(this.tricksWon),
+        scores = Json.decodeFromString(this.scores),
     )
 }

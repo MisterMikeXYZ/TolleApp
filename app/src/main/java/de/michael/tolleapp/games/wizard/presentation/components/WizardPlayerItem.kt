@@ -54,7 +54,7 @@ fun WizardPlayerItem(
         BetterOutlinedTextField(
             value = bidValue,
             onValueChange = onBidChange,
-            label = stringResource(R.string.bid),
+            label = stringResource(R.string.bids),
             enabled = inputEnabled.first,
             highlight = inputEnabled.first && highlight,
             keyboardOptions = KeyboardOptions(
@@ -73,7 +73,7 @@ fun WizardPlayerItem(
         BetterOutlinedTextField(
             value = wonTricksValue,
             onValueChange = onWonTricksChange,
-            label = stringResource(R.string.won),
+            label = stringResource(R.string.wins),
             enabled = inputEnabled.second,
             highlight = inputEnabled.second && highlight,
             keyboardOptions = KeyboardOptions(

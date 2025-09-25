@@ -19,6 +19,8 @@ import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStatsRepository
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenViewModel
 import de.michael.tolleapp.games.skyjo.data.SkyjoGameRepository
 import de.michael.tolleapp.games.skyjo.presentation.SkyjoViewModel
+import de.michael.tolleapp.games.wizard.data.WizardRepository
+import de.michael.tolleapp.games.wizard.domain.WizardRepositoryImpl
 import de.michael.tolleapp.games.wizard.presentation.WizardViewModel
 
 val appModule = module {
@@ -50,6 +52,8 @@ val appModule = module {
     single { get<AppDatabase>().dartGameDao() } // Dart
     single { get<AppDatabase>().dartThrowDao() }
 
+    single { get<AppDatabase>().wizardDao() } // Wizard
+
 
     // Repositories
     single { PlayerRepository(get()) } // Player
@@ -64,6 +68,8 @@ val appModule = module {
 
     single { DartGameRepository(get(), get()) } // Dart
 
+    single<WizardRepository> { WizardRepositoryImpl(get()) } // Wizard
+
 
     // ViewModels
     viewModel { MainViewModel() }
@@ -73,5 +79,5 @@ val appModule = module {
     viewModel { SettingsViewModel(get(), get(), get()) }
     viewModel { DartViewModel(get(), get(), get()) }
     viewModel { RandomizerViewModel(get(), get()) }
-    viewModel { WizardViewModel(get(), get()) }
+    viewModel { WizardViewModel(get(), get(), get()) }
 }

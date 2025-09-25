@@ -149,7 +149,7 @@ fun StartGameScreen(
             CustomTopBar(
                 title = state.gameType.toString(),
                 navigationIcon = {
-                    IconButton({ onAction(StartAction.NavigateBack) }) {
+                    IconButton({ onAction(StartAction.NavigateToMainMenu) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"

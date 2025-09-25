@@ -6,10 +6,12 @@ import de.michael.tolleapp.games.util.GameType
 import de.michael.tolleapp.games.util.player.PlayerRepository
 import de.michael.tolleapp.games.util.presets.GamePresetRepository
 import de.michael.tolleapp.games.util.startScreen.StartAction
+import de.michael.tolleapp.games.wizard.data.WizardRepository
 import de.michael.tolleapp.games.wizard.domain.WizardRoundData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -18,12 +20,14 @@ import kotlin.math.abs
 
 class WizardViewModel(
     private val playerRepo: PlayerRepository,
-//    private val gameRepo: , FIXME
+    private val wizardRepo: WizardRepository,
     private val presetRepo: GamePresetRepository
 ): ViewModel() {
 
     private val _allPlayers = playerRepo.getAllPlayers()
     private val _presets = presetRepo.getPresets(GameType.WIZARD.toString())
+    private val _pausedGames = wizardRepo.getPausedGames()
+        .getOrThrow()
 
     private val _selectedPlayerIds = MutableStateFlow<List<String?>>(
         listOf(null, null, null)
@@ -35,11 +39,13 @@ class WizardViewModel(
         _allPlayers,
         _presets,
         _selectedPlayerIds,
+        _pausedGames,
         _state
-    ) { players, presets, selectedPlayerIds, state ->
+    ) { players, presets, selectedPlayerIds, pausedGames, state ->
         state.copy(
             allPlayers = players,
             presets = presets,
+            pausedGames = pausedGames,
             selectedPlayers = selectedPlayerIds.map { selectedPlayerId ->
                 players.find { it.id == selectedPlayerId }
             }
@@ -71,9 +77,10 @@ class WizardViewModel(
             }
 
             StartAction.StartGame -> {
+                val gameId = UUID.randomUUID().toString()
                 _selectedPlayerIds.update { it.filterNotNull() }
                 _state.update { state -> state.copy(
-                    currentGameId = UUID.randomUUID().toString(),
+                    currentGameId = gameId,
                     rounds = listOf(
                         WizardRoundData(
                             roundNumber = 1,
@@ -81,9 +88,39 @@ class WizardViewModel(
                         )
                     )
                 ) }
+                viewModelScope.launch {
+                    wizardRepo.createGame(
+                        gameId,
+                        state.value.roundsToPlay
+                    )
+                    state.value.selectedPlayers.filterNotNull().forEach { player ->
+                        wizardRepo.addPlayerToGame(gameId, player.id)
+                    }
+                    wizardRepo.upsertRound(
+                        gameId,
+                        state.value.rounds.first()
+                    )
+                }
             }
-            is StartAction.ResumeGame -> TODO()
-            is StartAction.DeleteGame -> TODO()
+            is StartAction.ResumeGame -> {
+                viewModelScope.launch {
+                    val pausedGame = wizardRepo.getGame(action.gameId)
+                        .getOrThrow()
+                        .first()
+                        ?: throw IllegalStateException("Could not find game #${action.gameId}")
+                    _selectedPlayerIds.update { pausedGame.playerIds }
+                    _state.update { state -> state.copy(
+                        currentGameId = pausedGame.id,
+                        roundsToPlay = pausedGame.roundsToPlay,
+                        rounds = pausedGame.rounds,
+                    ) }
+                }
+            }
+            is StartAction.DeleteGame -> {
+                viewModelScope.launch {
+                    wizardRepo.deleteGame(action.gameId)
+                }
+            }
 
             else -> throw NotImplementedError("Action '$action' not implemented in WizardViewModel")
         }
@@ -100,25 +137,41 @@ class WizardViewModel(
                 )
                 state.copy(rounds = state.rounds.dropLast(1) + newRound)
             }
-            is WizardAction.OnTricksWonChange -> _state.update { state ->
-                val currentRound = state.rounds.last()
+            is WizardAction.OnTricksWonChange -> {
+                val currentRound = state.value.rounds.last()
                 val newRound = currentRound.copy(
                     tricksWon = currentRound.tricksWon.toMutableMap().apply {
                         this[action.playerId] = action.newValue
                     }
                 )
-                state.copy(rounds = state.rounds.dropLast(1) + newRound)
+                _state.update { state ->
+                    state.copy(rounds = state.rounds.dropLast(1) + newRound)
+                }
+                viewModelScope.launch {
+                    wizardRepo.upsertRound(
+                        state.value.currentGameId!!,
+                        listOf(currentRound, newRound)
+                    )
+                }
             }
-            WizardAction.FinishBidding -> _state.update { state ->
-                val currentRound = state.rounds.last()
+            WizardAction.FinishBidding -> {
+                val currentRound = state.value.rounds.last()
                 val newRound = currentRound.copy(
                     bidsFinal = true
                 )
-                state.copy(rounds = state.rounds.dropLast(1) + newRound)
+                _state.update { state ->
+                    state.copy(rounds = state.rounds.dropLast(1) + newRound)
+                }
+                viewModelScope.launch {
+                    wizardRepo.upsertRound(
+                        state.value.currentGameId!!,
+                        newRound
+                    )
+                }
             }
-            WizardAction.FinishRound -> _state.update { state ->
-                val previousRound = state.rounds.getOrNull(state.rounds.size - 2)
-                val currentRound = state.rounds.last()
+            WizardAction.FinishRound -> {
+                val previousRound = state.value.rounds.getOrNull(state.value.rounds.size - 2)
+                val currentRound = state.value.rounds.last()
                 val selectedPlayers = this.state.value.selectedPlayers
                 // calculate scores
                 val scores = selectedPlayers.filterNotNull().associate { player ->
@@ -136,20 +189,39 @@ class WizardViewModel(
                     scores = scores
                 )
                 // Finish game if last round played
-                if (currentRound.roundNumber >= state.roundsToPlay) {
-                    return@update state.copy(
-                        rounds = state.rounds.dropLast(1) + updatedCurrentRound,
-                        finished = true,
-                    )
+                if (currentRound.roundNumber >= state.value.roundsToPlay) {
+                    _state.update { state ->
+                        state.copy(
+                            rounds = state.rounds.dropLast(1) + updatedCurrentRound,
+                            finished = true,
+                        )
+                    }
+                    viewModelScope.launch {
+                        wizardRepo.upsertRound(
+                            state.value.currentGameId!!,
+                            updatedCurrentRound
+                        )
+                        wizardRepo.finishGame(state.value.currentGameId!!)
+                    }
+                    return
                 }
                 // prepare next round
-                val nextDealerIndex = selectedPlayers.indexOfFirst { it?.id == currentRound.dealerId }
-                    .let { if (it == -1) 0 else (it + 1) % selectedPlayers.size }
+                val nextDealerIndex =
+                    selectedPlayers.indexOfFirst { it?.id == currentRound.dealerId }
+                        .let { if (it == -1) 0 else (it + 1) % selectedPlayers.size }
                 val nextRound = WizardRoundData(
                     roundNumber = currentRound.roundNumber + 1,
                     dealerId = selectedPlayers[nextDealerIndex]?.id ?: "",
                 )
-                state.copy(rounds = state.rounds.dropLast(1) + updatedCurrentRound + nextRound)
+                _state.update { state ->
+                    state.copy(rounds = state.rounds.dropLast(1) + updatedCurrentRound + nextRound)
+                }
+                viewModelScope.launch {
+                    wizardRepo.upsertRound(
+                        state.value.currentGameId!!,
+                        listOf(updatedCurrentRound, nextRound)
+                    )
+                }
             }
             else -> throw NotImplementedError("Action '$action' not implemented in WizardViewModel")
         }

@@ -4,10 +4,13 @@
     <string name="predicted_tricks">Predicted tricks</string>
     <string name="actual_tricks">Actual tricks</string>
     <string name="total_points">Total points</string>
-    <string name="bid">Bid</string>
-    <string name="won">Won</string>
+    <string name="bids">Bids</string>
+    <string name="wins">Wins</string>
     <string name="total">Total</string>
     <string name="finish_bidding">Finish bidding</string>
     <string name="finish_round">Finish round</string>
     <string name="main_menu">Main menu</string>
+    <string name="enter_bids_desc">Enter bids for every player</string>
+    <string name="enter_tricks_won_desc">Enter tricks won for every player</string>
+    <string name="total_tricks_won_error">Total tricks won must equal round number (%1$d)</string>
 </resources>
