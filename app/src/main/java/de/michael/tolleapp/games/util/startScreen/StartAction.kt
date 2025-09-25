@@ -13,6 +13,6 @@ sealed interface StartAction {
     data class ResumeGame(val gameId: String) : StartAction
     data class DeleteGame(val gameId: String) : StartAction
 
-    data object NavigateBack : StartAction
+    data object NavigateToMainMenu : StartAction
     data object NavigateToGame : StartAction
 }

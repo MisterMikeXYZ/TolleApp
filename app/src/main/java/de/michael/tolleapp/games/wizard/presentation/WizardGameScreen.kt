@@ -12,8 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
@@ -22,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -47,7 +53,19 @@ fun WizardGameScreen(
     }
 
     Scaffold(
-        topBar = { CustomTopBar(title = "Wizard (${state.rounds.size}/${state.roundsToPlay})") },
+        topBar = {
+            CustomTopBar(
+                title = "Wizard (${state.rounds.size}/${state.roundsToPlay})",
+                navigationIcon = {
+                    IconButton({onAction(WizardAction.NavigateToMainMenu)}) {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = "Navigate to main menu",
+                        )
+                    }
+                }
+            )
+        },
         modifier = modifier
     ) { pad ->
         DividedScreen(
@@ -130,7 +148,11 @@ fun WizardGameScreen(
                                         }
 
                                         true -> {
-                                            { onAction(WizardAction.FinishRound) }
+                                            {
+                                                if (currentRound?.tricksWon?.filter { it.value != null }?.size == state.selectedPlayers.size
+                                                        && currentRound?.tricksWon?.values?.sumOf { it ?: 0 } == currentRound?.roundNumber)
+                                                    onAction(WizardAction.FinishRound)
+                                            }
                                         }
 
                                         else -> null
@@ -144,9 +166,31 @@ fun WizardGameScreen(
                     }
                     Row(
                         horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
                     ) {
+                        Text(
+                            text = when {
+                                (currentRound?.bidsFinal == false
+                                        && currentRound?.bids?.filter { it.value != null }?.size != state.selectedPlayers.size)
+                                        -> stringResource(R.string.enter_bids_desc)
+                                (currentRound?.bidsFinal == true
+                                        && currentRound?.tricksWon?.filter { it.value != null }?.size != state.selectedPlayers.size)
+                                        -> stringResource(R.string.enter_tricks_won_desc)
+                                (currentRound?.bidsFinal == true
+                                        && currentRound?.tricksWon?.values?.sumOf { it ?: 0 } != currentRound?.roundNumber)
+                                        -> stringResource(R.string.total_tricks_won_error, currentRound?.roundNumber ?: "?")
+                                else -> ""
+                            },
+                            color = if (currentRound?.tricksWon?.filter { it.value != null }?.size == state.selectedPlayers.size
+                                && currentRound?.tricksWon?.values?.sumOf { it ?: 0 } != currentRound?.roundNumber)
+                                MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp)
+                        )
                         Button(
                             onClick = {
                                 onAction(
@@ -155,7 +199,8 @@ fun WizardGameScreen(
                                 )
                             },
                             enabled = if (currentRound?.bidsFinal == false) currentRound?.bids?.filter { it.value != null }?.size == state.selectedPlayers.size
-                            else currentRound?.tricksWon?.filter { it.value != null }?.size == state.selectedPlayers.size
+                                else (currentRound?.tricksWon?.filter { it.value != null }?.size == state.selectedPlayers.size
+                                    && currentRound?.tricksWon?.values?.sumOf { it ?: 0 } == currentRound?.roundNumber)
                         ) {
                             Text(
                                 text = if (currentRound?.bidsFinal == false) stringResource(R.string.finish_bidding)

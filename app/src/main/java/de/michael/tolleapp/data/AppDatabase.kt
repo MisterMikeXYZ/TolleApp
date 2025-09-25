@@ -90,5 +90,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun dartThrowDao(): DartThrowDao
 
     // Wizard
-    abstract fun WizardDao(): WizardDao
+    abstract fun wizardDao(): WizardDao
 }

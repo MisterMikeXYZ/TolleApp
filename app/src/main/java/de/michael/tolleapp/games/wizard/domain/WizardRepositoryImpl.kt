@@ -1,5 +1,7 @@
 package de.michael.tolleapp.games.wizard.domain
 
+import android.util.Log
+import de.michael.tolleapp.games.util.PausedGame
 import de.michael.tolleapp.games.wizard.data.WizardDao
 import de.michael.tolleapp.games.wizard.data.WizardRepository
 import de.michael.tolleapp.games.wizard.data.entities.WizardGameEntity
@@ -8,14 +10,23 @@ import de.michael.tolleapp.games.wizard.data.mappers.toDomain
 import de.michael.tolleapp.games.wizard.data.mappers.toEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 
 class WizardRepositoryImpl(
     private val dao: WizardDao
 ): WizardRepository {
-    override fun createGame(gameId: String, roundsToPlay: Int): Result<Unit> {
+    companion object {
+        private const val TAG = "WizardRepositoryImpl"
+    }
+
+    override suspend fun createGame(gameId: String, roundsToPlay: Int): Result<Unit> {
         try {
-            dao.createGame(gameId, roundsToPlay)
+            dao.upsertGame(WizardGameEntity(
+                id = gameId,
+                roundsToPlay = roundsToPlay
+            ))
         } catch (e: Exception) {
+            Log.e(TAG, "Failed to create game", e)
             return Result.failure(e)
         }
         return Result.success(Unit)
@@ -46,7 +57,24 @@ class WizardRepositoryImpl(
         }
     }
 
-    override fun finishGame(gameId: String): Result<Unit> {
+    override fun getPausedGames(): Result<Flow<List<PausedGame>>> {
+        try {
+            dao.getPausedGames().map {
+                it.map { entity ->
+                    PausedGame(
+                        id = entity.id,
+                        createdAt = entity.createdAt
+                    )
+                }
+            }.let { flow ->
+                return Result.success(flow)
+            }
+        } catch (e: Exception) {
+            return Result.failure(e)
+        }
+    }
+
+    override suspend fun finishGame(gameId: String): Result<Unit> {
         try {
             dao.finishGame(gameId)
         } catch (e: Exception) {
@@ -55,7 +83,7 @@ class WizardRepositoryImpl(
         return Result.success(Unit)
     }
 
-    override fun deleteGame(gameId: String): Result<Unit> {
+    override suspend fun deleteGame(gameId: String): Result<Unit> {
         try {
             dao.deleteGame(gameId)
         } catch (e: Exception) {
@@ -64,7 +92,7 @@ class WizardRepositoryImpl(
         return Result.success(Unit)
     }
 
-    override fun upsertRound(
+    override suspend fun upsertRound(
         gameId: String,
         roundData: WizardRoundData
     ): Result<Unit> {
@@ -76,7 +104,21 @@ class WizardRepositoryImpl(
         return Result.success(Unit)
     }
 
-    override fun addPlayerToGame(
+    override suspend fun upsertRound(
+        gameId: String,
+        roundData: List<WizardRoundData>
+    ): Result<Unit> {
+        try {
+            roundData.forEach { roundData ->
+                dao.upsertRound(roundData.toEntity(gameId))
+            }
+        } catch (e: Exception) {
+            return Result.failure(e)
+        }
+        return Result.success(Unit)
+    }
+
+    override suspend fun addPlayerToGame(
         gameId: String,
         playerId: String
     ): Result<Unit> {
@@ -88,7 +130,7 @@ class WizardRepositoryImpl(
         return Result.success(Unit)
     }
 
-    override fun removePlayerFromGame(
+    override suspend fun removePlayerFromGame(
         gameId: String,
         playerId: String
     ): Result<Unit> {
