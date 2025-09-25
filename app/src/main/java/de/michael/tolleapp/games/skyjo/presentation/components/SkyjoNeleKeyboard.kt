@@ -5,8 +5,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.KeyboardHide
-import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -48,7 +48,7 @@ fun SkyjoNeleKeyboard(
             Spacer(modifier = Modifier.weight(1f))
 
             Icon(
-                imageVector = Icons.Default.Undo,
+                imageVector = Icons.AutoMirrored.Filled.Backspace,
                 contentDescription = null,
                 tint = if (!selectedValues.isEmpty()) MaterialTheme.colorScheme.onSurface
                 else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),

@@ -23,9 +23,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material3.Button
@@ -64,7 +64,6 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkyjoGameScreen(
-    modifier: Modifier = Modifier,
     navigateToMainMenu: () -> Unit,
     navigateToEnd: () -> Unit,
     viewModel: SkyjoViewModel = koinViewModel(),
@@ -153,7 +152,7 @@ fun SkyjoGameScreen(
                         enabled = !state.isGameEnded && hasAtLeastOneRound
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
+                            imageVector = Icons.AutoMirrored.Filled.Undo,
                             contentDescription = "Undo",
                             tint =  MaterialTheme.colorScheme.onSurface.copy(
                                 alpha = if (!hasAtLeastOneRound) 0.3f else 1f

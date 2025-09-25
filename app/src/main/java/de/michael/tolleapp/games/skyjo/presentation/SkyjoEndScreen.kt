@@ -19,9 +19,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -130,7 +130,7 @@ fun SkyjoEndScreen(
                         }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
+                            imageVector = Icons.AutoMirrored.Filled.Undo,
                             contentDescription = "Undo",
                             modifier = Modifier.size(24.dp)
                         )

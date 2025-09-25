@@ -6,8 +6,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.KeyboardHide
-import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,12 +32,12 @@ fun SkyjoNormalKeyboard(
     val invalidInput by remember(selectedValues, valuesAsInt) {
         derivedStateOf {
             selectedValues.isNotEmpty() &&
-                    inputString != "-" && (valuesAsInt == null || valuesAsInt < -17 || valuesAsInt > 144)
+                    inputString != "-" && (valuesAsInt == null || valuesAsInt < -17 || valuesAsInt > 288)
         }
     }
     val enabler = !invalidInput
     val input = when {
-        selectedValues.isEmpty() -> "Wähle Kartenwerte aus"
+        selectedValues.isEmpty() -> "Ergebnis eingeben"
         inputString == "-" -> "-"
         valuesAsInt == null || invalidInput -> "Unmöglicher Wert: $inputString"
         else -> inputString
@@ -64,7 +64,7 @@ fun SkyjoNormalKeyboard(
             Spacer(modifier = Modifier.weight(1f))
 
             Icon(
-                imageVector = Icons.Default.Undo,
+                imageVector = Icons.AutoMirrored.Filled.Backspace,
                 contentDescription = null,
                 tint = if (!selectedValues.isEmpty()) MaterialTheme.colorScheme.onSurface
                 else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
