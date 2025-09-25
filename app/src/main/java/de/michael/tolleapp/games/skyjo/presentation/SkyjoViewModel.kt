@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -44,7 +45,6 @@ class SkyjoViewModel(
 
     init {
         viewModelScope.launch {
-            // collect stats + players so UI always has names
             combine(
                 gameRepo.getAllPlayers(),
                 playerRepo.getAllPlayers()
@@ -66,6 +66,12 @@ class SkyjoViewModel(
     fun deletePreset(presetId: Long) {
         viewModelScope.launch {
             presetRepo.deletePreset(presetId)
+        }
+    }
+
+    fun deleteAllSavedGames() {
+        viewModelScope.launch {
+            pausedGames.first().forEach { gameRepo.deleteGameCompletely(it.id) }
         }
     }
 
@@ -230,14 +236,13 @@ class SkyjoViewModel(
         }
     }
 
-    fun startGame(dealerId: String? = null, neleModus: Boolean) {
+    fun startGame(dealerId: String? = null) {
         val newGameId = UUID.randomUUID().toString()
         _state.update { state ->
             state.copy(
                 currentGameId = newGameId,
                 selectedPlayerIds = state.selectedPlayerIds.filterNotNull(),
                 currentDealerId = dealerId,
-                neleModus = neleModus,
             )
         }
         viewModelScope.launch { gameRepo.startGame(newGameId, dealerId) }
@@ -327,5 +332,9 @@ class SkyjoViewModel(
             val prevDealerId = players[prevIndex]
             setDealer(prevDealerId)
         }
+    }
+
+    fun setLastKeyboardPage(page: Int) {
+        _state.update { it.copy(lastKeyboardPage = page) }
     }
 }

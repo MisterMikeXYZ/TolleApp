@@ -6,8 +6,6 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -19,16 +17,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.Keyboard
-import androidx.compose.material.icons.filled.KeyboardHide
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SaveAs
@@ -37,7 +33,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -54,18 +49,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import de.michael.tolleapp.games.skyjo.presentation.components.BetterOutlinedTextField
-import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoNeleKeyboard
-import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoNormalKeyboard
+import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoKeyboardSwitcher
+import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoPlayerDisplayRow
 import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.games.util.DividedScreen
 import kotlinx.coroutines.delay
@@ -99,9 +88,11 @@ fun SkyjoGameScreen(
         }
     }
 
-    val neleModus = state.neleModus
     var keyboardExpanded by remember { mutableStateOf(false) }
     var activePlayerId by remember { mutableStateOf<String?>(null) }
+
+    val playerListState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
     BackHandler {}
 
@@ -211,81 +202,36 @@ fun SkyjoGameScreen(
                 modifier = Modifier.fillMaxSize(),
                 topPart = {
                     Column(Modifier.fillMaxSize()) {
-                        val playerScrollState = rememberScrollState()
-                        Column(
+
+
+                        LazyColumn(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .weight(1f)
-                                .verticalScroll(playerScrollState)
+                                .weight(1f),
+                            state = playerListState
                         ) {
-                            state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                                val playerName = state.playerNames[playerId] ?: "Spieler auswählen"
-                                val isDealer = playerId == state.currentDealerId
-
+                            items(state.selectedPlayerIds.filterNotNull()) { playerId ->
                                 val isActivePlayer = playerId == activePlayerId
-                                val backgroundColor =
-                                    if (isActivePlayer) MaterialTheme.colorScheme.primary.copy(
-                                        alpha = 0.2f
-                                    )
-                                    else Color.Transparent
+                                SkyjoPlayerDisplayRow(
+                                    playerId = playerId,
+                                    state = state,
+                                    isActivePlayer = isActivePlayer,
+                                    points = points,
+                                    totalPoints = totalPoints,
+                                    onClick = {
+                                        activePlayerId = playerId
+                                        keyboardExpanded = true
+                                    }
+                                )
+                            }
+                        }
 
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .padding(top = 8.dp)
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(backgroundColor)
-                                        .clickable(enabled = true) {
-                                            activePlayerId = playerId
-                                            keyboardExpanded = true
-                                        }
-                                        .padding(4.dp) // inner padding
-                                ) {
-                                    BetterOutlinedTextField(
-                                        value = playerName,
-                                        //label = { Text("Spieler") },
-                                        modifier = Modifier.weight(1f),
-                                        textColor = if (isDealer) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurface,
-                                        textStyle = if (isDealer) MaterialTheme.typography.bodyLarge.copy(
-                                            fontSize = 20.sp
-                                        )
-                                        else LocalTextStyle.current,
-                                        readOnly = false
-                                    )
-
-                                    Spacer(modifier = Modifier.width(12.dp))
-
-                                    BetterOutlinedTextField(
-                                        value = points[playerId] ?: "",
-//                                        onValueChange = if (!neleModus) { { new ->
-//                                            if (new.isEmpty() || new == "-" || new.toIntOrNull() in -17..140) {
-//                                                points[playerId] = new
-//                                            }
-//                                        } } else null,
-                                        label = "Punkte",
-//                                        keyboardOptions = if (!neleModus) KeyboardOptions(
-//                                            keyboardType = KeyboardType.Phone,
-//                                            imeAction = ImeAction.Next,
-//                                            showKeyboardOnFocus = true
-//                                        ) else KeyboardOptions.Default,
-//                                        keyboardActions = if (!neleModus) KeyboardActions(
-//                                            onNext = { focusManager.moveFocus(FocusDirection.Down) },
-//                                            onDone = { keyboardManager?.hide() }
-//                                        ) else KeyboardActions.Default,
-                                        modifier = Modifier
-                                            .weight(1f),
-                                    )
-
-                                    Spacer(modifier = Modifier.width(12.dp))
-
-                                    BetterOutlinedTextField(
-                                        value = (totalPoints[playerId] ?: 0).toString(),
-                                        label = "Gesamt",
-                                        modifier = Modifier.weight(1f),
-                                        readOnly = true
-                                    )
+                        LaunchedEffect(activePlayerId) {
+                            val players = state.selectedPlayerIds.filterNotNull()
+                            val index = players.indexOf(activePlayerId)
+                            if (index >= 0) {
+                                scope.launch {
+                                    playerListState.animateScrollToItem(index)
                                 }
                             }
                         }
@@ -447,73 +393,24 @@ fun SkyjoGameScreen(
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
             ) {
-                Box {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.medium)
-                            .padding(8.dp)
-                            .align(Alignment.BottomCenter)
-                    ) {
-                        if (neleModus) {
-                            SkyjoNeleKeyboard(
-                                onSubmit = { total ->
-                                    activePlayerId?.let { id ->
-                                        points[id] = total
-                                        val nextId = state.selectedPlayerIds[(state.selectedPlayerIds.indexOf(activePlayerId) + 1) % state.selectedPlayerIds.size]
-                                        activePlayerId = if (points[nextId].isNullOrEmpty()) {
-                                            nextId
-                                        } else null
-                                        keyboardExpanded = if (points[nextId].isNullOrEmpty()) {
-                                            true
-                                        } else false
-                                    }
-                                },
-                                onBack = {
-                                    activePlayerId = null
-                                    keyboardExpanded = false
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        } else {
-                            SkyjoNormalKeyboard(
-                                onSubmit = { total ->
-                                    activePlayerId?.let { id ->
-                                        points[id] = total
-                                        val nextId = state.selectedPlayerIds[(state.selectedPlayerIds.indexOf(activePlayerId) + 1) % state.selectedPlayerIds.size]
-                                        activePlayerId = if (points[nextId].isNullOrEmpty()) {
-                                            nextId
-                                        } else null
-                                        keyboardExpanded = if (points[nextId].isNullOrEmpty()) {
-                                            true
-                                        } else false
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                SkyjoKeyboardSwitcher(
+                    activePlayerId = activePlayerId,
+                    onActivePlayerChange = { newId ->
+                        activePlayerId = newId
+                        keyboardExpanded = newId != null
+                    },
+                    points = points,
+                    state = state,
+                    viewModel = viewModel,
+                    onClose = {
+                        activePlayerId = null
+                        keyboardExpanded = false
+                        scope.launch {
+                            playerListState.animateScrollToItem(0)
                         }
                     }
-
-                    IconButton(
-                        onClick = {
-                            keyboardExpanded = !keyboardExpanded
-                            if (!keyboardExpanded) {
-                                activePlayerId = null
-                            }
-                        },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                    ) {
-                        Icon(
-                            imageVector = if (keyboardExpanded) Icons.Default.KeyboardHide
-                            else Icons.Default.Keyboard,
-                            contentDescription = "Toggle keyboard"
-                        )
-                    }
-                }
+                )
             }
-
         }
     }
 }

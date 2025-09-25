@@ -1,52 +1,47 @@
 package de.michael.tolleapp.games.skyjo.presentation.components
 
 
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.KeyboardHide
 import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun SkyjoNormalKeyboard(
     onSubmit: (total: String) -> Unit,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val numbers = (1..9).map { it.toString() }
     val chunkedRows = numbers.chunked(3)
 
     var selectedValues by remember { mutableStateOf<List<String>>(emptyList()) }
-    val valuesAsInt = selectedValues.joinToString("").toIntOrNull()
+
+    val inputString = selectedValues.joinToString("")
+    val valuesAsInt = inputString.toIntOrNull()
+
     val invalidInput by remember(selectedValues, valuesAsInt) {
         derivedStateOf {
-            selectedValues.isNotEmpty() && (valuesAsInt == null || valuesAsInt < -17 || valuesAsInt > 144)
+            selectedValues.isNotEmpty() &&
+                    inputString != "-" && (valuesAsInt == null || valuesAsInt < -17 || valuesAsInt > 144)
         }
     }
-    val input = selectedValues
-        .takeUnless { it.isEmpty() }
-        ?.joinToString("")
-        ?.takeUnless { valuesAsInt == null ||invalidInput }
-        ?: when {
-            selectedValues.isEmpty() -> "Wähle Kartenwerte aus"
-            else -> "Unmöglicher Wert: ${selectedValues.joinToString("")}"
-        }
+    val enabler = !invalidInput
+    val input = when {
+        selectedValues.isEmpty() -> "Wähle Kartenwerte aus"
+        inputString == "-" -> "-"
+        valuesAsInt == null || invalidInput -> "Unmöglicher Wert: $inputString"
+        else -> inputString
+    }
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -66,17 +61,27 @@ fun SkyjoNormalKeyboard(
                     .padding(top = 2.dp, end = 16.dp)
                     .horizontalScroll(scrollState)
             )
-            IconButton(
-                onClick = { selectedValues = selectedValues.dropLast(1) },
-                modifier = Modifier.padding(all = 0.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Undo,
-                    contentDescription = null,
-                    tint = if (!selectedValues.isEmpty()) MaterialTheme.colorScheme.onSurface
-                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                )
-            }
+            Spacer(modifier = Modifier.weight(1f))
+
+            Icon(
+                imageVector = Icons.Default.Undo,
+                contentDescription = null,
+                tint = if (!selectedValues.isEmpty()) MaterialTheme.colorScheme.onSurface
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                modifier = Modifier
+                    .size(30.dp)
+                    .clickable { selectedValues = selectedValues.dropLast(1) }
+            )
+
+            Spacer(modifier = Modifier.width(6.dp))
+
+            Icon(
+                imageVector = Icons.Default.KeyboardHide,
+                contentDescription = "Toggle keyboard",
+                modifier = Modifier
+                    .size(30.dp)
+                    .clickable { onBack() }
+            )
         }
 
         chunkedRows.forEach { row ->
@@ -87,7 +92,7 @@ fun SkyjoNormalKeyboard(
                 row.forEach { number ->
                     SkyjoKeyButton(
                         text = number,
-                        enabled = true,
+                        enabled = enabler,
                         onClick = { selectedValues = selectedValues + number },
                         modifier = Modifier
                             .weight(1f)
@@ -103,7 +108,7 @@ fun SkyjoNormalKeyboard(
         ) {
             SkyjoKeyButton(
                 text = "-",
-                enabled = true,
+                enabled = enabler,
                 onClick = { selectedValues = selectedValues + "-" },
                 modifier = Modifier
                     .weight(1f)
@@ -112,7 +117,7 @@ fun SkyjoNormalKeyboard(
 
             SkyjoKeyButton(
                 text = "0",
-                enabled = true,
+                enabled = enabler,
                 onClick = { selectedValues = selectedValues + "0" },
                 modifier = Modifier
                     .weight(1f)
@@ -122,21 +127,16 @@ fun SkyjoNormalKeyboard(
             SkyjoKeyButton(
                 text = "Submit",
                 onClick = {
-                    onSubmit(selectedValues.joinToString(""))
+                    onSubmit(inputString)
                     selectedValues = emptyList()
                 },
                 modifier = Modifier
                     .weight(1f)
                     .aspectRatio(2.5f),
-                enabled = !invalidInput && !selectedValues.isEmpty(),
+                enabled = enabler && !selectedValues.isEmpty(),
             )
 
         }
-
-
-
-
-
-
+        Spacer(modifier = Modifier.padding(1.dp))
     }
 }

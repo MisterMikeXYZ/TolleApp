@@ -5,13 +5,16 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.verticalScroll
@@ -29,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoEndScreenPlayerColumn
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -144,81 +149,71 @@ fun SkyjoEndScreen(
             Text("Spiel beendet!", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(12.dp))
 
-            // === ROUNDS GRID ===
-            Column(modifier = Modifier.fillMaxWidth()) {
-                // Header row
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Runde", style = MaterialTheme.typography.labelLarge)
-                    }
-                    state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                        val name = state.playerNames[playerId] ?: "?"
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .height(intrinsicSize = IntrinsicSize.Min)
+            ) {
+                Column(
+                    modifier = Modifier.width(intrinsicSize = IntrinsicSize.Min),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min)) {
                         Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(4.dp),
+                            modifier = Modifier.padding(4.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(name.take(2), style = MaterialTheme.typography.labelLarge)
+                            Text(
+                                text = "Runde",
+                                style = MaterialTheme.typography.labelLarge,
+                                maxLines = 1,
+                            )
                         }
                     }
-                }
 
-                // Round rows
-                val maxRounds = state.perPlayerRounds.values.maxOfOrNull { it.size } ?: 0
-                for (roundIndex in 1..maxRounds) {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        // Round number cell
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(4.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(roundIndex.toString())
-                        }
+                    HorizontalDivider()
 
-                        // Score cells
-                        state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                            val list = state.perPlayerRounds[playerId]
-                            val value = list?.getOrNull(roundIndex - 1)?.toString() ?: ""
+                    val maxRounds = state.perPlayerRounds.values.maxOfOrNull { it.size } ?: 0
+                    for (roundIndex in 1..maxRounds) {
+                        Row (modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min)){
                             Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(4.dp),
+                                modifier = Modifier.padding(4.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(value)
+                                Text(
+                                    roundIndex.toString(),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    maxLines = 1,
+                                )
                             }
                         }
                     }
-                }
-                HorizontalDivider()
-                // Totals row
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Σ", style = MaterialTheme.typography.labelLarge)
-                    }
-                    state.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                        val total = state.totalPoints[playerId] ?: 0
+
+                    HorizontalDivider()
+
+                    Row(modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min)) {
                         Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(4.dp),
+                            modifier = Modifier.padding(4.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(total.toString(), style = MaterialTheme.typography.labelLarge)
+                            Text(
+                                text = "Σ",
+                                style = MaterialTheme.typography.labelLarge,
+                                maxLines = 1,
+                            )
                         }
+                    }
+                }
+
+                VerticalDivider(modifier = Modifier.fillMaxHeight())
+
+                // === ROUNDS GRID ===
+                Row {
+                    state.selectedPlayerIds.filterNotNull().forEach {
+                        SkyjoEndScreenPlayerColumn(
+                            playerId = it,
+                            state = state,
+                            modifier = Modifier.width(40.dp)
+                        )
                     }
                 }
             }

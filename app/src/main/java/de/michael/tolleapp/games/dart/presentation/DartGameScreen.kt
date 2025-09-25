@@ -37,7 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.games.dart.presentation.components.Keyboard
+import de.michael.tolleapp.games.dart.presentation.components.DartKeyboard
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -162,7 +162,7 @@ fun DartGameScreen(
                 }
             }
             if (!state.isGameEnded) {
-                Keyboard(
+                DartKeyboard(
                     onThrow = { value, multiplier ->
                         val activePlayerId = players[state.activePlayerIndex]
                         viewModel.insertThrow(activePlayerId, value, multiplier)

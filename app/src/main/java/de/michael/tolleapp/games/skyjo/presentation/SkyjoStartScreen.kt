@@ -10,14 +10,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
@@ -33,8 +30,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -88,9 +83,6 @@ fun SkyjoStartScreen(
     var presetExpanded by remember { mutableStateOf(false) }
     var showPresetDialog by remember { mutableStateOf(false) }
     var newPresetName by remember { mutableStateOf("") }
-
-    var gameChange by remember {mutableStateOf(false)}
-    val neleModus = gameChange
 
     LaunchedEffect(Unit) {
         viewModel.resetGame()
@@ -210,6 +202,17 @@ fun SkyjoStartScreen(
                                 onClick = { expanded = false }
                             )
                         } else {
+                            var deleteAllPressed by remember { mutableStateOf(false) }
+                            LaunchedEffect(deleteAllPressed) {
+                                if (deleteAllPressed) {
+                                    delay(2000)
+                                    deleteAllPressed = false
+                                }
+                            }
+                            DropdownMenuItem(
+                                text = { if(!deleteAllPressed) Text("Alle löschen") else Text("Sicher?") },
+                                onClick = { if(!deleteAllPressed) deleteAllPressed = true else viewModel.deleteAllSavedGames() }
+                            )
                             pausedGames.forEach { game: SkyjoGame ->
                                 val date = Date(
                                     if (game.createdAt < 10_000_000_000L) {
@@ -323,33 +326,6 @@ fun SkyjoStartScreen(
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                Switch(
-                    checked = gameChange,
-                    onCheckedChange = { gameChange = !gameChange },
-                    thumbContent = if (gameChange) {
-                        {
-                            Icon(
-                                imageVector = Icons.Filled.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(SwitchDefaults.IconSize),
-                            )
-                        }
-                    } else null
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    "Nele-Modus",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-
             Spacer(modifier = Modifier.height(3.dp))
             HorizontalDivider()
             Spacer(modifier = Modifier.height(8.dp))
@@ -439,7 +415,7 @@ fun SkyjoStartScreen(
             //Button to start the game
             Button(
                 onClick = {
-                    viewModel.startGame(state.selectedPlayerIds.first(), neleModus)
+                    viewModel.startGame(state.selectedPlayerIds.first())
                     navigateToGame()
                 },
                 enabled = distinctSelected,
