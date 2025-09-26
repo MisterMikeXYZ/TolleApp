@@ -20,8 +20,11 @@ import de.michael.tolleapp.games.dart.presentation.DartStartScreen
 import de.michael.tolleapp.games.dart.presentation.DartViewModel
 import de.michael.tolleapp.games.randomizer.presentation.RandomizerScreen
 import de.michael.tolleapp.games.randomizer.presentation.RandomizerViewModel
-import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenGameScreenCanvas
-import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenGameScreenCircle
+import de.michael.tolleapp.games.romme.presentation.RommeAction
+import de.michael.tolleapp.games.romme.presentation.RommeGameScreen
+import de.michael.tolleapp.games.romme.presentation.RommeViewModel
+import de.michael.tolleapp.games.schwimmen.data.game.GameScreenType
+import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenGameScreen
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenStartScreen
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenViewModel
 import de.michael.tolleapp.games.skyjo.presentation.SkyjoEndScreen
@@ -29,7 +32,8 @@ import de.michael.tolleapp.games.skyjo.presentation.SkyjoGameScreen
 import de.michael.tolleapp.games.skyjo.presentation.SkyjoStartScreen
 import de.michael.tolleapp.games.skyjo.presentation.SkyjoViewModel
 import de.michael.tolleapp.games.util.startScreen.StartAction
-import de.michael.tolleapp.games.util.startScreen.StartGameScreen
+import de.michael.tolleapp.games.util.startScreen.StartScreen
+import de.michael.tolleapp.games.util.startScreen.StartState
 import de.michael.tolleapp.games.wizard.presentation.WizardAction
 import de.michael.tolleapp.games.wizard.presentation.WizardEndScreen
 import de.michael.tolleapp.games.wizard.presentation.WizardGameScreen
@@ -141,10 +145,8 @@ fun NavGraph(
                 val canvas = it.toRoute<Route.Schwimmen.Game>().canvas
                 val viewModel = it.sharedViewModel<SchwimmenViewModel>(navController)
 
-                if (canvas) SchwimmenGameScreenCanvas(
-                    viewModel = viewModel,
-                    navigateToMainMenu = { navController.navigateWithPop<Route.SchwimmenNav>(Route.BeforeNav) },
-                ) else SchwimmenGameScreenCircle(
+                SchwimmenGameScreen(
+                    gameScreenType = if (canvas) GameScreenType.CANVAS else GameScreenType.CIRCLE,
                     viewModel = viewModel,
                     navigateToMainMenu = { navController.navigateWithPop<Route.SchwimmenNav>(Route.BeforeNav) },
                 )
@@ -186,7 +188,7 @@ fun NavGraph(
             composable<Route.Wizard.Start> {
                 val viewModel = it.sharedViewModel<WizardViewModel>(navController)
                 val state by viewModel.state.collectAsStateWithLifecycle()
-                StartGameScreen(
+                StartScreen(
                     minPlayers = 3,
                     maxPlayers = 6,
                     state = state.toStartState(),
@@ -222,6 +224,45 @@ fun NavGraph(
                     state = state,
                     navigateToMainMenu = { navController.navigateWithPop<Route.WizardNav>(Route.BeforeNav) },
                 )
+            }
+        }
+        navigation<Route.RommeNav>(
+            startDestination = Route.Romme.Start
+        ) {
+            composable<Route.Romme.Start> {
+                val viewModel = it.sharedViewModel<RommeViewModel>(navController)
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                StartScreen(
+                    minPlayers = 2,
+                    maxPlayers = 6,
+                    state = state as StartState,
+                    onAction = { action ->
+                        when (action) {
+                            StartAction.NavigateToMainMenu -> navController.navigateWithPop<Route.RommeNav>(Route.BeforeNav)
+                            StartAction.NavigateToGame -> navController.navigate(Route.Romme.Game)
+                            else -> viewModel.onStartAction(action)
+                        }
+                    }
+                )
+            }
+            composable<Route.Romme.Game> {
+                val viewModel = it.sharedViewModel<RommeViewModel>(navController)
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                RommeGameScreen(
+                    state = state,
+                    onAction = { action ->
+                        when (action) {
+                            RommeAction.NavigateToMainMenu -> navController.navigateWithPop<Route.RommeNav>(Route.BeforeNav)
+                            RommeAction.OnGameFinished -> {
+                                navController.navigate(Route.Romme.End)
+                            }
+                            else -> viewModel.onAction(action)
+                        }
+                    }
+                )
+            }
+            composable<Route.Romme.End> {
+                // TODO implement
             }
         }
     }

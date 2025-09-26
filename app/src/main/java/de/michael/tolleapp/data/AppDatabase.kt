@@ -7,6 +7,10 @@ import de.michael.tolleapp.games.dart.data.DartGameDao
 import de.michael.tolleapp.games.dart.data.DartGameRound
 import de.michael.tolleapp.games.dart.data.DartThrowDao
 import de.michael.tolleapp.games.dart.data.DartThrowData
+import de.michael.tolleapp.games.romme.data.RommeDao
+import de.michael.tolleapp.games.romme.data.entities.RommeGameEntity
+import de.michael.tolleapp.games.romme.data.entities.RommeGamePlayerEntity
+import de.michael.tolleapp.games.romme.data.entities.RommeRoundEntity
 import de.michael.tolleapp.games.util.player.Player
 import de.michael.tolleapp.games.util.player.PlayerDao
 import de.michael.tolleapp.games.util.presets.GamePreset
@@ -60,8 +64,13 @@ import de.michael.tolleapp.settings.data.SettingsDao
         WizardGameEntity::class,
         WizardGamePlayerEntity::class,
         WizardRoundEntity::class,
+
+        // Romme
+        RommeGameEntity::class,
+        RommeGamePlayerEntity::class,
+        RommeRoundEntity::class,
     ],
-    version = 20,
+    version = 21,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -91,4 +100,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     // Wizard
     abstract fun wizardDao(): WizardDao
+
+    // Rommé
+    abstract fun rommeDao(): RommeDao
 }

@@ -1,4 +1,4 @@
-package de.michael.tolleapp.games.skyjo.presentation.components.table
+package de.michael.tolleapp.games.util.table
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp

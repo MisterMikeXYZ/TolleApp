@@ -14,6 +14,9 @@ import org.koin.dsl.module
 import de.michael.tolleapp.games.dart.presentation.DartViewModel
 import de.michael.tolleapp.games.util.presets.GamePresetRepository
 import de.michael.tolleapp.games.randomizer.presentation.RandomizerViewModel
+import de.michael.tolleapp.games.romme.data.RommeRepository
+import de.michael.tolleapp.games.romme.data.RommeRepositoryImpl
+import de.michael.tolleapp.games.romme.presentation.RommeViewModel
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameRepository
 import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStatsRepository
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenViewModel
@@ -54,6 +57,8 @@ val appModule = module {
 
     single { get<AppDatabase>().wizardDao() } // Wizard
 
+    single { get<AppDatabase>().rommeDao() } // Rommé
+
 
     // Repositories
     single { PlayerRepository(get()) } // Player
@@ -70,6 +75,8 @@ val appModule = module {
 
     single<WizardRepository> { WizardRepositoryImpl(get()) } // Wizard
 
+    single<RommeRepository> { RommeRepositoryImpl(get()) }
+
 
     // ViewModels
     viewModel { MainViewModel() }
@@ -80,4 +87,5 @@ val appModule = module {
     viewModel { DartViewModel(get(), get(), get()) }
     viewModel { RandomizerViewModel(get(), get()) }
     viewModel { WizardViewModel(get(), get(), get()) }
+    viewModel { RommeViewModel(get(), get(), get()) }
 }

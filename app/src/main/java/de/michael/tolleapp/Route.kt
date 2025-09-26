@@ -67,6 +67,20 @@ sealed interface Route {
     }
 
     @Serializable
+    data object RommeNav: Route
+    @Serializable
+    sealed interface Romme : Route {
+        @Serializable
+        data object Start : Romme
+
+        @Serializable
+        data object Game: Romme
+
+        @Serializable
+        data object End: Romme
+    }
+
+    @Serializable
     data object RandomizerNav: Route
     @Serializable
     sealed interface Randomizer: Route {

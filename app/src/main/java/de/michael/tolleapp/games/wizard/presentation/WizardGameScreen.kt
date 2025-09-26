@@ -27,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.R
 import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.games.util.DividedScreen
+import de.michael.tolleapp.games.util.OnHomeDialog
 import de.michael.tolleapp.games.wizard.presentation.components.WizardPlayerItem
 
 @Composable
@@ -44,7 +46,27 @@ fun WizardGameScreen(
     onAction: (WizardAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    BackHandler {  }
+    var showOnHomeDialog by remember { mutableStateOf(false) }
+    if (showOnHomeDialog) {
+        OnHomeDialog(
+            onSave = {
+                onAction(WizardAction.NavigateToMainMenu)
+                showOnHomeDialog = false
+            },
+            onDiscard = {
+                onAction(WizardAction.NavigateToMainMenu)
+                onAction(WizardAction.DeleteGame)
+                showOnHomeDialog = false
+            },
+            onDismissRequest = {
+                showOnHomeDialog = false
+            }
+        )
+    }
+
+    BackHandler {
+        showOnHomeDialog = true
+    }
 
     LaunchedEffect(state.finished) {
         if (state.finished) {
@@ -57,7 +79,7 @@ fun WizardGameScreen(
             CustomTopBar(
                 title = "Wizard (${state.rounds.size}/${state.roundsToPlay})",
                 navigationIcon = {
-                    IconButton({onAction(WizardAction.NavigateToMainMenu)}) {
+                    IconButton({ showOnHomeDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Home,
                             contentDescription = "Navigate to main menu",
@@ -81,15 +103,9 @@ fun WizardGameScreen(
                             ?: currentRound?.tricksWon)?.let { inputMap ->
                             val dealerIndex =
                                 state.selectedPlayers.indexOfFirst { it?.id == currentRound?.dealerId }
-                            val orderedPlayers = (state.selectedPlayers.subList(
-                                (dealerIndex + 1) % state.selectedPlayers.size,
-                                state.selectedPlayers.size
-                            )
-                                    + state.selectedPlayers.subList(
-                                0,
-                                (dealerIndex + 1) % state.selectedPlayers.size
-                            ))
-                            orderedPlayers.firstOrNull { player -> inputMap[player?.id] == null }?.id
+                            (state.selectedPlayers.subList((dealerIndex + 1) % state.selectedPlayers.size, state.selectedPlayers.size)
+                                    + (state.selectedPlayers.subList(0, (dealerIndex + 1) % state.selectedPlayers.size)))
+                                .firstOrNull { player -> inputMap[player?.id] == null }?.id
                         }
                     )
                 }

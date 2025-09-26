@@ -25,6 +25,10 @@ val gameNavigationDataList = listOf(
         gameRoute = Route.WizardNav
     ),
     GameNavigationData(
+        name = "Rommé",
+        gameRoute = Route.RommeNav
+    ),
+    GameNavigationData(
         name = "Randomizer",
         gameRoute = Route.RandomizerNav
     ),

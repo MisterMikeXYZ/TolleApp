@@ -1,4 +1,4 @@
-package de.michael.tolleapp.games.skyjo.presentation.components.table
+package de.michael.tolleapp.games.util.table
 
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.BorderStroke
@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,10 +32,10 @@ fun Table(
     headers: List<@Composable () -> Unit>,
     rows: List<List<@Composable () -> Unit>>,
     weights: List<Float> = List(headers.size) { 1f },
-    modifier: Modifier = Modifier,
     tableStrokes: TableStrokes = TableStrokes(),
     headerBackgroundColor: Color = Color.LightGray,
     cellPadding: Dp = 8.dp,
+    modifier: Modifier = Modifier,
 ) {
 
     val borderStroke = BorderStroke(tableStrokes.width, tableStrokes.color)
@@ -80,9 +81,9 @@ fun Table(
 
         // Horizontal border after header
         if (tableStrokes.horizontal == TableStrokeOptions.ALL || tableStrokes.horizontal == TableStrokeOptions.START) {
-            Divider(
-                color = tableStrokes.color,
-                thickness = tableStrokes.width
+            HorizontalDivider(
+                thickness = tableStrokes.width,
+                color = tableStrokes.color
             )
         }
 

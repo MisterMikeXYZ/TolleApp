@@ -10,4 +10,6 @@ sealed interface WizardAction {
     data object FinishRound : WizardAction
 
     data object OnGameFinished : WizardAction
+
+    data object DeleteGame : WizardAction
 }

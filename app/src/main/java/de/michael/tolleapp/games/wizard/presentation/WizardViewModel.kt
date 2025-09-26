@@ -223,6 +223,11 @@ class WizardViewModel(
                     )
                 }
             }
+            WizardAction.DeleteGame -> {
+                viewModelScope.launch {
+                    wizardRepo.deleteGame(state.value.currentGameId!!)
+                }
+            }
             else -> throw NotImplementedError("Action '$action' not implemented in WizardViewModel")
         }
     }

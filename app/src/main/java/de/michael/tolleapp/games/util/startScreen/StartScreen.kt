@@ -54,11 +54,11 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StartGameScreen(
+fun StartScreen(
     modifier: Modifier = Modifier,
     minPlayers: Int = 2,
     maxPlayers: Int,
-    state: StartGameState,
+    state: StartState,
     onAction: (StartAction) -> Unit,
 ) {
     val dateFormatter = DateFormat.getDateTimeInstance(

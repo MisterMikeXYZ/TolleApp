@@ -5,10 +5,10 @@ import de.michael.tolleapp.games.util.GameType
 import de.michael.tolleapp.games.util.player.Player
 import de.michael.tolleapp.games.util.presets.GamePresetWithPlayers
 
-data class StartGameState(
+open class StartState(
     val gameType: GameType,
-    val pausedGames: List<PausedGame> = emptyList(),
-    val presets: List<GamePresetWithPlayers> = emptyList(),
-    val allPlayers: List<Player> = emptyList(),
-    val selectedPlayers: List<Player?> = listOf(null, null),
+    open val pausedGames: List<PausedGame> = emptyList(),
+    open val presets: List<GamePresetWithPlayers> = emptyList(),
+    open val allPlayers: List<Player> = emptyList(),
+    open val selectedPlayers: List<Player?> = listOf(null, null),
 )
