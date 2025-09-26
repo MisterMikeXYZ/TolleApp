@@ -22,10 +22,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.SaveAs
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -51,13 +48,14 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoPlayerDisplayRow
+import de.michael.tolleapp.games.skyjo.presentation.components.keyboards.SkyjoKeyboardSwitcher
 import de.michael.tolleapp.games.skyjo.presentation.components.table.Table
 import de.michael.tolleapp.games.skyjo.presentation.components.table.TableStrokeOptions
 import de.michael.tolleapp.games.skyjo.presentation.components.table.TableStrokes
-import de.michael.tolleapp.games.skyjo.presentation.components.keyboards.SkyjoKeyboardSwitcher
-import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoPlayerDisplayRow
 import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.games.util.DividedScreen
+import de.michael.tolleapp.games.util.OnHomeDialog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -94,7 +92,29 @@ fun SkyjoGameScreen(
     val playerListState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
-    BackHandler {}
+    var showOnHomeDialog by remember { mutableStateOf(false) }
+    if (showOnHomeDialog) {
+        OnHomeDialog(
+            onSave = {
+                viewModel.pauseCurrentGame()
+                navigateToMainMenu()
+                showOnHomeDialog = false
+            },
+            saveEnabled = state.perPlayerRounds.values.any { it.isNotEmpty() },
+            onDiscard = {
+                viewModel.deleteGame(null)
+                navigateToMainMenu()
+                showOnHomeDialog = false
+            },
+            onDismissRequest = {
+                showOnHomeDialog = false
+            },
+        )
+    }
+
+    BackHandler {
+        showOnHomeDialog = true
+    }
 
     LaunchedEffect(state.selectedPlayerIds) {
         val selected = state.selectedPlayerIds.filterNotNull().toSet()
@@ -124,20 +144,12 @@ fun SkyjoGameScreen(
                     }
                     IconButton(
                         onClick = {
-                            if (!resetPressedDelete) resetPressedDelete = true
-                            else {
-                                viewModel.deleteGame(null)
-                                navigateToMainMenu()
-                                resetPressedDelete = false
-                            }
+                            showOnHomeDialog = true
                         }
                     ) {
                         Icon(
-                            imageVector = if (!resetPressedDelete) Icons.Default.Delete
-                            else Icons.Default.DeleteForever,
+                            imageVector = Icons.Default.Home,
                             contentDescription = null,
-                            tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
-                            else MaterialTheme.colorScheme.error
                         )
                     }
                 },
@@ -158,35 +170,6 @@ fun SkyjoGameScreen(
                             tint =  MaterialTheme.colorScheme.onSurface.copy(
                                 alpha = if (!hasAtLeastOneRound) 0.3f else 1f
                             )
-                        )
-                    }
-                    var resetPressedSave by remember { mutableStateOf(false) }
-                    LaunchedEffect(resetPressedSave) {
-                        if (resetPressedSave) {
-                            delay(2000)
-                            resetPressedSave = false
-                        }
-                    }
-                    IconButton(
-                        onClick = {
-                            if (!resetPressedSave) resetPressedSave = true
-                            else {
-                                viewModel.pauseCurrentGame()
-                                navigateToMainMenu()
-                                resetPressedSave = false
-                            }
-                        },
-                        enabled = !state.isGameEnded && hasAtLeastOneRound
-                    ) {
-                        Icon(
-                            imageVector = if (!resetPressedSave) Icons.Default.Save
-                            else Icons.Default.SaveAs,
-                            contentDescription = null,
-                            tint = if (!hasAtLeastOneRound) MaterialTheme.colorScheme.onSurface.copy(
-                                alpha = 0.3f
-                            )
-                            else if (!resetPressedSave) MaterialTheme.colorScheme.onSurface
-                            else MaterialTheme.colorScheme.primary
                         )
                     }
                 }

@@ -20,8 +20,8 @@ import de.michael.tolleapp.games.dart.presentation.DartStartScreen
 import de.michael.tolleapp.games.dart.presentation.DartViewModel
 import de.michael.tolleapp.games.randomizer.presentation.RandomizerScreen
 import de.michael.tolleapp.games.randomizer.presentation.RandomizerViewModel
-import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenGameScreenCanvas
-import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenGameScreenCircle
+import de.michael.tolleapp.games.schwimmen.data.game.GameScreenType
+import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenGameScreen
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenStartScreen
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenViewModel
 import de.michael.tolleapp.games.skyjo.presentation.SkyjoEndScreen
@@ -141,10 +141,8 @@ fun NavGraph(
                 val canvas = it.toRoute<Route.Schwimmen.Game>().canvas
                 val viewModel = it.sharedViewModel<SchwimmenViewModel>(navController)
 
-                if (canvas) SchwimmenGameScreenCanvas(
-                    viewModel = viewModel,
-                    navigateToMainMenu = { navController.navigateWithPop<Route.SchwimmenNav>(Route.BeforeNav) },
-                ) else SchwimmenGameScreenCircle(
+                SchwimmenGameScreen(
+                    gameScreenType = if (canvas) GameScreenType.CANVAS else GameScreenType.CIRCLE,
                     viewModel = viewModel,
                     navigateToMainMenu = { navController.navigateWithPop<Route.SchwimmenNav>(Route.BeforeNav) },
                 )

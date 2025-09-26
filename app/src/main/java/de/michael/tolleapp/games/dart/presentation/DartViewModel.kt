@@ -268,7 +268,7 @@ class DartViewModel (
         return true
     }
 
-    fun deleteGame(gameId: String?) {
+    fun deleteGame(gameId: String? = null) {
         val newGameId = if (gameId.isNullOrEmpty()) _state.value.currentGameId else gameId
         viewModelScope.launch { gameRepo.deleteGameCompletely(newGameId) }
         resetGame()

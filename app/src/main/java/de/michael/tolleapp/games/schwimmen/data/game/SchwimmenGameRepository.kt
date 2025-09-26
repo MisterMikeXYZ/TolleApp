@@ -1,8 +1,6 @@
 package de.michael.tolleapp.games.schwimmen.data.game
 
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.withContext
 
 class SchwimmenGameRepository (
     private val gameDao: SchwimmenGameDao,
@@ -49,18 +47,16 @@ class SchwimmenGameRepository (
     }
     fun getPausedGames(): Flow<List<SchwimmenGame>> = gameDao.getPausedGames()
     suspend fun saveSnapshot(gameId: String, perPlayerRounds: Map<String, Int>) {
-        withContext(Dispatchers.IO) {
-            roundDao.deleteRoundsForGame(gameId)
-            perPlayerRounds.forEach { (playerId, lives) ->
-                roundDao.insertRound(
-                    SchwimmenGameRound(
-                        gameId = gameId,
-                        playerId = playerId,
-                        roundIndex = 1, // only storing current lives
-                        lives = lives
-                    )
+        roundDao.deleteRoundsForGame(gameId)
+        perPlayerRounds.forEach { (playerId, lives) ->
+            roundDao.insertRound(
+                SchwimmenGameRound(
+                    gameId = gameId,
+                    playerId = playerId,
+                    roundIndex = 1, // only storing current lives
+                    lives = lives
                 )
-            }
+            )
         }
     }
     suspend fun loadGame(gameId: String) : List<SchwimmenGameRound> = roundDao.getRoundsForGame(gameId)

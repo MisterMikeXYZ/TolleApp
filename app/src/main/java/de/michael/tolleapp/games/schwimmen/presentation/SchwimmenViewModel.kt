@@ -258,7 +258,7 @@ class SchwimmenViewModel(
         }
     }
 
-    fun deleteGame(gameId: String?) {
+    fun deleteGame(gameId: String? = null) {
         val newGameId = if (gameId.isNullOrEmpty()) _state.value.currentGameId else gameId
         viewModelScope.launch { gameRepository.deleteGameCompletely(newGameId) }
         resetGame()
