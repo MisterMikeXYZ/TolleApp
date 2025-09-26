@@ -13,4 +13,8 @@
     <string name="enter_bids_desc">Gebe Gebote für jeden Spieler ein</string>
     <string name="enter_tricks_won_desc">Gebe Siege für jeden Spieler ein</string>
     <string name="total_tricks_won_error">Summe der Gewinne muss gleich der Rundennummer sein (%1$d)</string>
+    <string name="save_game">Spiel speichern</string>
+    <string name="discard_game">Spiel verwerfen</string>
+    <string name="save_game_title">Spiel speichern?</string>
+    <string name="save_game_desc">Möchtest du das Spiel speicher? Dann kannst du das Spiel später fortsetzen.</string>
 </resources>

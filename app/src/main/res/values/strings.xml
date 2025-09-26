@@ -13,4 +13,8 @@
     <string name="enter_bids_desc">Enter bids for every player</string>
     <string name="enter_tricks_won_desc">Enter tricks won for every player</string>
     <string name="total_tricks_won_error">Total tricks won must equal round number (%1$d)</string>
+    <string name="save_game">Save game</string>
+    <string name="discard_game">Discard game</string>
+    <string name="save_game_title">Save Game?</string>
+    <string name="save_game_desc">Do you want to save the game before exiting? You can then resume the game later.</string>
 </resources>
