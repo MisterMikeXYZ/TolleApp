@@ -1,4 +1,4 @@
-package de.michael.tolleapp.games.skyjo.presentation.components
+package de.michael.tolleapp.games.skyjo.presentation.components.keyboards
 
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background

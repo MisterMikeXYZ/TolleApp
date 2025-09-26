@@ -1,6 +1,5 @@
 package de.michael.tolleapp.games.skyjo.presentation
 
-import android.graphics.fonts.Font
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
@@ -10,21 +9,17 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Delete
@@ -33,13 +28,11 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -56,13 +49,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.papercode.composecourse.stuff.table.Table
-import com.papercode.composecourse.stuff.table.TableStrokeOptions
-import com.papercode.composecourse.stuff.table.TableStrokes
-import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoKeyboardSwitcher
+import de.michael.tolleapp.games.skyjo.presentation.components.table.Table
+import de.michael.tolleapp.games.skyjo.presentation.components.table.TableStrokeOptions
+import de.michael.tolleapp.games.skyjo.presentation.components.table.TableStrokes
+import de.michael.tolleapp.games.skyjo.presentation.components.keyboards.SkyjoKeyboardSwitcher
 import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoPlayerDisplayRow
 import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.games.util.DividedScreen
@@ -308,6 +300,12 @@ fun SkyjoGameScreen(
                             row
                         }
 
+                        val weights = if(state.selectedPlayerIds.size <= 4) {
+                            listOf(1f) + List(state.selectedPlayerIds.filterNotNull().size) { 2f }
+                        } else {
+                            listOf(1f) + List(state.selectedPlayerIds.filterNotNull().size) { 1f }
+                        }
+
                         Table(
                             headers = header,
                             rows = rows,
@@ -327,7 +325,7 @@ fun SkyjoGameScreen(
                                 width = 2.dp
                             ),
                             headerBackgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                            weights = listOf(0.5f) + List(state.selectedPlayerIds.filterNotNull().size) { 1f }
+                            weights = weights
                         )
 
                         /*Column(

@@ -1,4 +1,4 @@
-package com.papercode.composecourse.stuff.table
+package de.michael.tolleapp.games.skyjo.presentation.components.table
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp

@@ -76,13 +76,17 @@ class SettingsViewModel (
 
     fun createTestPresets() {
         viewModelScope.launch {
-            val players = playerRepo.createPlayers()
+            val playerNames = listOf("Michi", "Malte", "Nele", "Papa", "Mama", "Raphi", "Lennart", "Pauline", "Alea" )
+            val players: MutableList<Player> = mutableListOf()
+            playerNames.forEach{ players.add(playerRepo.addPlayer(it)) }
+
             if (players.isEmpty()) return@launch
             val playerMap = players.associateBy { it.name }
 
             val presets = listOf(
                 "Test" to listOf("Michi", "Malte", "Nele"),
-                "Test Extrem" to listOf("Michi", "Malte", "Nele", "Papa", "Mama", "Raphi"),
+                "Test 6" to listOf("Michi", "Malte", "Nele", "Lennart", "Pauline", "Alea"),
+                "Test 9" to listOf("Michi", "Malte", "Nele", "Papa", "Mama", "Raphi", "Lennart", "Pauline", "Alea"),
                 "Viebegs" to listOf("Michi", "Papa", "Mama", "Raphi")
             )
 

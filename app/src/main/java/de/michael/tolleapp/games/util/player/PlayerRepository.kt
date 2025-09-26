@@ -29,9 +29,4 @@ class PlayerRepository(
     suspend fun deletePlayer(player: Player) {
         playerDao.deletePlayerAndPresets(player)
     }
-
-    suspend fun createPlayers(): List<Player> {
-        val names = listOf("Michi", "Malte", "Nele", "Papa", "Mama", "Raphi")
-        return names.map { name -> addPlayer(name) }
-    }
 }

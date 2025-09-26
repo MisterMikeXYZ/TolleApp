@@ -1,4 +1,4 @@
-package de.michael.tolleapp.games.skyjo.presentation.components
+package de.michael.tolleapp.games.skyjo.presentation.components.keyboards
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -11,6 +11,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
@@ -30,42 +31,51 @@ fun SkyjoNeleKeyboard(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
+        val scrollState = rememberScrollState()
+        LaunchedEffect(selectedValues) {
+            scrollState.animateScrollTo(scrollState.maxValue)
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
         ) {
-            val scrollState = rememberScrollState()
-            LaunchedEffect(selectedValues) {
-                scrollState.animateScrollTo(scrollState.maxValue)
-            }
             Text(
                 selectedValues.takeUnless { it.isEmpty() }?.joinToString(", ")
                     ?: "Wähle Kartenwerte aus",
                 maxLines = 1,
                 modifier = Modifier
-                    .padding(top = 2.dp, end = 16.dp)
+                    .padding(top = 2.dp, end = 70.dp)
                     .horizontalScroll(scrollState)
+                    .align(Alignment.CenterStart)
             )
-            Spacer(modifier = Modifier.weight(1f))
 
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Backspace,
-                contentDescription = null,
-                tint = if (!selectedValues.isEmpty()) MaterialTheme.colorScheme.onSurface
-                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+            Row(
                 modifier = Modifier
-                    .size(30.dp)
-                    .clickable { selectedValues = selectedValues.dropLast(1) }
-            )
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 4.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Backspace,
+                    contentDescription = null,
+                    tint = if (!selectedValues.isEmpty()) MaterialTheme.colorScheme.onSurface
+                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clickable { selectedValues = selectedValues.dropLast(1) }
+                )
 
-            Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(6.dp))
 
-            Icon(
-                imageVector = Icons.Default.KeyboardHide,
-                contentDescription = "Toggle keyboard",
-                modifier = Modifier
-                    .size(30.dp)
-                    .clickable { onBack() }
-            )
+                Icon(
+                    imageVector = Icons.Default.KeyboardHide,
+                    contentDescription = "Toggle keyboard",
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clickable { onBack() }
+                )
+            }
         }
 
         chunkedRows.forEach { row ->
@@ -76,7 +86,11 @@ fun SkyjoNeleKeyboard(
                 row.forEach { value ->
                     SkyjoKeyButton(
                         text = value,
-                        enabled = true,
+                        enabled = if(value != "Submit") {
+                            selectedValues.size < 12
+                        } else {
+                            !selectedValues.isEmpty()
+                        },
                         onClick = {
                             if(value != "Submit") {
                                 value.toIntOrNull()?.let {

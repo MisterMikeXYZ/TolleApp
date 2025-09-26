@@ -96,6 +96,7 @@ fun SettingsScreen (
 
             HorizontalDivider()
 
+            // Presets erstellen
             Row (
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -113,6 +114,7 @@ fun SettingsScreen (
 
             HorizontalDivider()
 
+            // Presets löschen
             Row (
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
