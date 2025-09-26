@@ -108,7 +108,6 @@ class SkyjoViewModel(
                     winnerId = listOf(null),
                     loserId = listOf(null),
                     ranking = emptyList(),
-                    currentGameRounds = maxRounds,
                     currentDealerId = dealerId
                 )
             }
@@ -309,6 +308,8 @@ class SkyjoViewModel(
             }
         }
 
+        val visibleRoundRows = if (_state.value.visibleRoundRows <= 5) 5 else _state.value.visibleRoundRows - 1
+
         _state.update {
             it.copy(
                 perPlayerRounds = updatedRounds,
@@ -316,6 +317,7 @@ class SkyjoViewModel(
                 isGameEnded = false,
                 winnerId = listOf(null),
                 loserId = listOf(null),
+                visibleRoundRows = visibleRoundRows
             )
         }
         reverseDealer()

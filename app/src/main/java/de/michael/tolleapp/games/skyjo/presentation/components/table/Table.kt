@@ -28,10 +28,10 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun Table(
+    modifier: Modifier = Modifier,
     headers: List<@Composable () -> Unit>,
     rows: List<List<@Composable () -> Unit>>,
     weights: List<Float> = List(headers.size) { 1f },
-    modifier: Modifier = Modifier,
     tableStrokes: TableStrokes = TableStrokes(),
     headerBackgroundColor: Color = Color.LightGray,
     cellPadding: Dp = 8.dp,
@@ -54,9 +54,9 @@ fun Table(
                         .weight(weights.getOrElse(index) { 1f })
                         .then(
                             if (
-                                (tableStrokes.vertical == TableStrokeOptions.ALL ||
-                                        (tableStrokes.vertical == TableStrokeOptions.START && index == 0) ||
-                                        (tableStrokes.vertical == TableStrokeOptions.END && index == headers.size - 2)
+                                (TableStrokeOptions.ALL in tableStrokes.vertical ||
+                                        (TableStrokeOptions.START in tableStrokes.vertical && index == 0) ||
+                                        (TableStrokeOptions.END in tableStrokes.vertical && index == headers.size - 2)
                                         ) && index < headers.size - 1
                             ) {
                                 Modifier.drawBehind {
@@ -79,7 +79,8 @@ fun Table(
         }
 
         // Horizontal border after header
-        if (tableStrokes.horizontal == TableStrokeOptions.ALL || tableStrokes.horizontal == TableStrokeOptions.START) {
+        if (TableStrokeOptions.ALL in tableStrokes.horizontal ||
+            TableStrokeOptions.START in tableStrokes.horizontal) {
             Divider(
                 color = tableStrokes.color,
                 thickness = tableStrokes.width
@@ -100,9 +101,9 @@ fun Table(
                                 .weight(weights.getOrElse(colIndex) { 1f })
                                 .then(
                                     if (
-                                        (tableStrokes.vertical == TableStrokeOptions.ALL ||
-                                                (tableStrokes.vertical == TableStrokeOptions.START && colIndex == 0) ||
-                                                (tableStrokes.vertical == TableStrokeOptions.END && colIndex == headers.size - 2)
+                                        (TableStrokeOptions.ALL in tableStrokes.vertical ||
+                                                (TableStrokeOptions.START in tableStrokes.vertical && colIndex == 0) ||
+                                                (TableStrokeOptions.END in tableStrokes.vertical && colIndex == headers.size - 2)
                                                 ) && colIndex < headers.size - 1
                                     ) {
                                         Modifier.drawBehind {
@@ -126,8 +127,8 @@ fun Table(
 
                 // Horizontal border between rows
                 if ((
-                    tableStrokes.horizontal == TableStrokeOptions.ALL ||
-                            (tableStrokes.horizontal == TableStrokeOptions.END && rowIndex == rows.size - 2)
+                    TableStrokeOptions.ALL in tableStrokes.horizontal ||
+                            (TableStrokeOptions.END in tableStrokes.horizontal && rowIndex == rows.size - 2)
                     ) && rowIndex < rows.size - 1
                 ) {
                     Divider(
@@ -262,8 +263,8 @@ fun TableExample() {
             headers = headers,
             rows = cells,
             tableStrokes = TableStrokes(
-                vertical = TableStrokeOptions.START,
-                horizontal = TableStrokeOptions.START,
+                vertical = setOf(TableStrokeOptions.START),
+                horizontal = setOf(TableStrokeOptions.START),
                 outer = false,
                 color = Color.Black,
                 width = 3.dp

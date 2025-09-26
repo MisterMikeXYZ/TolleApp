@@ -6,5 +6,5 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "settings")
 data class Settings(
     @PrimaryKey val id: Long = 0,
-    val isDarkmode: Boolean = false,
+    val isDarkmode: Boolean = true,
 )

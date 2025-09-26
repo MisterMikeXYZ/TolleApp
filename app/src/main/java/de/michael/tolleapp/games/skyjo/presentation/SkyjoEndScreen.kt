@@ -151,7 +151,6 @@ fun SkyjoEndScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(16.dp)
-                .verticalScroll(scrollState)
         ) {
             Text("Spiel beendet!", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(12.dp))
@@ -159,7 +158,7 @@ fun SkyjoEndScreen(
 
             Box(
                 Modifier
-                    .height(intrinsicSize = IntrinsicSize.Min)
+                    .weight(1f)
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
@@ -178,34 +177,47 @@ fun SkyjoEndScreen(
                         fontWeight = FontWeight.Bold
                     ) }
                 })
+                val roundsPlayed = state.perPlayerRounds.values.maxOfOrNull { it.size } ?: 0
 
-                val rows = (1..state.currentGameRounds).map { roundIndex ->
-                    val row = mutableListOf<@Composable () -> Unit>()
-                    row.add { Text(roundIndex.toString()) }
+                val rows = (1..roundsPlayed + 1).map { roundIndex ->
                     val players = state.selectedPlayerIds.filterNotNull()
-                    players.forEach { playerId ->
-                        val list = state.perPlayerRounds[playerId]
-                        val value = list?.getOrNull(roundIndex - 1)?.toString() ?: ""
-                        row.add { Text(value) }
+                    val row = mutableListOf<@Composable () -> Unit>()
+                    if (roundIndex > roundsPlayed) {
+                        row.add { Text("Σ") }
+                        players.forEach { playerId ->
+                            val sum = state.totalPoints[playerId] ?: ""
+                            row.add { Text(sum.toString()) }
+                        }
+                    } else {
+                        row.add { Text(roundIndex.toString()) }
+                        players.forEach { playerId ->
+                            val list = state.perPlayerRounds[playerId]
+                            val value = list?.getOrNull(roundIndex - 1)?.toString() ?: ""
+                            row.add { Text(value) }
+                        }
                     }
                     row
                 }
 
-                val weights = if(state.selectedPlayerIds.size <= 4) listOf(1f) + List(state.selectedPlayerIds.filterNotNull().size) { 2f } else listOf(1f) + List(state.selectedPlayerIds.filterNotNull().size) { 1f }
+                val weights = if(state.selectedPlayerIds.size <= 4){
+                    listOf(1f) + List(state.selectedPlayerIds.filterNotNull().size) { 2f }
+                } else {
+                    listOf(1f) + List(state.selectedPlayerIds.filterNotNull().size) { 1f }
+                }
+
                 Table(
                     headers = header,
                     rows = rows,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight()
                         .clip(RoundedCornerShape(16.dp))
                         .background(
                             MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                         ),
                     cellPadding = 4.dp,
                     tableStrokes = TableStrokes(
-                        vertical = TableStrokeOptions.ALL,
-                        horizontal = TableStrokeOptions.START,
+                        vertical = setOf(TableStrokeOptions.ALL),
+                        horizontal = setOf(TableStrokeOptions.START, TableStrokeOptions.END),
                         outer = false,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                         width = 2.dp
@@ -214,74 +226,6 @@ fun SkyjoEndScreen(
                     weights = weights
                 )
             }
-//            Row(modifier = Modifier
-//                .fillMaxWidth()
-//                .height(intrinsicSize = IntrinsicSize.Min)
-//            ) {
-//                Column(
-//                    modifier = Modifier.width(intrinsicSize = IntrinsicSize.Min),
-//                    horizontalAlignment = Alignment.CenterHorizontally
-//                ) {
-//                    Row(modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min)) {
-//                        Box(
-//                            modifier = Modifier.padding(4.dp),
-//                            contentAlignment = Alignment.Center
-//                        ) {
-//                            Text(
-//                                text = "Runde",
-//                                style = MaterialTheme.typography.labelLarge,
-//                                maxLines = 1,
-//                            )
-//                        }
-//                    }
-//
-//                    HorizontalDivider()
-//
-//                    val maxRounds = state.perPlayerRounds.values.maxOfOrNull { it.size } ?: 0
-//                    for (roundIndex in 1..maxRounds) {
-//                        Row (modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min)){
-//                            Box(
-//                                modifier = Modifier.padding(4.dp),
-//                                contentAlignment = Alignment.Center
-//                            ) {
-//                                Text(
-//                                    roundIndex.toString(),
-//                                    style = MaterialTheme.typography.labelLarge,
-//                                    maxLines = 1,
-//                                )
-//                            }
-//                        }
-//                    }
-//
-//                    HorizontalDivider()
-//
-//                    Row(modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min)) {
-//                        Box(
-//                            modifier = Modifier.padding(4.dp),
-//                            contentAlignment = Alignment.Center
-//                        ) {
-//                            Text(
-//                                text = "Σ",
-//                                style = MaterialTheme.typography.labelLarge,
-//                                maxLines = 1,
-//                            )
-//                        }
-//                    }
-//                }
-//
-//                VerticalDivider(modifier = Modifier.fillMaxHeight())
-//
-//                // === ROUNDS GRID ===
-//                Row {
-//                    state.selectedPlayerIds.filterNotNull().forEach {
-//                        SkyjoEndScreenPlayerColumn(
-//                            playerId = it,
-//                            state = state,
-//                            modifier = Modifier.width(40.dp)
-//                        )
-//                    }
-//                }
-//            }
 
             Spacer(modifier = Modifier.height(24.dp))
 

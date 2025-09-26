@@ -107,7 +107,7 @@ fun SkyjoNormalKeyboard(
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             SkyjoKeyButton(
-                text = "-",
+                text = "—",
                 enabled = enabler,
                 onClick = { selectedValues = selectedValues + "-" },
                 modifier = Modifier

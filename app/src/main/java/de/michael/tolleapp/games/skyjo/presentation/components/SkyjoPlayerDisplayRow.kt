@@ -39,7 +39,6 @@ fun SkyjoPlayerDisplayRow(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .padding(top = 8.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(backgroundColor)
@@ -50,7 +49,7 @@ fun SkyjoPlayerDisplayRow(
     ) {
         BetterOutlinedTextField(
             value = playerName,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).padding(top = 3.dp),
             textColor = if (isDealer) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.onSurface,
             textStyle = if (isDealer) MaterialTheme.typography.bodyLarge.copy(
@@ -66,7 +65,7 @@ fun SkyjoPlayerDisplayRow(
             value = points[playerId] ?: "",
             label = "Punkte",
             modifier = Modifier
-                .weight(1f),
+                .weight(1f).padding(top = 5.dp),
         )
 
         Spacer(modifier = Modifier.width(12.dp))
@@ -74,7 +73,7 @@ fun SkyjoPlayerDisplayRow(
         BetterOutlinedTextField(
             value = (totalPoints[playerId] ?: 0).toString(),
             label = "Gesamt",
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).padding(top = 3.dp),
             readOnly = true
         )
     }

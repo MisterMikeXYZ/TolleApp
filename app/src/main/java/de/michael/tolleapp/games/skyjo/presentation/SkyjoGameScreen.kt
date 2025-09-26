@@ -14,18 +14,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SaveAs
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -33,6 +37,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -50,6 +56,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.games.skyjo.presentation.components.table.Table
 import de.michael.tolleapp.games.skyjo.presentation.components.table.TableStrokeOptions
@@ -73,12 +80,10 @@ fun SkyjoGameScreen(
     val keyboardManager = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
-    // Local UI state to hold per-player current round input
     val points = remember { mutableStateMapOf<String, String>() }
 
     val perPlayerRounds = state.perPlayerRounds
     val totalPoints = state.totalPoints
-    val visibleRoundRows = state.visibleRoundRows
 
     val allInputsFilled by remember {
         derivedStateOf {
@@ -94,6 +99,39 @@ fun SkyjoGameScreen(
     val playerListState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
+    var backToHomeScreen by remember { mutableStateOf(false) }
+    
+    if (backToHomeScreen) {
+        AlertDialog(
+            onDismissRequest = { backToHomeScreen = false },
+            title = { Text("Spiel verlassen") },
+            text = { Text("Möchtest du das Spiel speichern oder löschen?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        navigateToMainMenu()
+                        backToHomeScreen = false
+                        viewModel.pauseCurrentGame()
+                    },
+                    enabled = state.perPlayerRounds.isNotEmpty()
+                ) {
+                    Text("Speichern")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        navigateToMainMenu()
+                        backToHomeScreen = false
+                        viewModel.deleteGame(null)
+                    }
+                ) {
+                    Text("Löschen")
+                }
+            }
+        )
+    }
+    
     BackHandler {}
 
     LaunchedEffect(state.selectedPlayerIds) {
@@ -115,29 +153,15 @@ fun SkyjoGameScreen(
             CustomTopBar(
                 title = "Skyjo",
                 navigationIcon = {
-                    var resetPressedDelete by remember { mutableStateOf(false) }
-                    LaunchedEffect(resetPressedDelete) {
-                        if (resetPressedDelete) {
-                            delay(2000)
-                            resetPressedDelete = false
-                        }
-                    }
                     IconButton(
                         onClick = {
-                            if (!resetPressedDelete) resetPressedDelete = true
-                            else {
-                                viewModel.deleteGame(null)
-                                navigateToMainMenu()
-                                resetPressedDelete = false
-                            }
-                        }
+                            backToHomeScreen = true
+                        },
                     ) {
                         Icon(
-                            imageVector = if (!resetPressedDelete) Icons.Default.Delete
-                            else Icons.Default.DeleteForever,
-                            contentDescription = null,
-                            tint = if (!resetPressedDelete) MaterialTheme.colorScheme.onSurface
-                            else MaterialTheme.colorScheme.error
+                            imageVector = Icons.Default.Home,
+                            contentDescription = "HomeButton",
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 },
@@ -160,35 +184,6 @@ fun SkyjoGameScreen(
                             )
                         )
                     }
-                    var resetPressedSave by remember { mutableStateOf(false) }
-                    LaunchedEffect(resetPressedSave) {
-                        if (resetPressedSave) {
-                            delay(2000)
-                            resetPressedSave = false
-                        }
-                    }
-                    IconButton(
-                        onClick = {
-                            if (!resetPressedSave) resetPressedSave = true
-                            else {
-                                viewModel.pauseCurrentGame()
-                                navigateToMainMenu()
-                                resetPressedSave = false
-                            }
-                        },
-                        enabled = !state.isGameEnded && hasAtLeastOneRound
-                    ) {
-                        Icon(
-                            imageVector = if (!resetPressedSave) Icons.Default.Save
-                            else Icons.Default.SaveAs,
-                            contentDescription = null,
-                            tint = if (!hasAtLeastOneRound) MaterialTheme.colorScheme.onSurface.copy(
-                                alpha = 0.3f
-                            )
-                            else if (!resetPressedSave) MaterialTheme.colorScheme.onSurface
-                            else MaterialTheme.colorScheme.primary
-                        )
-                    }
                 }
             )
         }
@@ -200,10 +195,9 @@ fun SkyjoGameScreen(
         ) {
             DividedScreen(
                 modifier = Modifier.fillMaxSize(),
+                startTopFraction = 0.6f,
                 topPart = {
                     Column(Modifier.fillMaxSize()) {
-
-
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -288,7 +282,7 @@ fun SkyjoGameScreen(
                             ) }
                         })
 
-                        val rows = (1..visibleRoundRows).map { roundIndex ->
+                        val rows = (1..state.visibleRoundRows).map { roundIndex ->
                             val row = mutableListOf<@Composable () -> Unit>()
                             row.add { Text(roundIndex.toString()) }
                             val players = state.selectedPlayerIds.filterNotNull()
@@ -299,7 +293,6 @@ fun SkyjoGameScreen(
                             }
                             row
                         }
-
                         val weights = if(state.selectedPlayerIds.size <= 4) {
                             listOf(1f) + List(state.selectedPlayerIds.filterNotNull().size) { 2f }
                         } else {
@@ -311,15 +304,14 @@ fun SkyjoGameScreen(
                             rows = rows,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .fillMaxHeight()
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(
                                     MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                 ),
                             cellPadding = 4.dp,
                             tableStrokes = TableStrokes(
-                                vertical = TableStrokeOptions.ALL,
-                                horizontal = TableStrokeOptions.START,
+                                vertical = setOf(TableStrokeOptions.ALL),
+                                horizontal = setOf(TableStrokeOptions.START),
                                 outer = false,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                                 width = 2.dp
@@ -327,112 +319,6 @@ fun SkyjoGameScreen(
                             headerBackgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                             weights = weights
                         )
-
-                        /*Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                        )
-                        {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(IntrinsicSize.Min)
-                            ){
-                                Spacer(modifier = Modifier.width(20.dp))
-
-                                VerticalDivider(
-                                    modifier = Modifier
-                                        .fillMaxHeight()
-                                        .width(3.dp),
-                                )
-
-                                val players = state.selectedPlayerIds.filterNotNull()
-                                players.forEachIndexed { index, playerId ->
-                                    val playerName = state.playerNames[playerId] ?: ""
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(4.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            playerName.take(2),
-                                            style = MaterialTheme.typography.labelLarge
-                                        )
-                                    }
-                                    if (index < players.size - 1) {
-                                        VerticalDivider(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .width(3.dp),
-                                        )
-                                    }
-                                }
-                            }
-
-                            HorizontalDivider()
-
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .verticalScroll(rememberScrollState())
-                            ) {
-                                Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-                                    Column (
-                                        modifier = Modifier.width(20.dp)
-                                    ){
-                                        for (roundIndex in 1..visibleRoundRows)
-                                            Box(
-                                                modifier = Modifier
-                                                    .padding(4.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Text(roundIndex.toString())
-                                            }
-                                    }
-                                    VerticalDivider(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .width(3.dp),
-                                    )
-
-                                    Column {
-                                        // Round rows
-                                        for (roundIndex in 1..visibleRoundRows) {
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .height(IntrinsicSize.Min)
-                                            ) {
-                                                val players = state.selectedPlayerIds.filterNotNull()
-                                                players.forEachIndexed { index, playerId ->
-                                                    val list = perPlayerRounds[playerId]
-                                                    val value =
-                                                        list?.getOrNull(roundIndex - 1)?.toString()
-                                                            ?: ""
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .weight(1f)
-                                                            .padding(4.dp),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        Text(value)
-                                                    }
-
-                                                    if (index < players.lastIndex) {
-                                                        VerticalDivider(
-                                                            modifier = Modifier
-                                                                .fillMaxHeight()
-                                                                .width(3.dp),
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }*/
                     }
                 }
             )

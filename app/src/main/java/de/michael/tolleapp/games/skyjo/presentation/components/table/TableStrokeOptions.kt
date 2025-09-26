@@ -12,8 +12,8 @@ enum class TableStrokeOptions{
 }
 
 data class TableStrokes(
-    val vertical: TableStrokeOptions = TableStrokeOptions.ALL,
-    val horizontal: TableStrokeOptions = TableStrokeOptions.ALL,
+    val vertical: Set<TableStrokeOptions> = setOf(TableStrokeOptions.ALL),
+    val horizontal: Set<TableStrokeOptions> = setOf(TableStrokeOptions.ALL),
     val outer: Boolean = true,
     val color: Color = Color.Gray,
     val width: Dp = 1.dp
