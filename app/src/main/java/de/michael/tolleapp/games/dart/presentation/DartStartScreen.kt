@@ -54,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.games.dart.data.DartGame
+import de.michael.tolleapp.games.util.CustomTopBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import org.koin.compose.viewmodel.koinViewModel
@@ -175,19 +176,8 @@ fun DartStartScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Dart") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
-                modifier = Modifier
-                    .clip(
-                        shape = MaterialTheme.shapes.extraLarge.copy(
-                            topStart = CornerSize(0.dp),
-                            topEnd = CornerSize(0.dp),
-                        )
-                    ),
+            CustomTopBar(
+                title = "Dart",
                 navigationIcon = {
                     IconButton(onClick = navigateToMainMenu) {
                         Icon(
