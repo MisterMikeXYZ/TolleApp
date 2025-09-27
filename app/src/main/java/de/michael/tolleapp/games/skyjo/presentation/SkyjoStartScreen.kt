@@ -58,7 +58,7 @@ import java.util.Locale
 fun SkyjoStartScreen(
     viewModel: SkyjoViewModel = koinViewModel(),
     navigateToGame: () -> Unit,
-    navigateToMainMenu: () -> Unit,
+    navigateBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -163,7 +163,7 @@ fun SkyjoStartScreen(
             CustomTopBar(
                 title = "Skyjo",
                 navigationIcon = {
-                    IconButton(onClick = navigateToMainMenu) {
+                    IconButton(onClick = navigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
