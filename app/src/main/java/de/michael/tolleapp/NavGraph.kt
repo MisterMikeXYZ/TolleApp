@@ -108,6 +108,12 @@ fun NavGraph(
                 },
                 exitTransition = {
                     slideOutOfContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                        animationSpec = tween(400)
+                    )
+                },
+                popEnterTransition = {
+                    slideIntoContainer(
                         towards = AnimatedContentTransitionScope.SlideDirection.Right,
                         animationSpec = tween(400)
                     )
@@ -128,7 +134,20 @@ fun NavGraph(
                 )
             }
 
-            composable<Route.Before.PlayerDeleteScreen> {
+            composable<Route.Before.PlayerDeleteScreen>(
+                enterTransition = {
+                    slideIntoContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                        animationSpec = tween(400)
+                    )
+                },
+                popExitTransition = {
+                    slideOutOfContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                        animationSpec = tween(400)
+                    )
+                },
+            ) {
                 PlayerDeleteScreen(
                     viewModel = settingsViewModel,
                     navigateBack = { navController.popBackStack() },
