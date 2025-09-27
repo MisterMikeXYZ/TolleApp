@@ -2,13 +2,7 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,7 +15,6 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
@@ -101,7 +94,26 @@ fun NavGraph(
             }
 
             // --- Settings ---
-            composable<Route.Before.Settings> {
+            composable<Route.Before.Settings>(
+                enterTransition = {
+                    slideIntoContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                        animationSpec = tween(400)
+                    )
+                },
+                exitTransition = {
+                    slideOutOfContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                        animationSpec = tween(400)
+                    )
+                },
+                popExitTransition = {
+                    slideOutOfContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                        animationSpec = tween(400)
+                    )
+                },
+            ) {
                 SettingsScreen(
                     viewModel = settingsViewModel,
                     navigateBack = { navController.popBackStack() },
