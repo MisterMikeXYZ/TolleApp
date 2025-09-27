@@ -16,10 +16,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -46,8 +46,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.games.util.PausedGame
 import de.michael.tolleapp.games.util.CustomTopBar
+import de.michael.tolleapp.games.util.PausedGame
 import kotlinx.coroutines.delay
 import java.text.DateFormat
 import java.util.Date
@@ -153,7 +153,7 @@ fun StartScreen(
                 navigationIcon = {
                     IconButton({ onAction(StartAction.NavigateToMainMenu) }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.Default.Home,
                             contentDescription = "Back"
                         )
                     }
@@ -164,7 +164,7 @@ fun StartScreen(
         Column(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start,
-            modifier = Modifier
+            modifier = modifier
                 .padding(innerPadding)
                 .fillMaxSize()
                 .padding(horizontal = 8.dp, vertical = 3.dp)

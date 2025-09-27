@@ -50,11 +50,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoPlayerDisplayRow
 import de.michael.tolleapp.games.skyjo.presentation.components.keyboards.SkyjoKeyboardSwitcher
-import de.michael.tolleapp.games.skyjo.presentation.components.table.Table
-import de.michael.tolleapp.games.skyjo.presentation.components.table.TableStrokeOptions
-import de.michael.tolleapp.games.skyjo.presentation.components.table.TableStrokes
-import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoPlayerDisplayRow
-import de.michael.tolleapp.games.skyjo.presentation.components.keyboards.SkyjoKeyboardSwitcher
 import de.michael.tolleapp.games.util.table.Table
 import de.michael.tolleapp.games.util.table.TableStrokeOptions
 import de.michael.tolleapp.games.util.table.TableStrokes
@@ -304,8 +299,8 @@ fun SkyjoGameScreen(
                                 ),
                             cellPadding = 4.dp,
                             tableStrokes = TableStrokes(
-                                vertical = setOf(TableStrokeOptions.ALL),
-                                horizontal = setOf(TableStrokeOptions.START),
+                                vertical = TableStrokeOptions.ALL,
+                                horizontal = TableStrokeOptions.START,
                                 outer = false,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                                 width = 2.dp

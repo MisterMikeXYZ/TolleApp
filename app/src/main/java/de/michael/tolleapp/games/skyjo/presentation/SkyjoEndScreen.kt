@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Delete
@@ -43,13 +41,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.games.util.table.Table
 import de.michael.tolleapp.games.util.table.TableStrokeOptions
 import de.michael.tolleapp.games.util.table.TableStrokes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
-import kotlin.collections.getOrNull
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,22 +75,8 @@ fun SkyjoEndScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(
-                    "Skyjo",
-                    color = MaterialTheme.colorScheme.onSurface
-                ) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
-                modifier = Modifier
-                    .clip(
-                        shape = MaterialTheme.shapes.extraLarge.copy(
-                            topStart = CornerSize(0.dp),
-                            topEnd = CornerSize(0.dp),
-                        )
-                    ),
+            CustomTopBar(
+                title = "Skyjo",
                 navigationIcon = {
                     var resetPressedDelete by remember { mutableStateOf(false) }
                     LaunchedEffect(resetPressedDelete) {
@@ -210,8 +194,8 @@ fun SkyjoEndScreen(
                         ),
                     cellPadding = 4.dp,
                     tableStrokes = TableStrokes(
-                        vertical = setOf(TableStrokeOptions.ALL),
-                        horizontal = setOf(TableStrokeOptions.START, TableStrokeOptions.END),
+                        vertical = TableStrokeOptions.ALL,
+                        horizontal = TableStrokeOptions.START_END,
                         outer = false,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                         width = 2.dp

@@ -14,10 +14,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -58,7 +58,7 @@ import java.util.Locale
 fun SkyjoStartScreen(
     viewModel: SkyjoViewModel = koinViewModel(),
     navigateToGame: () -> Unit,
-    navigateToMainMenu: () -> Unit,
+    navigateBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -163,9 +163,9 @@ fun SkyjoStartScreen(
             CustomTopBar(
                 title = "Skyjo",
                 navigationIcon = {
-                    IconButton(onClick = navigateToMainMenu) {
+                    IconButton(onClick = navigateBack) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.Default.Home,
                             contentDescription = "Back"
                         )
                     }
