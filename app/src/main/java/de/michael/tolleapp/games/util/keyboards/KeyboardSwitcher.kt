@@ -26,7 +26,6 @@ fun KeyboardSwitcher(
     onSubmit: (Int) -> Unit,
     onHideKeyboard: () -> Unit,
     initialValue: Int? = null,
-    minusAllowed: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val pagerState = rememberPagerState(initialPage = initialKeyboardIndex) { keyboards.size }
@@ -45,16 +44,24 @@ fun KeyboardSwitcher(
             modifier = Modifier.fillMaxWidth()
         ) { page ->
             when (keyboards[page]) {
-                Keyboard.NUMBER -> NumberKeyboard(
+                Keyboard.NUMBER,
+                Keyboard.NUMBER_WITH_2X,
+                Keyboard.NUMBER_WITH_MINUS -> NumberKeyboard(
                     onSubmit = onSubmit,
                     hideKeyboard = onHideKeyboard,
                     initialValue = initialValue,
-                    minusAllowed = minusAllowed,
+                    minusAllowed = keyboards[page] == Keyboard.NUMBER_WITH_MINUS,
+                    withDoubleSubmit = keyboards[page] == Keyboard.NUMBER_WITH_2X,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Keyboard.SKYJO -> TODO()
                 Keyboard.DART -> TODO()
-                Keyboard.ROMME -> TODO()
+                Keyboard.ROMME -> RommeKeyboard(
+                    onSubmit = onSubmit,
+                    hideKeyboard = onHideKeyboard,
+                    initialValue = initialValue?.let { listOf(it) } ?: emptyList(),
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
 

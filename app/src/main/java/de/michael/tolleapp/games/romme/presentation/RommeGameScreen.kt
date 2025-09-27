@@ -221,7 +221,7 @@ fun RommeGameScreen(
                     .align(Alignment.BottomCenter)
             ) {
                 KeyboardSwitcher(
-                    keyboards = listOf(Keyboard.NUMBER),
+                    keyboards = listOf(Keyboard.NUMBER_WITH_2X, Keyboard.ROMME),
                     onSubmit = { newValue ->
                         currentlyEditingScoreForPlayerId?.let { playerId ->
                             onAction(RommeAction.OnRoundScoreChange(playerId, newValue))

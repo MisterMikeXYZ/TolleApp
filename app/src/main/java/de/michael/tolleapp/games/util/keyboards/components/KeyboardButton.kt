@@ -1,5 +1,6 @@
 package de.michael.tolleapp.games.util.keyboards.components
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,8 +18,8 @@ import androidx.compose.ui.text.style.TextAlign
 fun KeyboardButton(
     text: String,
     onClick: () -> Unit,
-    enabled: Boolean,
-    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 

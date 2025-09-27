@@ -1,7 +1,6 @@
 package de.michael.tolleapp.games.util.keyboards
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +20,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,29 +28,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.games.util.keyboards.components.KeyboardButton
 
-private const val TAG = "NumberKeyboard"
-
 @Composable
-fun NumberKeyboard(
+fun RommeKeyboard(
     onSubmit: (total: Int) -> Unit,
     hideKeyboard: () -> Unit,
-    initialValue: Int? = null,
-    minusAllowed: Boolean = false,
-    withDoubleSubmit: Boolean = false,
+    initialValue: List<Int> = emptyList(),
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
-    var currentInput by remember { mutableStateOf(initialValue?.toString() ?: "") }
-
-    val validInput by remember(currentInput) {
-        derivedStateOf {
-            currentInput.toIntOrNull()?.let { minusAllowed || it >= 0 } ?: false
-        }
-    }
-    val inputPrefix = when {
-        currentInput.isEmpty() -> "Ergebnis eingeben"
-        !validInput -> "Unmöglicher Wert: "
-        else -> ""
-    }
+    var currentInput by remember { mutableStateOf(initialValue) }
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -66,7 +49,8 @@ fun NumberKeyboard(
                 scrollState.animateScrollTo(scrollState.maxValue)
             }
             Text(
-                text = inputPrefix + currentInput,
+                text = if (currentInput.isEmpty()) "Kartenwerte eingeben"
+                    else "${currentInput.joinToString(separator = " + ")} = ${currentInput.sum()}",
                 maxLines = 1,
                 modifier = Modifier
                     .weight(1f)
@@ -90,7 +74,7 @@ fun NumberKeyboard(
             )
         }
 
-        (1..9).chunked(3).forEach { row ->
+        (2..10).chunked(3).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -98,8 +82,7 @@ fun NumberKeyboard(
                 row.forEach { number ->
                     KeyboardButton(
                         text = number.toString(),
-                        enabled = currentInput.isEmpty() || validInput,
-                        onClick = { currentInput += number.toString() },
+                        onClick = { currentInput = currentInput + number },
                         modifier = Modifier
                             .weight(1f)
                             .aspectRatio(2f)
@@ -113,40 +96,26 @@ fun NumberKeyboard(
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             KeyboardButton(
-                text = if (!withDoubleSubmit) "-" else "Submit x2",
-                enabled = if (!withDoubleSubmit) minusAllowed && validInput
-                    else validInput,
+                text = "Submit x2",
                 onClick = {
-                    if (!withDoubleSubmit) currentInput += "-"
-                    else currentInput.toIntOrNull()?.let{
-                        onSubmit(it * 2)
-                        currentInput = ""
-                    } ?: Log.e(TAG, "Could not parse input '$currentInput' to Int")
+                    onSubmit(currentInput.sum() * 2)
+                    currentInput = emptyList()
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .aspectRatio(2.5f)
-            )
-            KeyboardButton(
-                text = "0",
-                enabled = currentInput.isEmpty() || validInput,
-                onClick = { currentInput += "0" },
-                modifier = Modifier
-                    .weight(1f)
-                    .aspectRatio(2f)
+                    .aspectRatio(3f),
+                enabled = currentInput.isNotEmpty(),
             )
             KeyboardButton(
                 text = "Submit",
                 onClick = {
-                    currentInput.toIntOrNull()?.let{
-                        onSubmit(it)
-                        currentInput = ""
-                    } ?: Log.e(TAG, "Could not parse input '$currentInput' to Int")
+                    onSubmit(currentInput.sum())
+                    currentInput = emptyList()
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .aspectRatio(2.5f),
-                enabled = validInput,
+                    .aspectRatio(3f),
+                enabled = currentInput.isNotEmpty(),
             )
         }
         Spacer(modifier = Modifier.padding(1.dp))
