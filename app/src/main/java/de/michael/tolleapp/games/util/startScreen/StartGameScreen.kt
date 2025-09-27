@@ -1,5 +1,6 @@
 package de.michael.tolleapp.games.util.startScreen
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,10 +16,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -45,8 +46,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.games.util.PausedGame
 import de.michael.tolleapp.games.util.CustomTopBar
+import de.michael.tolleapp.games.util.PausedGame
 import kotlinx.coroutines.delay
 import java.text.DateFormat
 import java.util.Date
@@ -55,11 +56,11 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StartGameScreen(
-    modifier: Modifier = Modifier,
     minPlayers: Int = 2,
     maxPlayers: Int,
     state: StartGameState,
     onAction: (StartAction) -> Unit,
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier,
 ) {
     val dateFormatter = DateFormat.getDateTimeInstance(
         DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault()
@@ -151,7 +152,7 @@ fun StartGameScreen(
                 navigationIcon = {
                     IconButton({ onAction(StartAction.NavigateToMainMenu) }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.Default.Home,
                             contentDescription = "Back"
                         )
                     }
@@ -162,7 +163,7 @@ fun StartGameScreen(
         Column(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start,
-            modifier = Modifier
+            modifier = modifier
                 .padding(innerPadding)
                 .fillMaxSize()
                 .padding(horizontal = 8.dp, vertical = 3.dp)
