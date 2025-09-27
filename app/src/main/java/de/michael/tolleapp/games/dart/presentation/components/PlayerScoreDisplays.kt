@@ -1,19 +1,28 @@
 package de.michael.tolleapp.games.dart.presentation.components
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import de.michael.tolleapp.R
 import de.michael.tolleapp.ui.theme.AppTheme
 
 @Preview
@@ -26,7 +35,7 @@ private fun PlayerScoreDisplaysPrev() {
                 isActive = true,
                 playerState = PlayerState(
                     playerId = "1",
-                    playerName = "Michi",
+                    playerName = "Nicolas",
                     rounds = listOf(
                         listOf(
                             ThrowData(
@@ -69,6 +78,8 @@ fun PlayerScoreDisplays(
 ) {
     val lastRound = playerState.rounds.lastOrNull() ?: emptyList()
 
+    val roundsPlayed = playerState.rounds.sumOf { it.size }
+
     val displayRound: List<String> = if (lastRound.isNotEmpty()) {
         List(3) { i ->
             val throwData = lastRound.getOrNull(i)
@@ -87,6 +98,19 @@ fun PlayerScoreDisplays(
         lastRound.sumOf { it.calcScore() ?: 0 }.toString()
     }
 
+    val animatable = remember { Animatable(initialValue = 24f) }
+
+    LaunchedEffect(isActive) {
+        if(isActive) {
+            animatable.animateTo(
+                targetValue = 32f,
+            )
+        } else {
+            animatable.animateTo(
+                targetValue = 24f,
+            )
+        }
+    }
     Row(
         modifier
     ) {
@@ -95,15 +119,39 @@ fun PlayerScoreDisplays(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
-                .weight(1f)
+                .weight(0.4f)
                 .fillMaxHeight()
         ) {
-            Text(
-                text = playerState.playerName,
-                style = if (isActive) MaterialTheme.typography.headlineLarge else MaterialTheme.typography.headlineSmall,
-                color = if (isActive) MaterialTheme.colorScheme.primary
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 4.dp)
+            ){
+                Text(
+                    text = playerState.playerName,
+                    style = MaterialTheme.typography.headlineSmall.copy(fontSize = animatable.value.sp),
+                    color = if (isActive) MaterialTheme.colorScheme.primary
                     else Color.Unspecified,
-            )
+                    modifier = Modifier.align(Alignment.Center),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                ){
+                    Text(
+                        text = roundsPlayed.toString(),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Icon(
+                        painter = painterResource(R.drawable.ic_dart),
+                        contentDescription = "Dart icon",
+                        modifier = Modifier.size(12.dp)
+                    )
+                }
+            }
         }
         VerticalDivider(Modifier.padding(horizontal = 2.dp))
 
@@ -111,7 +159,7 @@ fun PlayerScoreDisplays(
         if (playerState.hasFinished) {
             Box(
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(0.4f)
                     .fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
@@ -125,7 +173,7 @@ fun PlayerScoreDisplays(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(0.4f)
                     .fillMaxHeight(),
             ) {
                 Row(
@@ -170,7 +218,7 @@ fun PlayerScoreDisplays(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
-                .weight(1f)
+                .weight(0.2f)
                 .fillMaxHeight()
         ) {
             val totalRoundPoints = playerState.rounds.sumOf { round ->

@@ -12,6 +12,7 @@ import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStatsRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.UUID
+import kotlin.collections.toMutableList
 
 class SchwimmenViewModel(
     private val statsRepository: SchwimmenStatsRepository,
@@ -181,7 +182,6 @@ class SchwimmenViewModel(
         }
     }
 
-
     fun addPlayer(name: String, rowIndex: Int) = viewModelScope.launch {
         val newPlayer = Player(name = name)
         val added = statsRepository.addPlayer(newPlayer)
@@ -283,4 +283,43 @@ class SchwimmenViewModel(
             presetRepo.deletePreset(presetId)
         }
     }
+
+//    suspend fun undoLastRound(): Boolean {
+//        val stateValue = _state.value
+//        if (stateValue.perPlayerRounds.isEmpty()) return false
+//
+//        if (stateValue.isGameEnded) gameRepo.markNotEnded(stateValue.currentGameId)
+//
+//        val updatedRounds = stateValue.perPlayerRounds.toMutableMap()
+//        val updatedTotals = stateValue.totalPoints.toMutableMap()
+//
+//        val lastRoundIndex = updatedRounds.values.maxOfOrNull { it.size } ?: return false
+//        if (lastRoundIndex == 0) return false
+//
+//        stateValue.selectedPlayerIds.filterNotNull().forEach { playerId ->
+//            val currentRounds = updatedRounds[playerId]?.toMutableList() ?: return@forEach
+//            if (currentRounds.isNotEmpty()) {
+//                val removedScore = currentRounds.removeAt(currentRounds.lastIndex)
+//                updatedRounds[playerId] = currentRounds
+//                updatedTotals[playerId] = (updatedTotals[playerId] ?: 0) - removedScore
+//
+//                gameRepo.removeLastRound(stateValue.currentGameId, playerId)
+//            }
+//        }
+//
+//        val visibleRoundRows = if (_state.value.visibleRoundRows <= 5) 5 else _state.value.visibleRoundRows - 1
+//
+//        _state.update {
+//            it.copy(
+//                perPlayerRounds = updatedRounds,
+//                totalPoints = updatedTotals,
+//                isGameEnded = false,
+//                winnerId = listOf(null),
+//                loserId = listOf(null),
+//                visibleRoundRows = visibleRoundRows
+//            )
+//        }
+//        reverseDealer()
+//        return true
+//    }
 }

@@ -6,8 +6,8 @@ data class SchwimmenState (
     val playerNames: Map<String, String> = emptyMap(),
     val currentGameId: String = "",
     val currentGameRounds: Int = 0,
-    val selectedPlayerIds: List<String?> = listOf(null, null), // at least two slots
-    val perPlayerRounds: Map<String, Int> = emptyMap(), //Id and lives left
+    val selectedPlayerIds: List<String?> = listOf(null, null),
+    val perPlayerRounds: Map<String, Int> = emptyMap(),
     val winnerId: String? = null,
     val loserId: String? = null,
     val losers: List<String?> = emptyList(),
