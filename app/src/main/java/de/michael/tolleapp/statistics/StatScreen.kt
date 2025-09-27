@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.Route
 import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStats
 import de.michael.tolleapp.games.skyjo.data.SkyjoStats
+import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.statistics.screens.SchwimmenStatsTable
 import de.michael.tolleapp.statistics.screens.SkyjoStatsTable
 import kotlinx.coroutines.delay
@@ -69,22 +70,8 @@ fun StatScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(
-                    "Statistik",
-                    color = MaterialTheme.colorScheme.onSurface
-                ) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
-                modifier = Modifier
-                    .clip(
-                        shape = MaterialTheme.shapes.extraLarge.copy(
-                            topStart = CornerSize(0.dp),
-                            topEnd = CornerSize(0.dp),
-                        )
-                    ),
+            CustomTopBar(
+                title = "Statistik",
                 navigationIcon = {
                     IconButton(onClick = { navigateBack() }) {
                         Icon(

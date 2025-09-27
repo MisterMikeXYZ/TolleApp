@@ -1,3 +1,4 @@
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -16,9 +17,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
@@ -64,25 +67,15 @@ fun NavGraph(
         startDestination = Route.BeforeNav,
         enterTransition = {
             slideIntoContainer(
-                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                towards = AnimatedContentTransitionScope.SlideDirection.Up,
                 animationSpec = tween(400)
             )
         },
-        exitTransition = {
-            slideOutOfContainer(
-                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(400)
-            )
-        },
-        popEnterTransition = {
-            slideIntoContainer(
-                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(400)
-            )
-        },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
         popExitTransition = {
             slideOutOfContainer(
-                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                towards = AnimatedContentTransitionScope.SlideDirection.Down,
                 animationSpec = tween(400)
             )
         },
@@ -108,7 +101,7 @@ fun NavGraph(
             }
 
             // --- Settings ---
-            composable <Route.Before.Settings> {
+            composable<Route.Before.Settings> {
                 SettingsScreen(
                     viewModel = settingsViewModel,
                     navigateBack = { navController.popBackStack() },
@@ -118,7 +111,7 @@ fun NavGraph(
                 )
             }
 
-            composable <Route.Before.PlayerDeleteScreen> {
+            composable<Route.Before.PlayerDeleteScreen> {
                 PlayerDeleteScreen(
                     viewModel = settingsViewModel,
                     navigateBack = { navController.popBackStack() },
@@ -128,7 +121,7 @@ fun NavGraph(
         navigation<Route.SkyjoNav>(
             startDestination = Route.Skyjo.Start
         ) {
-            composable<Route.Skyjo.Start> {
+            composableStartScreen<Route.Skyjo.Start> {
                 val viewModel = it.sharedViewModel<SkyjoViewModel>(navController)
                 SkyjoStartScreen(
                     navigateToGame = { navController.navigate(Route.Skyjo.Game) },
@@ -136,7 +129,7 @@ fun NavGraph(
                     viewModel = viewModel
                 )
             }
-            composable<Route.Skyjo.Game> {
+            composableGameScreen<Route.Skyjo.Game> {
                 val viewModel = it.sharedViewModel<SkyjoViewModel>(navController)
                 SkyjoGameScreen(
                     viewModel = viewModel,
@@ -144,7 +137,7 @@ fun NavGraph(
                     navigateToEnd = { navController.navigate(Route.Skyjo.End) },
                 )
             }
-            composable<Route.Skyjo.End> {
+            composableGameScreen<Route.Skyjo.End> {
                 val viewModel = it.sharedViewModel<SkyjoViewModel>(navController)
                 SkyjoEndScreen(
                     navigateToGameScreen = { navController.popToRoute(Route.Skyjo.Game) },
@@ -156,7 +149,7 @@ fun NavGraph(
         navigation<Route.SchwimmenNav>(
             startDestination = Route.Schwimmen.Start
         ) {
-            composable<Route.Schwimmen.Start> {
+            composableStartScreen<Route.Schwimmen.Start> {
                 val viewModel = it.sharedViewModel<SchwimmenViewModel>(navController)
                 SchwimmenStartScreen(
                     navigateToGame = { canvas -> navController.navigate(Route.Schwimmen.Game(canvas)) },
@@ -164,7 +157,7 @@ fun NavGraph(
                     viewModel = viewModel
                 )
             }
-            composable<Route.Schwimmen.Game> {
+            composableGameScreen<Route.Schwimmen.Game> {
                 val canvas = it.toRoute<Route.Schwimmen.Game>().canvas
                 val viewModel = it.sharedViewModel<SchwimmenViewModel>(navController)
 
@@ -208,7 +201,7 @@ fun NavGraph(
         navigation<Route.WizardNav>(
             startDestination = Route.Wizard.Start
         ) {
-            composable<Route.Wizard.Start> {
+            composableStartScreen<Route.Wizard.Start> {
                 val viewModel = it.sharedViewModel<WizardViewModel>(navController)
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 StartGameScreen(
@@ -224,7 +217,7 @@ fun NavGraph(
                     }
                 )
             }
-            composable<Route.Wizard.Game> {
+            composableGameScreen<Route.Wizard.Game> {
                 val viewModel = it.sharedViewModel<WizardViewModel>(navController)
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 WizardGameScreen(
@@ -240,7 +233,7 @@ fun NavGraph(
                     }
                 )
             }
-            composable<Route.Wizard.End> {
+            composableGameScreen<Route.Wizard.End> {
                 val viewModel = it.sharedViewModel<WizardViewModel>(navController)
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 WizardEndScreen(
@@ -259,6 +252,54 @@ inline fun <reified T: Route> NavController.navigateWithPop(route: Route) {
         }
     }
 }
+
+private inline fun <reified T : Any> NavGraphBuilder.composableStartScreen(
+    noinline content: @Composable (AnimatedContentScope.(NavBackStackEntry) -> Unit)
+) = composable <T>(
+    content = content,
+    enterTransition = {
+        slideIntoContainer(
+            towards = AnimatedContentTransitionScope.SlideDirection.Up,
+            animationSpec = tween(400)
+        )
+    },
+    exitTransition = {
+        slideOutOfContainer(
+            towards = AnimatedContentTransitionScope.SlideDirection.Left,
+            animationSpec = tween(400)
+        )
+    },
+    popExitTransition = {
+        slideOutOfContainer(
+            towards = AnimatedContentTransitionScope.SlideDirection.Down,
+            animationSpec = tween(400)
+        )
+    },
+)
+
+private inline fun <reified T : Any> NavGraphBuilder.composableGameScreen(
+    noinline content: @Composable (AnimatedContentScope.(NavBackStackEntry) -> Unit)
+) = composable <T>(
+    content = content,
+    enterTransition = {
+        slideIntoContainer(
+            towards = AnimatedContentTransitionScope.SlideDirection.Left,
+            animationSpec = tween(400)
+        )
+    },
+    exitTransition = {
+        slideOutOfContainer(
+            towards = AnimatedContentTransitionScope.SlideDirection.Right,
+            animationSpec = tween(400)
+        )
+    },
+    popExitTransition = {
+        slideOutOfContainer(
+            towards = AnimatedContentTransitionScope.SlideDirection.Down,
+            animationSpec = tween(400)
+        )
+    },
+)
 
 fun NavController.popToRoute(route: Route) {
     while (currentBackStackEntry?.destination?.route != route::class.qualifiedName) {

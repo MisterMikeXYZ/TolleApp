@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.sp
+import de.michael.tolleapp.games.util.CustomTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,22 +30,8 @@ fun PlayerDeleteScreen (
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(
-                    "Spieler löschen",
-                    color = MaterialTheme.colorScheme.onSurface
-                ) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
-                modifier = Modifier
-                    .clip(
-                        shape = MaterialTheme.shapes.extraLarge.copy(
-                            topStart = CornerSize(0.dp),
-                            topEnd = CornerSize(0.dp),
-                        )
-                    ),
+            CustomTopBar(
+                title = "Spieler löschen",
                 navigationIcon = {
                     IconButton(onClick = {
                         navigateBack()
