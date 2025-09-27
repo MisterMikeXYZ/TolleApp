@@ -342,7 +342,7 @@ fun StartScreen(
                                         showCreatePlayerDialog = true
                                     }
                                 )
-                                state.allPlayers.filter { it !in state.selectedPlayers }
+                                state.allPlayers.sortedBy{ it.name }.filter { it !in state.selectedPlayers }
                                     .forEach { (id, name) ->
                                         DropdownMenuItem(
                                             text = { Text(name) },

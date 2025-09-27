@@ -9,5 +9,5 @@ data class StatState(
     val playersSkyjo: List<SkyjoStats> = emptyList(),
     val playersSchwimmen: List<SchwimmenStats> = emptyList(),
     val playerNames: Map<String, String> = emptyMap(),
-    val selectedGame: GameType = GameType.SKYJO
+    val selectedGame: GameType? = null,
 )

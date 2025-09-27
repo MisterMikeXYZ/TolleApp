@@ -60,6 +60,8 @@ fun StatScreen(
             state.playersSchwimmen.find { it.playerId == playerId }
                 ?: SchwimmenStats(playerId = playerId)
         }.sortedByDescending { it.roundsPlayedSchwimmen + it.totalGamesPlayedSchwimmen }
+
+        null -> emptyList()
     }
 
     Scaffold(
@@ -117,6 +119,7 @@ fun StatScreen(
                 val str = when (state.selectedGame) {
                     GameType.SKYJO -> "Skyjo"
                     GameType.SCHWIMMEN -> "Schwimmen"
+                    null -> "Kein Spiel ausgewählt"
                 }
                 Button(onClick = { expanded = true }) {
                     Text("Ausgewähltes Spiel: $str")

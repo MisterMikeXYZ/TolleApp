@@ -260,7 +260,6 @@ fun SkyjoStartScreen(
                             }
                         }
                     }
-
                 }
 
                 //Presets
@@ -375,12 +374,12 @@ fun SkyjoStartScreen(
                                         showCreatePlayerDialog = true
                                     }
                                 )
-                                state.playerNames.filter { (id, _) -> id !in state.selectedPlayerIds } //THIS
+                                state.playerNames.toList().sortedBy{ it.second }.filter { (id, _) -> id !in state.selectedPlayerIds }
                                     .forEach { (id, name) ->
                                         DropdownMenuItem(
-                                            text = { Text(name) }, //THIS
+                                            text = { Text(name) },
                                             onClick = {
-                                                viewModel.selectPlayer(index, id) //THIS
+                                                viewModel.selectPlayer(index, id)
                                                 expanded = false
                                             }
                                         )

@@ -1,7 +1,9 @@
 package de.michael.tolleapp.main
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement.Absolute.spacedBy
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -11,7 +13,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -21,8 +22,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -30,19 +37,17 @@ import de.michael.tolleapp.R
 import de.michael.tolleapp.Route
 import de.michael.tolleapp.main.components.GameCard
 import de.michael.tolleapp.main.util.gameNavigationDataList
+import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 
-/**
- * MainScreen is the entry point of the app.
- * It displays a simple button to navigate to the [SkyjoScreen][de.michael.tolleapp.skyjo.presentation.SkyjoStartScreen].
- * The MainViewModel is injected using Koin. []
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel = koinViewModel(),
     navigateTo : (Route) -> Unit,
 ) {
+    val content = LocalContext.current
+
     BackHandler {  }
     Scaffold(
         topBar = {
@@ -53,12 +58,31 @@ fun MainScreen(
                 ) },
                 navigationIcon = {
                     // App Icon
+                    var counter by remember { mutableIntStateOf(0) }
+                    LaunchedEffect(counter) {
+                        if (counter == 1) {
+                            delay(3000)
+                            counter = 0
+                        }
+                    }
                     Image(
                         painter = painterResource(id = R.drawable.ic_launcher_round),
                         contentDescription = null,
                         modifier = Modifier
                             .padding(start = 8.dp)
                             .size(48.dp)
+                            .clickable(true) {
+                                if (counter++ >= 20) {
+                                    counter = 0
+                                    Toast
+                                        .makeText(
+                                            content,
+                                            "Such dir nen Leben, du Opfer",
+                                            Toast.LENGTH_SHORT
+                                        )
+                                        .show()
+                                }
+                            }
                     )
                 },
                 actions = {

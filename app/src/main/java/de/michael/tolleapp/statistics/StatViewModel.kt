@@ -104,6 +104,7 @@ class StatViewModel(
                     schwimmenRepo.resetAllGameStats()
                     // Schwimmen flow is already collected, UI refreshes automatically
                 }
+                else -> { /* no-op */}
             }
         }
     }
