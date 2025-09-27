@@ -188,7 +188,7 @@ fun NavGraph(
         navigation<Route.DartNav>(
             startDestination = Route.Dart.Start
         ) {
-            composable<Route.Dart.Start> {
+            composableStartScreen<Route.Dart.Start> {
                 val viewModel = it.sharedViewModel<DartViewModel>(navController)
                 DartStartScreen(
                     viewModel = viewModel,
@@ -196,7 +196,7 @@ fun NavGraph(
                     navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
                 )
             }
-            composable<Route.Dart.Game> {
+            composableGameScreen<Route.Dart.Game> {
                 val viewModel = it.sharedViewModel<DartViewModel>(navController)
                 DartGameScreen(
                     viewModel = viewModel,
@@ -207,7 +207,7 @@ fun NavGraph(
         navigation<Route.RandomizerNav>(
             startDestination = Route.Randomizer.Start,
         ) {
-            composable<Route.Randomizer.Start> {
+            composableStartScreen<Route.Randomizer.Start> {
                 val viewModel = it.sharedViewModel<RandomizerViewModel>(navController)
                 RandomizerScreen(
                     viewModel = viewModel,
@@ -250,7 +250,7 @@ fun NavGraph(
                     }
                 )
             }
-            composable<Route.Wizard.End> { backStackEntry ->
+            composableGameScreen<Route.Wizard.End> { backStackEntry ->
                 val viewModel = backStackEntry.sharedViewModel<WizardViewModel>(navController)
                 val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -265,14 +265,14 @@ fun NavGraph(
                             sortedPlayers.map { "${roundData.scores[it.id]} | ${roundData.bids[it.id]}" }
                         },
                     sortedTotalValues = sortedPlayers.map { state.rounds.last().scores[it.id].toString() },
-                    navigateToMainMenu = { navController.navigateWithPop<Route.WizardNav>(Route.BeforeNav) },
+                    navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
                 )
             }
         }
         navigation<Route.RommeNav>(
             startDestination = Route.Romme.Start
         ) {
-            composable<Route.Romme.Start> {
+            composableStartScreen<Route.Romme.Start> {
                 val viewModel = it.sharedViewModel<RommeViewModel>(navController)
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 StartScreen(
@@ -280,21 +280,21 @@ fun NavGraph(
                     state = state as StartState,
                     onAction = { action ->
                         when (action) {
-                            StartAction.NavigateToMainMenu -> navController.navigateWithPop<Route.RommeNav>(Route.BeforeNav)
+                            StartAction.NavigateToMainMenu -> navController.popToRoute(Route.Before.StartScreen)
                             StartAction.NavigateToGame -> navController.navigate(Route.Romme.Game)
                             else -> viewModel.onStartAction(action)
                         }
                     }
                 )
             }
-            composable<Route.Romme.Game> {
+            composableGameScreen<Route.Romme.Game> {
                 val viewModel = it.sharedViewModel<RommeViewModel>(navController)
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 RommeGameScreen(
                     state = state,
                     onAction = { action ->
                         when (action) {
-                            RommeAction.NavigateToMainMenu -> navController.navigateWithPop<Route.RommeNav>(Route.BeforeNav)
+                            RommeAction.NavigateToMainMenu -> navController.popToRoute(Route.Before.StartScreen)
                             RommeAction.OnGameFinished -> {
                                 navController.navigate(Route.Romme.End)
                                 viewModel.onAction(action)
@@ -304,7 +304,7 @@ fun NavGraph(
                     }
                 )
             }
-            composable<Route.Romme.End> { backStackEntry ->
+            composableGameScreen<Route.Romme.End> { backStackEntry ->
                 val viewModel = backStackEntry.sharedViewModel<RommeViewModel>(navController)
                 val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -320,7 +320,7 @@ fun NavGraph(
                             sortedPlayers.map { roundData.roundScores[it.id]?.toString() ?: "" }
                         },
                     sortedTotalValues = sortedPlayers.map { state.rounds.last().finalScores[it.id].toString() },
-                    navigateToMainMenu = { navController.navigateWithPop<Route.RommeNav>(Route.BeforeNav) },
+                    navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
                 )
             }
         }
@@ -371,7 +371,7 @@ private inline fun <reified T : Any> NavGraphBuilder.composableGameScreen(
     },
     exitTransition = {
         slideOutOfContainer(
-            towards = AnimatedContentTransitionScope.SlideDirection.Right,
+            towards = AnimatedContentTransitionScope.SlideDirection.Left,
             animationSpec = tween(400)
         )
     },
