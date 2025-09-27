@@ -7,6 +7,7 @@ sealed interface StartAction {
     data object ResetSelectedPlayers : StartAction
 
     data class CreatePreset(val presetName: String, val playerIds: List<String>) : StartAction
+    data class SelectPreset(val presetId: Long) : StartAction
     data class DeletePreset(val presetId: Long) : StartAction
 
     data object StartGame : StartAction

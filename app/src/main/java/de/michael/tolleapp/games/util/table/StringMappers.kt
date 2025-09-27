@@ -3,18 +3,42 @@ package de.michael.tolleapp.games.util.table
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 
-fun String.toTableHeader(): (@Composable () -> Unit) {
+@Composable
+fun String.toTableHeader(
+    maxLines: Int = 1,
+    overflow: TextOverflow = TextOverflow.Ellipsis,
+    style: TextStyle = MaterialTheme.typography.labelLarge,
+    fontWeight: FontWeight = FontWeight.Bold,
+): (@Composable () -> Unit) {
     return { Text(
         text = this,
-        style = MaterialTheme.typography.labelLarge,
-        fontWeight = FontWeight.Bold
+        maxLines = maxLines,
+        overflow = overflow,
+        style = style,
+        fontWeight = fontWeight,
     ) }
 }
 
-fun String.toRowCell(): (@Composable () -> Unit) {
+fun String.toTableRowCell(
+    maxLines: Int = 1,
+): (@Composable () -> Unit) {
     return { Text(
         text = this,
+        maxLines = maxLines
+    ) }
+}
+
+fun String.toTableTotalCell(
+    maxLines: Int = 1,
+    fontWeight: FontWeight = FontWeight.Bold,
+): (@Composable () -> Unit) {
+    return { Text(
+        text = this,
+        maxLines = maxLines,
+        fontWeight = fontWeight
     ) }
 }

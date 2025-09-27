@@ -6,6 +6,7 @@ import androidx.compose.ui.unit.dp
 
 enum class TableStrokeOptions{
     START,
+    START_END,
     END,
     ALL,
     NONE

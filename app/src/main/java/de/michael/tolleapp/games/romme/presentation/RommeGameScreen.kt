@@ -46,7 +46,7 @@ import de.michael.tolleapp.games.util.keyboards.util.Keyboard
 import de.michael.tolleapp.games.util.table.Table
 import de.michael.tolleapp.games.util.table.TableStrokeOptions
 import de.michael.tolleapp.games.util.table.TableStrokes
-import de.michael.tolleapp.games.util.table.toRowCell
+import de.michael.tolleapp.games.util.table.toTableRowCell
 import de.michael.tolleapp.games.util.table.toTableHeader
 
 @Composable
@@ -73,10 +73,6 @@ fun RommeGameScreen(
         )
     }
 
-    BackHandler {
-        showOnHomeDialog = true
-    }
-
     val lazyListState = rememberLazyListState()
     var currentlyEditingScoreForPlayerId by remember { mutableStateOf<String?>(null) }
 
@@ -85,6 +81,13 @@ fun RommeGameScreen(
             val index = state.selectedPlayers.indexOfFirst { it?.id == currentlyEditingScoreForPlayerId }
             if (index >= 0) lazyListState.animateScrollToItem(index)
         }
+    }
+
+    BackHandler {
+        if (currentlyEditingScoreForPlayerId != null)
+            currentlyEditingScoreForPlayerId = null
+        else
+            showOnHomeDialog = true
     }
 
     Scaffold(
@@ -100,7 +103,11 @@ fun RommeGameScreen(
                     }
                 },
                 actions = {
-                    IconButton({ onAction(RommeAction.OnGameFinished)} ) {
+                    IconButton(
+                        onClick = { onAction(RommeAction.OnGameFinished) },
+                        enabled = state.rounds.firstOrNull()?.roundScores?.values?.filterNotNull()?.size
+                                == state.selectedPlayers.filterNotNull().size
+                    ) {
                         Icon(
                             imageVector = Icons.Default.ArrowCircleRight,
                             contentDescription = "Finish game",
@@ -167,34 +174,34 @@ fun RommeGameScreen(
                     }
                 },
                 bottomPart = {
-                    val weights = if(state.selectedPlayers.filterNotNull().size <= 4) {
-                        listOf(1f) + List(state.selectedPlayers.filterNotNull().size) { 2f }
-                    } else {
-                        listOf(1f) + List(state.selectedPlayers.filterNotNull().size) { 1f }
-                    }
-
                     Table(
-                        headers = (listOf("") + state.selectedPlayers.map { it?.name?.take(2) ?: "" }).map { it.toTableHeader() },
-                        rows = state.rounds.dropLast(1).reversed().map { roundData ->
+                        headers = (listOf("") + state.selectedPlayers.filterNotNull().map { it.name.take(2) }).map { it.toTableHeader() },
+                        rows = state.rounds.reversed().map { roundData ->
                             (listOf(roundData.roundNumber.toString()) + roundData.roundScores.entries.toList().sortedBy { (key, _) ->
                                 state.selectedPlayers.indexOfFirst { it?.id == key }
-                            }.map { it.value?.toString() ?: "" }).map { it.toRowCell() }
+                            }.map { it.value?.toString() ?: "" }).map { it.toTableRowCell() }
                         },
-                        weights = weights,
+                        totalRow = state.rounds.lastOrNull()?.finalScores?.entries?.toList()?.sortedBy { (key, _) ->
+                            state.selectedPlayers.indexOfFirst { it?.id == key }
+                        }?.let { finalScores ->
+                            (listOf("∑") + finalScores.map { it.value?.toString() ?: "" }).map { it.toTableRowCell() }
+                        },
+                        frozenStartColumns = 1,
+                        weights = listOf(1f) + List(state.selectedPlayers.filterNotNull().size) { 1.5f },
+                        minCellWidth = 32.dp,
                         cellPadding = 4.dp,
                         tableStrokes = TableStrokes(
                             vertical = TableStrokeOptions.ALL,
-                            horizontal = TableStrokeOptions.START,
+                            horizontal = TableStrokeOptions.START_END,
                             outer = false,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                             width = 2.dp
                         ),
-                        headerBackgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                         modifier = Modifier
                             .padding(8.dp)
-                            .fillMaxSize()
-                            .clip(MaterialTheme.shapes.medium)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                            .fillMaxWidth()
+                            .clip(MaterialTheme.shapes.small)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                     )
                 },
                 modifier = Modifier.fillMaxSize()

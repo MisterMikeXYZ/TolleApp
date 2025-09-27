@@ -64,12 +64,17 @@ class RommeViewModel(
             }
             is StartAction.SelectPlayer -> selectPlayer(action.index, action.playerId)
             is StartAction.UnselectPlayer -> unselectPlayer(action.index)
-            StartAction.ResetSelectedPlayers -> _state.update { it.copy(
-                selectedPlayers = listOf(null, null)
-            ) }
+            StartAction.ResetSelectedPlayers -> _selectedPlayerIds.update { List(2) { null } }
 
             is StartAction.CreatePreset -> viewModelScope.launch {
                 presetRepo.createPreset(GameType.ROMME.toString(), action.presetName, action.playerIds)
+            }
+            is StartAction.SelectPreset -> viewModelScope.launch {
+                val players = state.value.presets.first { it.preset.id == action.presetId }.players
+                _selectedPlayerIds.update { List(2) { null } }
+                players.map { it.playerId }.forEachIndexed { index, playerId ->
+                    selectPlayer(index, playerId)
+                }
             }
             is StartAction.DeletePreset -> viewModelScope.launch {
                 presetRepo.deletePreset(action.presetId)
@@ -177,7 +182,13 @@ class RommeViewModel(
                     )
                 }
             }
-            RommeAction.OnGameFinished -> TODO()
+            RommeAction.OnGameFinished -> {
+                val gameId = state.value.currentGameId
+                    ?: throw IllegalStateException("Game ID is null, cannot finish game")
+                viewModelScope.launch {
+                    rommeRepo.finishGame(gameId)
+                }
+            }
             RommeAction.DeleteGame -> {
                 val gameId = state.value.currentGameId
                     ?: throw IllegalStateException("Game ID is null, cannot delete game")
@@ -194,7 +205,7 @@ class RommeViewModel(
         _selectedPlayerIds.update { selectedPlayerIds ->
             val newValue = selectedPlayerIds.toMutableList().apply {
                 this[index] = playerId
-                if (index == this.lastIndex && this.size < 6) this.add(null) // auto add empty row if last row got a player
+                if (index == this.lastIndex) this.add(null) // auto add empty row if last row got a player
             }
             return@update newValue
         }
@@ -207,7 +218,7 @@ class RommeViewModel(
             if (index < updated.size) {
                 updated.removeAt(index)
             }
-            if (updated.size < 6 && updated.last() != null) {
+            if (updated.last() != null) {
                 updated.add(null)
             }
             return@update updated

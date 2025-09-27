@@ -1,27 +1,23 @@
 package de.michael.tolleapp.games.wizard.presentation
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,14 +26,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.R
 import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.games.util.DividedScreen
 import de.michael.tolleapp.games.util.OnHomeDialog
+import de.michael.tolleapp.games.util.table.Table
+import de.michael.tolleapp.games.util.table.TableStrokeOptions
+import de.michael.tolleapp.games.util.table.TableStrokes
+import de.michael.tolleapp.games.util.table.toTableHeader
+import de.michael.tolleapp.games.util.table.toTableRowCell
+import de.michael.tolleapp.games.util.table.toTableTotalCell
 import de.michael.tolleapp.games.wizard.presentation.components.WizardPlayerItem
 
 @Composable
@@ -227,88 +228,38 @@ fun WizardGameScreen(
                 }
             },
             bottomPart = {
-                // == Score Table ==
-                val scoreTableHorizontalScrollState = rememberScrollState()
-                val scoreTableVerticalScrollState = rememberScrollState()
-
-                Row(
+                Table(
+                    headers = listOf("")
+                        .plus(state.selectedPlayers.filterNotNull().map { it.name.take(2)})
+                        .map { it.toTableHeader() },
+                    rows = state.rounds.map { round ->
+                        listOf(round.roundNumber.toString())
+                            .plus(state.selectedPlayers.filterNotNull().map { player -> round.scores[player.id]?.toString() ?: "" })
+                            .map { it.toTableRowCell() }
+                    },
+                    totalRow = listOf("∑")
+                        .plus(state.selectedPlayers.map { player ->
+                            state.rounds.lastOrNull()?.scores?.get(player?.id)?.toString() ?: ""
+                        })
+                        .map { it.toTableTotalCell() },
+                    frozenStartColumns = 1,
+                    weights = listOf(1f) + List(state.selectedPlayers.filterNotNull().size) { 1.5f },
+                    minCellWidth = 32.dp,
+                    cellPadding = 4.dp,
+                    tableStrokes = TableStrokes(
+                        vertical = TableStrokeOptions.ALL,
+                        horizontal = TableStrokeOptions.START_END,
+                        outer = false,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                        width = 2.dp
+                    ),
+                    headerBackgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                     modifier = Modifier
-                        .fillMaxWidth()
                         .padding(8.dp)
-                ) {
-                    // Column with Round Numbers
-                    Column(Modifier.requiredWidth(32.dp)) {
-                        Text(
-                            text = "",
-                            modifier = Modifier
-                                .defaultMinSize(
-                                    minHeight = 20.dp
-                                )
-                        )
-                        HorizontalDivider(Modifier.fillMaxWidth())
-                        Column(
-                            modifier = Modifier
-                                .verticalScroll(scoreTableVerticalScrollState)
-                        ) {
-                            state.rounds.dropLast(1).reversed().forEach { round ->
-                                Text(
-                                    text = round.roundNumber.toString(),
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .defaultMinSize(
-                                            minHeight = 20.dp
-                                        )
-                                )
-                            }
-                        }
-                    }
-                    VerticalDivider()
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .defaultMinSize(minHeight = 20.dp)
-                                .horizontalScroll(scoreTableHorizontalScrollState)
-                        ) {
-                            state.selectedPlayers.forEach { player ->
-                                Text(
-                                    text = player?.name?.take(2) ?: "?",
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier
-                                        .requiredWidth(64.dp)
-                                )
-                            }
-                        }
-                        HorizontalDivider(Modifier.fillMaxWidth())
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .verticalScroll(scoreTableVerticalScrollState)
-                                .horizontalScroll(scoreTableHorizontalScrollState)
-                        ) {
-                            state.rounds.dropLast(1).reversed().forEach { round ->
-                                Row(Modifier.defaultMinSize(minHeight = 20.dp)) {
-                                    state.selectedPlayers.forEach { player ->
-                                        Text(
-                                            text = round.scores[player?.id]?.toString() ?: "—",
-                                            maxLines = 1,
-                                            textAlign = TextAlign.Center,
-                                            modifier = Modifier
-                                                .requiredWidth(64.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.small)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                )
             }
         )
     }

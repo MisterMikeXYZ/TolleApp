@@ -6,11 +6,11 @@ import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -38,6 +39,7 @@ fun DividedScreen(
         Box(
             modifier = Modifier
                 .weight(topHeightFraction)
+                .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .background(
                     color = MaterialTheme.colorScheme.surface,
@@ -63,21 +65,21 @@ fun DividedScreen(
                 )
                 .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
-            Spacer(
+            HorizontalDivider(
+                thickness = 4.dp,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
                 modifier = Modifier
-                    .background(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                        shape = MaterialTheme.shapes.small
-                    )
-                    .height(4.dp)
+                    .clip(MaterialTheme.shapes.small)
                     .width(64.dp)
                     .align(Alignment.Center)
             )
         }
 
         Box(
+            contentAlignment = Alignment.TopCenter,
             modifier = Modifier
                 .weight(1f - topHeightFraction)
+                .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .background(
                     color = MaterialTheme.colorScheme.surface,

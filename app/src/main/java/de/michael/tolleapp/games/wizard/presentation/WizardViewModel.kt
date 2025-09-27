@@ -65,12 +65,17 @@ class WizardViewModel(
             }
             is StartAction.SelectPlayer -> selectPlayer(action.index, action.playerId)
             is StartAction.UnselectPlayer -> unselectPlayer(action.index)
-            StartAction.ResetSelectedPlayers -> _state.update { it.copy(
-                selectedPlayers = listOf(null, null, null)
-            ) }
+            StartAction.ResetSelectedPlayers -> _selectedPlayerIds.update { listOf(null, null, null) }
 
             is StartAction.CreatePreset -> viewModelScope.launch {
                 presetRepo.createPreset(GameType.WIZARD.toString(), action.presetName, action.playerIds)
+            }
+            is StartAction.SelectPreset -> viewModelScope.launch {
+                val players = state.value.presets.first { it.preset.id == action.presetId }.players
+                _selectedPlayerIds.update { listOf(null, null, null) }
+                players.map { it.playerId }.forEachIndexed { index, playerId ->
+                    selectPlayer(index, playerId)
+                }
             }
             is StartAction.DeletePreset -> viewModelScope.launch {
                 presetRepo.deletePreset(action.presetId)
