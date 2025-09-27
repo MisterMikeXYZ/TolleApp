@@ -55,6 +55,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.games.schwimmen.data.game.GameScreenType
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGame
+import de.michael.tolleapp.games.util.CustomTopBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import org.koin.compose.viewmodel.koinViewModel
@@ -172,22 +173,8 @@ fun SchwimmenStartScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(
-                    "Schwimmen",
-                    color = MaterialTheme.colorScheme.onSurface
-                ) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
-                modifier = Modifier
-                    .clip(
-                        shape = MaterialTheme.shapes.extraLarge.copy(
-                            topStart = CornerSize(0.dp),
-                            topEnd = CornerSize(0.dp),
-                        )
-                    ),
+            CustomTopBar(
+                title = "Schwimmen",
                 navigationIcon = {
                     IconButton(onClick = navigateBack) {
                         Icon(
