@@ -1,5 +1,13 @@
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -54,10 +62,30 @@ fun NavGraph(
     NavHost(
         navController = navController,
         startDestination = Route.BeforeNav,
-        enterTransition = { EnterTransition.None },
-        exitTransition = { ExitTransition.None },
-        popEnterTransition = { EnterTransition.None },
-        popExitTransition = { ExitTransition.None },
+        enterTransition = {
+            slideIntoContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                animationSpec = tween(400)
+            )
+        },
+        exitTransition = {
+            slideOutOfContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                animationSpec = tween(400)
+            )
+        },
+        popEnterTransition = {
+            slideIntoContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                animationSpec = tween(400)
+            )
+        },
+        popExitTransition = {
+            slideOutOfContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                animationSpec = tween(400)
+            )
+        },
     ) {
         navigation<Route.BeforeNav>(
             startDestination = Route.Before.StartScreen,
@@ -74,9 +102,7 @@ fun NavGraph(
             // --- Statistics ---
             composable<Route.Before.Statistics> {
                 StatScreen(
-                    navigateTo = { route ->
-                        navController.navigate(route)
-                    },
+                    navigateBack = { navController.popBackStack() },
                     viewModel = statViewModel
                 )
             }
@@ -91,6 +117,7 @@ fun NavGraph(
                     },
                 )
             }
+
             composable <Route.Before.PlayerDeleteScreen> {
                 PlayerDeleteScreen(
                     viewModel = settingsViewModel,
@@ -105,7 +132,7 @@ fun NavGraph(
                 val viewModel = it.sharedViewModel<SkyjoViewModel>(navController)
                 SkyjoStartScreen(
                     navigateToGame = { navController.navigate(Route.Skyjo.Game) },
-                    navigateToMainMenu = { navController.navigateWithPop<Route.SkyjoNav>(Route.BeforeNav) },
+                    navigateBack = { navController.popBackStack() },
                     viewModel = viewModel
                 )
             }
@@ -113,15 +140,15 @@ fun NavGraph(
                 val viewModel = it.sharedViewModel<SkyjoViewModel>(navController)
                 SkyjoGameScreen(
                     viewModel = viewModel,
-                    navigateToMainMenu = { navController.navigateWithPop<Route.SkyjoNav>(Route.BeforeNav) },
+                    navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
                     navigateToEnd = { navController.navigate(Route.Skyjo.End) },
                 )
             }
             composable<Route.Skyjo.End> {
                 val viewModel = it.sharedViewModel<SkyjoViewModel>(navController)
                 SkyjoEndScreen(
-                    navigateToGameScreen = { navController.navigate(Route.Skyjo.Game) },
-                    navigateToMainMenu = { navController.navigateWithPop<Route.SkyjoNav>(Route.BeforeNav) },
+                    navigateToGameScreen = { navController.popToRoute(Route.Skyjo.Game) },
+                    navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
                     viewModel = viewModel,
                 )
             }
@@ -133,7 +160,7 @@ fun NavGraph(
                 val viewModel = it.sharedViewModel<SchwimmenViewModel>(navController)
                 SchwimmenStartScreen(
                     navigateToGame = { canvas -> navController.navigate(Route.Schwimmen.Game(canvas)) },
-                    navigateBack = { navController.navigateWithPop<Route.SchwimmenNav>(Route.BeforeNav) },
+                    navigateBack = { navController.popBackStack() },
                     viewModel = viewModel
                 )
             }
@@ -144,7 +171,7 @@ fun NavGraph(
                 SchwimmenGameScreen(
                     gameScreenType = if (canvas) GameScreenType.CANVAS else GameScreenType.CIRCLE,
                     viewModel = viewModel,
-                    navigateToMainMenu = { navController.navigateWithPop<Route.SchwimmenNav>(Route.BeforeNav) },
+                    navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
                 )
             }
         }
@@ -156,14 +183,14 @@ fun NavGraph(
                 DartStartScreen(
                     viewModel = viewModel,
                     navigateToGameScreen = { navController.navigate(Route.Dart.Game) },
-                    navigateToMainMenu = { navController.navigateWithPop<Route.DartNav>(Route.BeforeNav) },
+                    navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
                 )
             }
             composable<Route.Dart.Game> {
                 val viewModel = it.sharedViewModel<DartViewModel>(navController)
                 DartGameScreen(
                     viewModel = viewModel,
-                    navigateToMainMenu = { navController.navigateWithPop<Route.DartNav>(Route.BeforeNav) }
+                    navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) }
                 )
             }
         }
@@ -174,7 +201,7 @@ fun NavGraph(
                 val viewModel = it.sharedViewModel<RandomizerViewModel>(navController)
                 RandomizerScreen(
                     viewModel = viewModel,
-                    navigateToMainMenu = { navController.navigateWithPop<Route.RandomizerNav>(Route.BeforeNav) }
+                    navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) }
                 )
             }
         }
@@ -190,7 +217,7 @@ fun NavGraph(
                     state = state.toStartState(),
                     onAction = { action ->
                         when (action) {
-                            StartAction.NavigateToMainMenu -> navController.navigateWithPop<Route.WizardNav>(Route.BeforeNav)
+                            StartAction.NavigateToMainMenu -> navController.popToRoute(Route.Before.StartScreen)
                             StartAction.NavigateToGame -> navController.navigate(Route.Wizard.Game)
                             else -> viewModel.onStartAction(action)
                         }
@@ -204,7 +231,7 @@ fun NavGraph(
                     state = state,
                     onAction = { action ->
                         when (action) {
-                            WizardAction.NavigateToMainMenu -> navController.navigateWithPop<Route.WizardNav>(Route.BeforeNav)
+                            WizardAction.NavigateToMainMenu -> navController.popToRoute(Route.Before.StartScreen)
                             WizardAction.OnGameFinished -> {
                                 navController.navigate(Route.Wizard.End)
                             }
@@ -218,7 +245,7 @@ fun NavGraph(
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 WizardEndScreen(
                     state = state,
-                    navigateToMainMenu = { navController.navigateWithPop<Route.WizardNav>(Route.BeforeNav) },
+                    navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
                 )
             }
         }
@@ -230,6 +257,12 @@ inline fun <reified T: Route> NavController.navigateWithPop(route: Route) {
         popUpTo(T::class) {
             inclusive = true
         }
+    }
+}
+
+fun NavController.popToRoute(route: Route) {
+    while (currentBackStackEntry?.destination?.route != route::class.qualifiedName) {
+        if (!popBackStack()) break
     }
 }
 

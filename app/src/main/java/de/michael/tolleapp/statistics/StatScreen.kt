@@ -49,7 +49,8 @@ import kotlin.collections.sortedByDescending
 @Composable
 fun StatScreen(
     viewModel: StatViewModel = koinViewModel(),
-    navigateTo: (Route) -> Unit,
+    navigateBack: () -> Unit,
+//    navigateTo: (Route) -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
     var expanded by remember { mutableStateOf(false) }
@@ -85,7 +86,7 @@ fun StatScreen(
                         )
                     ),
                 navigationIcon = {
-                    IconButton(onClick = { navigateTo(Route.Before.StartScreen) }) {
+                    IconButton(onClick = { navigateBack() }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
