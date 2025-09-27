@@ -53,6 +53,11 @@ import de.michael.tolleapp.games.skyjo.presentation.components.keyboards.SkyjoKe
 import de.michael.tolleapp.games.skyjo.presentation.components.table.Table
 import de.michael.tolleapp.games.skyjo.presentation.components.table.TableStrokeOptions
 import de.michael.tolleapp.games.skyjo.presentation.components.table.TableStrokes
+import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoPlayerDisplayRow
+import de.michael.tolleapp.games.skyjo.presentation.components.keyboards.SkyjoKeyboardSwitcher
+import de.michael.tolleapp.games.util.table.Table
+import de.michael.tolleapp.games.util.table.TableStrokeOptions
+import de.michael.tolleapp.games.util.table.TableStrokes
 import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.games.util.DividedScreen
 import de.michael.tolleapp.games.util.OnHomeDialog
@@ -281,7 +286,8 @@ fun SkyjoGameScreen(
                             }
                             row
                         }
-                        val weights = if(state.selectedPlayerIds.size <= 4) {
+
+                        val weights = if(state.selectedPlayerIds.filterNotNull().size <= 4) {
                             listOf(1f) + List(state.selectedPlayerIds.filterNotNull().size) { 2f }
                         } else {
                             listOf(1f) + List(state.selectedPlayerIds.filterNotNull().size) { 1f }

@@ -1,5 +1,6 @@
 package de.michael.tolleapp.games.util.startScreen
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,12 +55,13 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StartGameScreen(
-    modifier: Modifier = Modifier,
+fun StartScreen(
     minPlayers: Int = 2,
-    maxPlayers: Int,
-    state: StartGameState,
+    maxPlayers: Int = Int.MAX_VALUE,
+    state: StartState,
     onAction: (StartAction) -> Unit,
+    @SuppressLint("ModifierParameter")
+    modifier: Modifier = Modifier,
 ) {
     val dateFormatter = DateFormat.getDateTimeInstance(
         DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault()
@@ -257,10 +259,7 @@ fun StartGameScreen(
                             DropdownMenuItem(
                                 text = { Text(presetWithPlayers.preset.name) },
                                 onClick = {
-                                    onAction(StartAction.ResetSelectedPlayers)
-                                    presetWithPlayers.players.forEachIndexed { index, presetPlayer ->
-                                        onAction(StartAction.SelectPlayer(index, presetPlayer.playerId))
-                                    }
+                                    onAction(StartAction.SelectPreset(presetWithPlayers.preset.id))
                                     presetExpanded = false
                                 },
                                 trailingIcon = {

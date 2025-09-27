@@ -5,4 +5,5 @@ enum class GameType {
     DART,
     SCHWIMMEN,
     WIZARD,
+    ROMME,
 }

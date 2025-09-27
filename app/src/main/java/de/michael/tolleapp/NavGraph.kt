@@ -1,3 +1,5 @@
+package de.michael.tolleapp
+
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -14,12 +16,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
-import de.michael.tolleapp.Route
 import de.michael.tolleapp.games.dart.presentation.DartGameScreen
 import de.michael.tolleapp.games.dart.presentation.DartStartScreen
 import de.michael.tolleapp.games.dart.presentation.DartViewModel
 import de.michael.tolleapp.games.randomizer.presentation.RandomizerScreen
 import de.michael.tolleapp.games.randomizer.presentation.RandomizerViewModel
+import de.michael.tolleapp.games.romme.presentation.RommeAction
+import de.michael.tolleapp.games.romme.presentation.RommeGameScreen
+import de.michael.tolleapp.games.romme.presentation.RommeViewModel
+import de.michael.tolleapp.games.schwimmen.data.game.GameScreenType
+import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenGameScreen
 import de.michael.tolleapp.games.schwimmen.data.game.GameScreenType
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenGameScreen
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenStartScreen
@@ -28,10 +34,11 @@ import de.michael.tolleapp.games.skyjo.presentation.SkyjoEndScreen
 import de.michael.tolleapp.games.skyjo.presentation.SkyjoGameScreen
 import de.michael.tolleapp.games.skyjo.presentation.SkyjoStartScreen
 import de.michael.tolleapp.games.skyjo.presentation.SkyjoViewModel
+import de.michael.tolleapp.games.util.endScreen.EndScreen
 import de.michael.tolleapp.games.util.startScreen.StartAction
-import de.michael.tolleapp.games.util.startScreen.StartGameScreen
+import de.michael.tolleapp.games.util.startScreen.StartScreen
+import de.michael.tolleapp.games.util.startScreen.StartState
 import de.michael.tolleapp.games.wizard.presentation.WizardAction
-import de.michael.tolleapp.games.wizard.presentation.WizardEndScreen
 import de.michael.tolleapp.games.wizard.presentation.WizardGameScreen
 import de.michael.tolleapp.games.wizard.presentation.WizardViewModel
 import de.michael.tolleapp.games.wizard.presentation.toStartState
@@ -184,7 +191,7 @@ fun NavGraph(
             composable<Route.Wizard.Start> {
                 val viewModel = it.sharedViewModel<WizardViewModel>(navController)
                 val state by viewModel.state.collectAsStateWithLifecycle()
-                StartGameScreen(
+                StartScreen(
                     minPlayers = 3,
                     maxPlayers = 6,
                     state = state.toStartState(),
@@ -213,12 +220,77 @@ fun NavGraph(
                     }
                 )
             }
-            composable<Route.Wizard.End> {
-                val viewModel = it.sharedViewModel<WizardViewModel>(navController)
+            composable<Route.Wizard.End> { backStackEntry ->
+                val viewModel = backStackEntry.sharedViewModel<WizardViewModel>(navController)
                 val state by viewModel.state.collectAsStateWithLifecycle()
-                WizardEndScreen(
-                    state = state,
+
+                val sortedPlayers = state.selectedPlayers.filterNotNull().sortedBy {
+                    state.rounds.last().scores[it.id]
+                }
+                EndScreen(
+                    titleValue = "Wizard",
+                    sortedPlayerNames = sortedPlayers.map { it.name },
+                    sortedScoreValues = state.rounds
+                        .map { roundData ->
+                            sortedPlayers.map { "${roundData.scores[it.id]} | ${roundData.bids[it.id]}" }
+                        },
+                    sortedTotalValues = sortedPlayers.map { state.rounds.last().scores[it.id].toString() },
                     navigateToMainMenu = { navController.navigateWithPop<Route.WizardNav>(Route.BeforeNav) },
+                )
+            }
+        }
+        navigation<Route.RommeNav>(
+            startDestination = Route.Romme.Start
+        ) {
+            composable<Route.Romme.Start> {
+                val viewModel = it.sharedViewModel<RommeViewModel>(navController)
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                StartScreen(
+                    minPlayers = 2,
+                    state = state as StartState,
+                    onAction = { action ->
+                        when (action) {
+                            StartAction.NavigateToMainMenu -> navController.navigateWithPop<Route.RommeNav>(Route.BeforeNav)
+                            StartAction.NavigateToGame -> navController.navigate(Route.Romme.Game)
+                            else -> viewModel.onStartAction(action)
+                        }
+                    }
+                )
+            }
+            composable<Route.Romme.Game> {
+                val viewModel = it.sharedViewModel<RommeViewModel>(navController)
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                RommeGameScreen(
+                    state = state,
+                    onAction = { action ->
+                        when (action) {
+                            RommeAction.NavigateToMainMenu -> navController.navigateWithPop<Route.RommeNav>(Route.BeforeNav)
+                            RommeAction.OnGameFinished -> {
+                                navController.navigate(Route.Romme.End)
+                                viewModel.onAction(action)
+                            }
+                            else -> viewModel.onAction(action)
+                        }
+                    }
+                )
+            }
+            composable<Route.Romme.End> { backStackEntry ->
+                val viewModel = backStackEntry.sharedViewModel<RommeViewModel>(navController)
+                val state by viewModel.state.collectAsStateWithLifecycle()
+
+                val sortedPlayers = state.selectedPlayers.filterNotNull().sortedBy {
+                    state.rounds.last().finalScores[it.id]
+                }
+                EndScreen(
+                    titleValue = "Rommé",
+                    sortedPlayerNames = sortedPlayers.map { it.name },
+                    sortedScoreValues = state.rounds
+                        .let { rounds -> if (rounds.last().roundScores.values.any { it == null }) rounds.dropLast(1) else rounds }
+                        .map { roundData ->
+                            sortedPlayers.map { roundData.roundScores[it.id]?.toString() ?: "" }
+                        },
+                    sortedTotalValues = sortedPlayers.map { state.rounds.last().finalScores[it.id].toString() },
+                    navigateToMainMenu = { navController.navigateWithPop<Route.RommeNav>(Route.BeforeNav) },
                 )
             }
         }
