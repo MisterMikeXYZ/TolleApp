@@ -25,5 +25,6 @@ interface SkyjoRepository {
     suspend fun addPlayerToGame(gameId: String, playerId: String): Result<Unit>
     suspend fun removePlayerFromGame(gameId: String, playerId: String): Result<Unit>
     suspend fun setWinnerAndLoser(gameId: String, winners: List<String>, losers: List<String>): Result<Unit>
+    suspend fun clearWinnersAndLosers(gameId: String, playerIds: List<String>): Result<Unit>
     suspend fun setDealer(gameId: String, dealerId: String): Result<Unit>
 }
