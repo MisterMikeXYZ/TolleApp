@@ -416,7 +416,7 @@ fun DartStartScreen(
                                         showCreatePlayerDialog = true
                                     }
                                 )
-                                state.playerNames.filter { (id, _) ->
+                                state.playerNames.toList().sortedBy{ it.second }.filter { (id, _) ->
                                     id !in state.selectedPlayerIds
                                 }.forEach { (id, name) ->
                                     DropdownMenuItem(

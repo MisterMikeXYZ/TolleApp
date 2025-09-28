@@ -400,7 +400,7 @@ fun SchwimmenStartScreen(
                                         showCreatePlayerDialog = true
                                     }
                                 )
-                                state.playerNames.filter { (id, _) -> id !in state.selectedPlayerIds } //THIS
+                                state.playerNames.toList().sortedBy { it.second }.filter { (id, _) -> id !in state.selectedPlayerIds } //THIS
                                     .forEach { (id, name) ->
                                         DropdownMenuItem(
                                             text = { Text(name) }, //THIS
