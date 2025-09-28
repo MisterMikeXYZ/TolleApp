@@ -43,11 +43,14 @@ import de.michael.tolleapp.games.util.DividedScreen
 import de.michael.tolleapp.games.util.OnHomeDialog
 import de.michael.tolleapp.games.util.keyboards.KeyboardSwitcher
 import de.michael.tolleapp.games.util.keyboards.util.Keyboard
+import de.michael.tolleapp.games.util.table.SortDirection
 import de.michael.tolleapp.games.util.table.Table
 import de.michael.tolleapp.games.util.table.TableStrokeOptions
 import de.michael.tolleapp.games.util.table.TableStrokes
-import de.michael.tolleapp.games.util.table.toTableRowCell
+import de.michael.tolleapp.games.util.table.getSortDirectionButtonComposableList
 import de.michael.tolleapp.games.util.table.toTableHeader
+import de.michael.tolleapp.games.util.table.toTableRowCell
+import de.michael.tolleapp.games.util.table.toTableTotalCell
 
 @Composable
 fun RommeGameScreen(
@@ -175,8 +178,15 @@ fun RommeGameScreen(
                 },
                 bottomPart = {
                     Table(
-                        headers = (listOf("") + state.selectedPlayers.filterNotNull().map { it.name.take(2) }).map { it.toTableHeader() },
-                        rows = state.rounds.reversed().map { roundData ->
+                        headers = getSortDirectionButtonComposableList(
+                            currentDirection = state.sortDirection,
+                            onDirectionChange = { onAction(RommeAction.OnSortDirectionChange(it)) },
+                        )
+                            .plus(state.selectedPlayers.filterNotNull().map { it.name.take(2) }.map { it.toTableHeader() }),
+                        rows = state.rounds.let {
+                            if (state.sortDirection == SortDirection.ASCENDING) it
+                            else it.reversed()
+                        }.map { roundData ->
                             (listOf(roundData.roundNumber.toString()) + roundData.roundScores.entries.toList().sortedBy { (key, _) ->
                                 state.selectedPlayers.indexOfFirst { it?.id == key }
                             }.map { it.value?.toString() ?: "" }).map { it.toTableRowCell() }
@@ -184,7 +194,7 @@ fun RommeGameScreen(
                         totalRow = state.rounds.lastOrNull()?.finalScores?.entries?.toList()?.sortedBy { (key, _) ->
                             state.selectedPlayers.indexOfFirst { it?.id == key }
                         }?.let { finalScores ->
-                            (listOf("∑") + finalScores.map { it.value?.toString() ?: "" }).map { it.toTableRowCell() }
+                            (listOf("∑") + finalScores.map { it.value?.toString() ?: "" }).map { it.toTableTotalCell() }
                         },
                         frozenStartColumns = 1,
                         weights = listOf(1f) + List(state.selectedPlayers.filterNotNull().size) { 1.5f },

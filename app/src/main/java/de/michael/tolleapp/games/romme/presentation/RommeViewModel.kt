@@ -2,7 +2,7 @@ package de.michael.tolleapp.games.romme.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.michael.tolleapp.games.romme.data.RommeRepository
+import de.michael.tolleapp.games.romme.domain.RommeRepository
 import de.michael.tolleapp.games.romme.domain.RommeRoundData
 import de.michael.tolleapp.games.util.GameType
 import de.michael.tolleapp.games.util.player.PlayerRepository
@@ -160,6 +160,11 @@ class RommeViewModel(
                         gameId,
                         state.value.rounds.last()
                     )
+                }
+            }
+            is RommeAction.OnSortDirectionChange -> {
+                _state.update { state ->
+                    state.copy(sortDirection = action.newDirection)
                 }
             }
             RommeAction.FinishRound -> {

@@ -33,13 +33,14 @@ import de.michael.tolleapp.R
 import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.games.util.DividedScreen
 import de.michael.tolleapp.games.util.OnHomeDialog
+import de.michael.tolleapp.games.util.table.SortDirection
 import de.michael.tolleapp.games.util.table.Table
 import de.michael.tolleapp.games.util.table.TableStrokeOptions
 import de.michael.tolleapp.games.util.table.TableStrokes
+import de.michael.tolleapp.games.util.table.getSortDirectionButtonComposableList
 import de.michael.tolleapp.games.util.table.toTableHeader
 import de.michael.tolleapp.games.util.table.toTableRowCell
 import de.michael.tolleapp.games.util.table.toTableTotalCell
-import de.michael.tolleapp.games.util.OnHomeDialog
 import de.michael.tolleapp.games.wizard.presentation.components.WizardPlayerItem
 
 @Composable
@@ -230,17 +231,23 @@ fun WizardGameScreen(
             },
             bottomPart = {
                 Table(
-                    headers = listOf("")
-                        .plus(state.selectedPlayers.filterNotNull().map { it.name.take(2)})
-                        .map { it.toTableHeader() },
-                    rows = state.rounds.map { round ->
-                        listOf(round.roundNumber.toString())
-                            .plus(state.selectedPlayers.filterNotNull().map { player -> round.scores[player.id]?.toString() ?: "" })
-                            .map { it.toTableRowCell() }
-                    },
+                    headers = getSortDirectionButtonComposableList(
+                        currentDirection = state.sortDirection,
+                        onDirectionChange = { onAction(WizardAction.OnSortDirectionChange(it)) }
+                    )
+                        .plus(state.selectedPlayers.filterNotNull().map { it.name.take(2)}
+                            .map { it.toTableHeader() }),
+                    rows = state.rounds.dropLast(1)
+                        .let { if (state.sortDirection == SortDirection.ASCENDING) it else it.reversed() }
+                        .map { round ->
+                            listOf(round.roundNumber.toString())
+                                .plus(state.selectedPlayers.filterNotNull().map { player -> round.scores[player.id]?.toString() ?: "" })
+                                .map { it.toTableRowCell() }
+                        },
                     totalRow = listOf("∑")
                         .plus(state.selectedPlayers.map { player ->
-                            state.rounds.lastOrNull()?.scores?.get(player?.id)?.toString() ?: ""
+                            state.rounds.getOrNull(state.rounds.size - 2)?.scores?.get(player?.id)?.toString()
+                                ?: ""
                         })
                         .map { it.toTableTotalCell() },
                     frozenStartColumns = 1,

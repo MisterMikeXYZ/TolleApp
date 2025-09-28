@@ -159,6 +159,9 @@ class WizardViewModel(
                     )
                 }
             }
+            is WizardAction.OnSortDirectionChange -> _state.update { state ->
+                state.copy(sortDirection = action.newDirection)
+            }
             WizardAction.FinishBidding -> {
                 val currentRound = state.value.rounds.last()
                 val newRound = currentRound.copy(

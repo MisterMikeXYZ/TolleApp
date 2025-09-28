@@ -5,14 +5,16 @@ import de.michael.tolleapp.games.util.PausedGame
 import de.michael.tolleapp.games.util.player.Player
 import de.michael.tolleapp.games.util.presets.GamePresetWithPlayers
 import de.michael.tolleapp.games.util.startScreen.StartState
+import de.michael.tolleapp.games.util.table.SortDirection
 import de.michael.tolleapp.games.wizard.domain.WizardRoundData
 
 data class WizardState(
     val allPlayers: List<Player> = emptyList(),
     val presets: List<GamePresetWithPlayers> = emptyList(),
     val pausedGames: List<PausedGame> = emptyList(),
-
     val selectedPlayers: List<Player?> = listOf(null, null, null),
+
+    val sortDirection: SortDirection = SortDirection.DESCENDING,
 
     val currentGameId: String? = null,
     val roundsToPlay: Int = 20,

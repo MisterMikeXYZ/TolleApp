@@ -14,7 +14,7 @@ import org.koin.dsl.module
 import de.michael.tolleapp.games.dart.presentation.DartViewModel
 import de.michael.tolleapp.games.util.presets.GamePresetRepository
 import de.michael.tolleapp.games.randomizer.presentation.RandomizerViewModel
-import de.michael.tolleapp.games.romme.data.RommeRepository
+import de.michael.tolleapp.games.romme.domain.RommeRepository
 import de.michael.tolleapp.games.romme.data.RommeRepositoryImpl
 import de.michael.tolleapp.games.romme.presentation.RommeViewModel
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameRepository

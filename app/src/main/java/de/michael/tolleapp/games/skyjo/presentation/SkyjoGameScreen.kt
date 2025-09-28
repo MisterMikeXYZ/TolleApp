@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -50,12 +49,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoPlayerDisplayRow
 import de.michael.tolleapp.games.skyjo.presentation.components.keyboards.SkyjoKeyboardSwitcher
-import de.michael.tolleapp.games.util.table.Table
-import de.michael.tolleapp.games.util.table.TableStrokeOptions
-import de.michael.tolleapp.games.util.table.TableStrokes
 import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.games.util.DividedScreen
 import de.michael.tolleapp.games.util.OnHomeDialog
+import de.michael.tolleapp.games.util.table.SortDirection
+import de.michael.tolleapp.games.util.table.Table
+import de.michael.tolleapp.games.util.table.TableStrokeOptions
+import de.michael.tolleapp.games.util.table.TableStrokes
+import de.michael.tolleapp.games.util.table.getSortDirectionButtonComposableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -254,12 +255,9 @@ fun SkyjoGameScreen(
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
-                        var header = listOf<@Composable () -> Unit>(
-                            { Text(
-                                "",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold
-                            ) }
+                        var header = getSortDirectionButtonComposableList(
+                            currentDirection = state.sortDirection,
+                            onDirectionChange = { viewModel.setSortDirection(it) }
                         )
                         header = header.plus(state.selectedPlayerIds.filterNotNull().map { id ->
                             val playerName = state.playerNames[id] ?: ""
@@ -270,17 +268,19 @@ fun SkyjoGameScreen(
                             ) }
                         })
 
-                        val rows = (1..visibleRoundRows).map { roundIndex ->
-                            val row = mutableListOf<@Composable () -> Unit>()
-                            row.add { Text(roundIndex.toString()) }
-                            val players = state.selectedPlayerIds.filterNotNull()
-                            players.forEach { playerId ->
-                                val list = perPlayerRounds[playerId]
-                                val value = list?.getOrNull(roundIndex - 1)?.toString() ?: ""
-                                row.add { Text(value) }
+                        val rows = (1..visibleRoundRows)
+                            .let { if (state.sortDirection == SortDirection.ASCENDING) it else it.reversed() }
+                            .map { roundIndex ->
+                                val row = mutableListOf<@Composable () -> Unit>()
+                                row.add { Text(roundIndex.toString()) }
+                                val players = state.selectedPlayerIds.filterNotNull()
+                                players.forEach { playerId ->
+                                    val list = perPlayerRounds[playerId]
+                                    val value = list?.getOrNull(roundIndex - 1)?.toString() ?: ""
+                                    row.add { Text(value) }
+                                }
+                                row
                             }
-                            row
-                        }
 
                         val weights = if(state.selectedPlayerIds.filterNotNull().size <= 4) {
                             listOf(1f) + List(state.selectedPlayerIds.filterNotNull().size) { 2f }

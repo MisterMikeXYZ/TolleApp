@@ -1,5 +1,7 @@
 package de.michael.tolleapp.games.skyjo.presentation
 
+import de.michael.tolleapp.games.util.table.SortDirection
+
 data class SkyjoState(
     val playerNames: Map<String, String> = emptyMap(),
     val currentGameId: String = "",
@@ -13,4 +15,6 @@ data class SkyjoState(
     val isGameEnded: Boolean = false,
     val currentDealerId: String? = null,
     val lastKeyboardPage: Int = 0,
+
+    val sortDirection: SortDirection = SortDirection.ASCENDING,
 )

@@ -34,7 +34,7 @@ fun String.toTableRowCell(
 
 fun String.toTableTotalCell(
     maxLines: Int = 1,
-    fontWeight: FontWeight = FontWeight.Bold,
+    fontWeight: FontWeight = FontWeight.SemiBold,
 ): (@Composable () -> Unit) {
     return { Text(
         text = this,

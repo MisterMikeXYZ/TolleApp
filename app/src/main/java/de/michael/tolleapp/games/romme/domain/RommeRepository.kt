@@ -1,7 +1,5 @@
-package de.michael.tolleapp.games.romme.data
+package de.michael.tolleapp.games.romme.domain
 
-import de.michael.tolleapp.games.romme.domain.RommeGame
-import de.michael.tolleapp.games.romme.domain.RommeRoundData
 import de.michael.tolleapp.games.util.PausedGame
 import kotlinx.coroutines.flow.Flow
 

@@ -8,6 +8,7 @@ import de.michael.tolleapp.games.skyjo.data.SkyjoGameRepository
 import de.michael.tolleapp.games.skyjo.data.SkyjoGameWinner
 import de.michael.tolleapp.games.util.player.PlayerRepository
 import de.michael.tolleapp.games.util.presets.GamePresetRepository
+import de.michael.tolleapp.games.util.table.SortDirection
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -338,5 +339,9 @@ class SkyjoViewModel(
 
     fun setLastKeyboardPage(page: Int) {
         _state.update { it.copy(lastKeyboardPage = page) }
+    }
+
+    fun setSortDirection(newDirection: SortDirection) {
+        _state.update { it.copy(sortDirection = newDirection) }
     }
 }
