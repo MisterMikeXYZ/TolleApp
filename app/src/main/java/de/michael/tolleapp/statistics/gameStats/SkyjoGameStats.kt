@@ -1,4 +1,4 @@
-package de.michael.tolleapp.games.skyjo.data
+package de.michael.tolleapp.statistics.gameStats
 
 data class SkyjoStats(
     val playerId: String,

@@ -22,13 +22,13 @@ import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameRound
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameRoundDao
 import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStats
 import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStatsDao
-import de.michael.tolleapp.games.skyjo.data.SkyjoGame
-import de.michael.tolleapp.games.skyjo.data.SkyjoGameDao
+import de.michael.tolleapp.games.skyjo.data.entities.SkyjoGameEntity
+import de.michael.tolleapp.games.skyjo.data.SkyjoDao
 import de.michael.tolleapp.games.skyjo.data.SkyjoGameLoser
-import de.michael.tolleapp.games.skyjo.data.SkyjoGameRound
+import de.michael.tolleapp.games.skyjo.data.entities.SkyjoRoundEntity
 import de.michael.tolleapp.games.skyjo.data.SkyjoGameRoundDao
 import de.michael.tolleapp.games.skyjo.data.SkyjoGameStatisticsDao
-import de.michael.tolleapp.games.skyjo.data.SkyjoGameWinner
+import de.michael.tolleapp.games.skyjo.data.entities.SkyjoPlayerEntity
 import de.michael.tolleapp.games.wizard.data.WizardDao
 import de.michael.tolleapp.games.wizard.data.entities.WizardGameEntity
 import de.michael.tolleapp.games.wizard.data.entities.WizardGamePlayerEntity
@@ -45,9 +45,9 @@ import de.michael.tolleapp.settings.data.SettingsDao
         GamePresetPlayer::class,
 
         // Skyjo
-        SkyjoGame::class,
-        SkyjoGameRound::class,
-        SkyjoGameWinner::class,
+        SkyjoGameEntity::class,
+        SkyjoRoundEntity::class,
+        SkyjoPlayerEntity::class,
         SkyjoGameLoser::class,
 
         // Schwimmen
@@ -85,7 +85,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun settingsDao(): SettingsDao
 
     // Skyjo
-    abstract fun skyjoGameDao(): SkyjoGameDao
+    abstract fun skyjoGameDao(): SkyjoDao
     abstract fun skyjoGameRoundDao(): SkyjoGameRoundDao
     abstract fun skyjoGameStatisticsDao(): SkyjoGameStatisticsDao
 

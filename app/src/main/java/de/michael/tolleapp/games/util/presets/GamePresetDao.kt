@@ -1,6 +1,7 @@
 package de.michael.tolleapp.games.util.presets
 
 import androidx.room.*
+import de.michael.tolleapp.games.util.GameType
 import kotlinx.coroutines.flow.Flow
 
 data class GamePresetWithPlayers(
@@ -21,6 +22,10 @@ interface GamePresetDao {
     fun getPresets(gameType: String): Flow<List<GamePresetWithPlayers>>
 
     @Transaction
+    @Query("SELECT * FROM game_presets WHERE gameType = :gameType")
+    fun getPresets(gameType: GameType): Flow<List<GamePresetWithPlayers>>
+
+    @Transaction
     @Query("SELECT * FROM game_presets WHERE id = :id")
     fun getPreset(id: Long): Flow<GamePresetWithPlayers>
 
@@ -33,8 +38,22 @@ interface GamePresetDao {
     @Query("SELECT * FROM game_presets WHERE gameType = :gameType AND name = :name LIMIT 1")
     suspend fun getPresetByNameAndGameType(gameType: String, name: String): GamePreset?
 
+    @Query("SELECT * FROM game_presets WHERE gameType = :gameType AND name = :name LIMIT 1")
+    suspend fun getPresetByNameAndGameType(gameType: GameType, name: String): GamePreset?
+
     @Transaction
     suspend fun insertPresetWithPlayers(gameType: String, preset: GamePreset, playerIds: List<String>) {
+        val existing = getPresetByNameAndGameType(gameType, preset.name)
+        if (existing != null) return
+        val presetId = insertPreset(preset)
+        val playerEntities = playerIds.map { pid ->
+            GamePresetPlayer(presetId = presetId, playerId = pid)
+        }
+        insertPresetPlayers(playerEntities)
+    }
+
+    @Transaction
+    suspend fun insertPresetWithPlayers(gameType: GameType, preset: GamePreset, playerIds: List<String>) {
         val existing = getPresetByNameAndGameType(gameType, preset.name)
         if (existing != null) return
         val presetId = insertPreset(preset)

@@ -44,8 +44,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.games.skyjo.data.SkyjoGame
+import de.michael.tolleapp.games.skyjo.data.entities.SkyjoGameEntity
 import de.michael.tolleapp.games.util.CustomTopBar
+import de.michael.tolleapp.games.util.GameType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import org.koin.compose.viewmodel.koinViewModel
@@ -62,7 +63,7 @@ fun SkyjoStartScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    val pausedGamesState = remember { mutableStateOf(emptyList<SkyjoGame>()) }
+    val pausedGamesState = remember { mutableStateOf(emptyList<SkyjoGameEntity>()) }
 
     LaunchedEffect(viewModel) {
         viewModel.pausedGames
@@ -142,7 +143,7 @@ fun SkyjoStartScreen(
                 TextButton(onClick = {
                     val name = newPresetName.trim()
                     if (name.isNotEmpty()) {
-                        viewModel.createPreset("skyjo", name, state.selectedPlayerIds.filterNotNull())
+                        viewModel.createPreset(GameType.SKYJO, name, state.selectedPlayerIds.filterNotNull())
                     }
                     newPresetName = ""
                     showPresetDialog = false
@@ -213,7 +214,7 @@ fun SkyjoStartScreen(
                                 text = { if(!deleteAllPressed) Text("Alle löschen") else Text("Sicher?") },
                                 onClick = { if(!deleteAllPressed) deleteAllPressed = true else viewModel.deleteAllSavedGames() }
                             )
-                            pausedGames.forEach { game: SkyjoGame ->
+                            pausedGames.forEach { game: SkyjoGameEntity ->
                                 val date = Date(
                                     if (game.createdAt < 10_000_000_000L) {
                                         game.createdAt * 1000

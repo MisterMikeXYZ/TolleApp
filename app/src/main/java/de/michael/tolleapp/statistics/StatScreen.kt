@@ -33,7 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStats
-import de.michael.tolleapp.games.skyjo.data.SkyjoStats
+import de.michael.tolleapp.statistics.gameStats.SkyjoStats
 import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.statistics.screens.SchwimmenStatsTable
 import de.michael.tolleapp.statistics.screens.SkyjoStatsTable

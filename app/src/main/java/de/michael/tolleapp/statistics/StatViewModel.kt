@@ -6,8 +6,8 @@ import de.michael.tolleapp.games.util.player.Player
 import de.michael.tolleapp.games.util.player.PlayerRepository
 import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStats
 import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStatsRepository
-import de.michael.tolleapp.games.skyjo.data.SkyjoGameRepository
-import de.michael.tolleapp.games.skyjo.data.SkyjoStats
+import de.michael.tolleapp.games.skyjo.data.SkyjoRepositoryImpl
+import de.michael.tolleapp.statistics.gameStats.SkyjoStats
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class StatViewModel(
-    private val skyjoRepo: SkyjoGameRepository,
+    private val skyjoRepo: SkyjoRepositoryImpl,
     private val schwimmenRepo: SchwimmenStatsRepository,
     private val playerRepo: PlayerRepository,
 ) : ViewModel() {
