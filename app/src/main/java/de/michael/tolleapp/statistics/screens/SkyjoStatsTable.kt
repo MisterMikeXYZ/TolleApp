@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.games.skyjo.data.SkyjoStats
+import de.michael.tolleapp.statistics.gameStats.SkyjoStats
 
 @Composable
 fun SkyjoStatsTable(
