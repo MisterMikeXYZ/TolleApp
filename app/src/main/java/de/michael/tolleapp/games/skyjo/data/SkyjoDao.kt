@@ -37,16 +37,14 @@ interface SkyjoDao {
     // Player operations --------------------------------------------------------------------------
     @Query("SELECT playerId FROM WizardGamePlayerEntity WHERE gameId = :gameId")
     fun getPlayerIdsForGame(gameId: String): Flow<List<String>>
-
     @Query("INSERT INTO SkyjoPlayerEntity (gameId, playerId) VALUES (:gameId, :playerId)")
     suspend fun addPlayerToGame(gameId: String, playerId: String)
-
     @Query("UPDATE SkyjoPlayerEntity SET isWinner = 1 WHERE gameId = :gameId AND playerId = :playerId")
     suspend fun setPlayerAsWinner(gameId: String, playerId: String)
-
     @Query("UPDATE SkyjoPlayerEntity SET isLoser = 1 WHERE gameId = :gameId AND playerId = :playerId")
     suspend fun setPlayerAsLoser(gameId: String, playerId: String)
-
+    @Query("UPDATE SkyjoPlayerEntity SET isWinner = 0, isLoser = 0 WHERE gameId = :gameId AND playerId IN (:playerIds)")
+    suspend fun clearWinnersAndLosers(gameId: String, playerIds: List<String>)
     @Query("DELETE FROM SkyjoPlayerEntity WHERE gameId = :gameId AND playerId = :playerId")
     suspend fun removePlayerFromGame(gameId: String, playerId: String)
 }

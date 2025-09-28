@@ -19,6 +19,7 @@ class SkyjoRepositoryImpl(
     //private val skyjoStatisticsDao: SkyjoGameStatisticsDao,
 ): SkyjoRepository {
 
+
     // Game operations ----------------------------------------------------------------------------
     override suspend fun createGame(gameId: String, endPoints: Int): Result<Unit> {
         try {
@@ -99,6 +100,7 @@ class SkyjoRepositoryImpl(
         return Result.success(Unit)
     }
 
+
     // Round operations ---------------------------------------------------------------------------
     override suspend fun upsertRound(gameId: String, roundData: SkyjoRoundData): Result<Unit> {
         try {
@@ -132,6 +134,7 @@ class SkyjoRepositoryImpl(
         return Result.success(Unit)
     }
 
+
     // Player operations --------------------------------------------------------------------------
     override suspend fun addPlayerToGame(gameId: String, playerId: String): Result<Unit> {
         try {
@@ -155,6 +158,15 @@ class SkyjoRepositoryImpl(
         try {
             winners.forEach { skyjoDao.setPlayerAsWinner(gameId, playerId = it) }
             losers.forEach { skyjoDao.setPlayerAsLoser(gameId, playerId = it) }
+        } catch (e: Exception) {
+            return Result.failure(e)
+        }
+        return Result.success(Unit)
+    }
+
+    override suspend fun clearWinnersAndLosers(gameId: String, playerIds: List<String>): Result<Unit> {
+        try {
+            skyjoDao.clearWinnersAndLosers(gameId, playerIds)
         } catch (e: Exception) {
             return Result.failure(e)
         }
