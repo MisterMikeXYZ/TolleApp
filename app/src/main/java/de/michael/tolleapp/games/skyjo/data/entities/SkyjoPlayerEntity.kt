@@ -26,6 +26,6 @@ import de.michael.tolleapp.games.util.player.Player
 data class SkyjoPlayerEntity(
     val gameId: String,
     val playerId: String,
-    val isWinner: Boolean,
-    val isLoser: Boolean,
+    val isWinner: Boolean = false,
+    val isLoser: Boolean = false,
 )

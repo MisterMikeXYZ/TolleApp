@@ -1,6 +1,7 @@
 package de.michael.tolleapp.games.skyjo.data
 
 import de.michael.tolleapp.games.skyjo.data.entities.SkyjoGameEntity
+import de.michael.tolleapp.games.skyjo.data.entities.SkyjoPlayerEntity
 import de.michael.tolleapp.games.skyjo.data.entities.SkyjoRoundEntity
 import de.michael.tolleapp.games.skyjo.data.mappers.toDomain
 import de.michael.tolleapp.games.skyjo.data.mappers.toEntity
@@ -138,7 +139,10 @@ class SkyjoRepositoryImpl(
     // Player operations --------------------------------------------------------------------------
     override suspend fun addPlayerToGame(gameId: String, playerId: String): Result<Unit> {
         try {
-            skyjoDao.addPlayerToGame(gameId, playerId)
+            skyjoDao.upsertPlayerInGame(SkyjoPlayerEntity(
+                gameId = gameId,
+                playerId = playerId,
+            ))
         } catch (e: Exception) {
             return Result.failure(e)
         }

@@ -1,9 +1,11 @@
 package de.michael.tolleapp.games.skyjo.data
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
 import de.michael.tolleapp.games.skyjo.data.entities.SkyjoGameEntity
+import de.michael.tolleapp.games.skyjo.data.entities.SkyjoPlayerEntity
 import de.michael.tolleapp.games.skyjo.data.entities.SkyjoRoundEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -30,15 +32,19 @@ interface SkyjoDao {
     fun getRoundsForGame(gameId: String): Flow<List<SkyjoRoundEntity>>
     @Upsert
     suspend fun upsertRound(round: SkyjoRoundEntity)
-    @Query("DELETE FROM SkyjoRoundEntity WHERE gameId = :gameId ORDER BY roundNumber DESC LIMIT 1")
-    suspend fun removeLastRound(gameId: String)
-
+    @Query("SELECT * FROM SkyjoRoundEntity WHERE gameId = :gameId ORDER BY roundNumber DESC LIMIT 1")
+    suspend fun getLastRound(gameId: String): SkyjoRoundEntity?
+    @Delete
+    suspend fun deleteRound(round: SkyjoRoundEntity)
+    suspend fun removeLastRound(gameId: String) {
+        getLastRound(gameId)?.let { deleteRound(it) }
+    }
 
     // Player operations --------------------------------------------------------------------------
-    @Query("SELECT playerId FROM WizardGamePlayerEntity WHERE gameId = :gameId")
+    @Query("SELECT playerId FROM SkyjoPlayerEntity WHERE gameId = :gameId")
     fun getPlayerIdsForGame(gameId: String): Flow<List<String>>
-    @Query("INSERT INTO SkyjoPlayerEntity (gameId, playerId) VALUES (:gameId, :playerId)")
-    suspend fun addPlayerToGame(gameId: String, playerId: String)
+    @Upsert
+    suspend fun upsertPlayerInGame(player: SkyjoPlayerEntity)
     @Query("UPDATE SkyjoPlayerEntity SET isWinner = 1 WHERE gameId = :gameId AND playerId = :playerId")
     suspend fun setPlayerAsWinner(gameId: String, playerId: String)
     @Query("UPDATE SkyjoPlayerEntity SET isLoser = 1 WHERE gameId = :gameId AND playerId = :playerId")

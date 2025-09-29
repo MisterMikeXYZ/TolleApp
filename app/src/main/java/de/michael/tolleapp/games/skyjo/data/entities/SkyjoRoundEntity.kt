@@ -21,7 +21,7 @@ import de.michael.tolleapp.games.util.player.Player
             onDelete = ForeignKey.SET_NULL
         )
     ],
-    indices = [Index("gameId"), Index("playerId")]
+    indices = [Index("gameId"), Index("dealerId")]
 )
 data class SkyjoRoundEntity(
     val gameId: String,

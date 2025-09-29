@@ -41,6 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.games.util.PausedGame
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
@@ -60,6 +62,7 @@ fun StartScreen(
     maxPlayers: Int = Int.MAX_VALUE,
     state: StartState,
     onAction: (StartAction) -> Unit,
+    settingsItem: @Composable (() -> Unit)? = null,
     @SuppressLint("ModifierParameter")
     modifier: Modifier = Modifier,
 ) {
@@ -191,6 +194,18 @@ fun StartScreen(
                                 onClick = { pausedGamesExpanded = false }
                             )
                         } else {
+                            var deleteAllPressed by remember { mutableStateOf(false) }
+                            LaunchedEffect(deleteAllPressed) {
+                                if (deleteAllPressed) {
+                                    delay(2000)
+                                    deleteAllPressed = false
+                                }
+                            }
+                            DropdownMenuItem(
+                                text = { if(!deleteAllPressed) Text("Alle löschen") else Text("Sicher?") },
+                                onClick = { if(!deleteAllPressed) deleteAllPressed = true else state.pausedGames.forEach{ onAction(StartAction.DeleteGame(it.id)) } }
+                            )
+
                             state.pausedGames.forEach { pausedGame: PausedGame ->
                                 var resetPressedDelete by remember { mutableStateOf(false) }
                                 LaunchedEffect(resetPressedDelete) {
@@ -292,6 +307,8 @@ fun StartScreen(
                     }
                 }
             }
+
+            settingsItem?.invoke()
 
             Spacer(modifier = Modifier.height(3.dp))
             HorizontalDivider()
