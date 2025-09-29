@@ -10,11 +10,9 @@ import de.michael.tolleapp.games.util.table.SortDirection
 import de.michael.tolleapp.games.wizard.domain.WizardRoundData
 
 data class SkyjoState(
-    val playerNames: Map<String, String> = emptyMap(),
 
-    val selectedPlayerIds: List<String?> = listOf(null, null),
 
-    val perPlayerRounds: Map<String, List<Int>> = emptyMap(),
+    //val perPlayerRounds: Map<String, List<Int>> = emptyMap(),
     val totalPoints: Map<String, Int> = emptyMap(),
     val visibleRoundRows: Int = 5,
     val winnerId: List<String?> = listOf(null),
@@ -29,6 +27,7 @@ data class SkyjoState(
     val presets: List<GamePresetWithPlayers> = emptyList(),
     val pausedGames: List<PausedGame> = emptyList(),
     val selectedPlayers: List<Player?> = listOf(null, null),
+    val selectedPlayerIds: List<String?> = listOf(null, null),
 
     val rounds: List<SkyjoRoundData> = emptyList(),
     val endPoints: Int = 100,

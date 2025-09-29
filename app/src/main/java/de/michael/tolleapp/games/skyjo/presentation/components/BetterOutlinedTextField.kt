@@ -24,7 +24,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 @Composable
 fun BetterOutlinedTextField(
     modifier: Modifier = Modifier,
-    value: String,
+    value: String?,
     onValueChange: ((String) -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -40,11 +40,11 @@ fun BetterOutlinedTextField(
         modifier = modifier
     ) {
         OutlinedTextFieldDefaults.DecorationBox(
-            value = value,
+            value = value ?: "",
             innerTextField = {
                 if (onValueChange != null) {
                     BasicTextField(
-                        value = value,
+                        value = value ?: "",
                         onValueChange = onValueChange,
                         enabled = enabled,
                         readOnly = readOnly,
@@ -57,7 +57,7 @@ fun BetterOutlinedTextField(
                     )
                 } else {
                     Text(
-                        text = value,
+                        text = value ?: "",
                         color = textColor,
                         style = textStyle,
                         maxLines = if (singleLine) 1 else Int.MAX_VALUE,

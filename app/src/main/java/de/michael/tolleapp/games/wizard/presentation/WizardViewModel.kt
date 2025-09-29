@@ -50,12 +50,11 @@ class WizardViewModel(
                 players.find { it.id == selectedPlayerId }
             }
         )
-    }
-        .stateIn(
+    }.stateIn(
             scope = viewModelScope,
             started = WhileSubscribed(5_000),
             initialValue = WizardState()
-        )
+    )
 
     fun onStartAction(action: StartAction) {
         when (action) {
@@ -68,7 +67,7 @@ class WizardViewModel(
             StartAction.ResetSelectedPlayers -> _selectedPlayerIds.update { listOf(null, null, null) }
 
             is StartAction.CreatePreset -> viewModelScope.launch {
-                presetRepo.createPreset(GameType.WIZARD.toString(), action.presetName, action.playerIds)
+                presetRepo.createPreset(GameType.WIZARD, action.presetName, action.playerIds)
             }
             is StartAction.SelectPreset -> viewModelScope.launch {
                 val players = state.value.presets.first { it.preset.id == action.presetId }.players
@@ -81,7 +80,7 @@ class WizardViewModel(
                 presetRepo.deletePreset(action.presetId)
             }
 
-            StartAction.StartGame -> {
+            is StartAction.StartGame -> {
                 val gameId = UUID.randomUUID().toString()
                 _selectedPlayerIds.update { it.filterNotNull() }
                 _state.update { state -> state.copy(
@@ -107,6 +106,7 @@ class WizardViewModel(
                     )
                 }
             }
+
             is StartAction.ResumeGame -> {
                 viewModelScope.launch {
                     val pausedGame = wizardRepo.getGame(action.gameId)
@@ -162,7 +162,7 @@ class WizardViewModel(
             is WizardAction.OnSortDirectionChange -> _state.update { state ->
                 state.copy(sortDirection = action.newDirection)
             }
-            WizardAction.FinishBidding -> {
+            is WizardAction.FinishBidding -> {
                 val currentRound = state.value.rounds.last()
                 val newRound = currentRound.copy(
                     bidsFinal = true
@@ -177,7 +177,7 @@ class WizardViewModel(
                     )
                 }
             }
-            WizardAction.FinishRound -> {
+            is WizardAction.FinishRound -> {
                 val previousRound = state.value.rounds.getOrNull(state.value.rounds.size - 2)
                 val currentRound = state.value.rounds.last()
                 val selectedPlayers = this.state.value.selectedPlayers
@@ -231,7 +231,7 @@ class WizardViewModel(
                     )
                 }
             }
-            WizardAction.DeleteGame -> {
+            is WizardAction.DeleteGame -> {
                 viewModelScope.launch {
                     wizardRepo.deleteGame(state.value.currentGameId!!)
                 }

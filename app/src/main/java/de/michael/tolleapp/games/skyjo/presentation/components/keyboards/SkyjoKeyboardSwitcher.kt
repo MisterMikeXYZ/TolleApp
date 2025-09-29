@@ -18,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import de.michael.tolleapp.games.skyjo.presentation.SkyjoAction
 import de.michael.tolleapp.games.skyjo.presentation.SkyjoState
 import de.michael.tolleapp.games.skyjo.presentation.SkyjoViewModel
 
@@ -26,21 +27,21 @@ import de.michael.tolleapp.games.skyjo.presentation.SkyjoViewModel
 fun SkyjoKeyboardSwitcher(
     activePlayerId: String?,
     onActivePlayerChange: (String?) -> Unit,
-    points: MutableMap<String, String>,
+    points: MutableMap<String, Int?>,
     state: SkyjoState,
-    viewModel: SkyjoViewModel,
+    onAction: (SkyjoAction) -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val pagerState = rememberPagerState(initialPage = state.lastKeyboardPage) { 2 }
 
-    fun handleSubmit(total: String) {
+    fun handleSubmit(total: Int) {
         activePlayerId?.let { id ->
             points[id] = total
             val currentIndex = state.selectedPlayerIds.indexOf(activePlayerId)
             val nextId = state.selectedPlayerIds.getOrNull((currentIndex + 1) % state.selectedPlayerIds.size)
 
-            if (nextId != null && points[nextId].isNullOrEmpty()) {
+            if (nextId != null && points[nextId] == null) {
                 onActivePlayerChange(nextId)
             } else {
                 onActivePlayerChange(null)
@@ -50,7 +51,7 @@ fun SkyjoKeyboardSwitcher(
     }
 
     LaunchedEffect(pagerState.currentPage) {
-        viewModel.setLastKeyboardPage(pagerState.currentPage)
+        onAction(SkyjoAction.SetLastKeyboardPage(pagerState.currentPage))
     }
 
     Column(

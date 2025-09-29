@@ -46,12 +46,17 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import de.michael.tolleapp.games.skyjo.domain.SkyjoRoundData
 import de.michael.tolleapp.games.skyjo.presentation.components.SkyjoPlayerDisplayRow
 import de.michael.tolleapp.games.skyjo.presentation.components.keyboards.SkyjoKeyboardSwitcher
 import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.games.util.DividedScreen
 import de.michael.tolleapp.games.util.OnHomeDialog
+import de.michael.tolleapp.games.util.keyboards.KeyboardSwitcher
+import de.michael.tolleapp.games.util.keyboards.util.Keyboard
+import de.michael.tolleapp.games.util.player.Player
 import de.michael.tolleapp.games.util.table.SortDirection
 import de.michael.tolleapp.games.util.table.Table
 import de.michael.tolleapp.games.util.table.TableStrokeOptions
@@ -61,50 +66,66 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
+@Preview
+@Composable
+fun SkyjoGameScreenPreview() {
+    val round1 = SkyjoRoundData(
+        roundNumber = 1,
+        dealerId = "1",
+        scores = mapOf(
+            "1" to 10,
+            "2" to 20,
+        )
+    )
+    val round2 = SkyjoRoundData(
+        roundNumber = 2,
+        dealerId = "2",
+        scores = mapOf(
+            "1" to 30,
+            "2" to 40,
+        )
+    )
+    val selectedPlayers = listOf(Player(id = "1", name = "Player 1"), Player(id = "2", name = "Player 2"))
+    val state = SkyjoState(
+        selectedPlayerIds = listOf("1", "2"),
+        selectedPlayers = selectedPlayers,
+        rounds = listOf(round1, round2),
+        totalPoints = mapOf(
+            "1" to 70,
+            "2" to 80,
+        ),
+        visibleRoundRows = 5,
+        currentDealerId = "2",
+        allPlayers = (1..10).map { i -> Player(id = "$i", name = "Player $i") },
+        currentGameId = "game123",
+        sortDirection = SortDirection.ASCENDING,
+    )
+    SkyjoGameScreen(
+        state = state,
+        onAction = {},
+        modifier = Modifier.fillMaxSize()
+    )
+}
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkyjoGameScreen(
-    navigateToMainMenu: () -> Unit,
-    navigateToEnd: () -> Unit,
-    viewModel: SkyjoViewModel = koinViewModel(),
+    state: SkyjoState,
+    onAction: (SkyjoAction) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    val state by viewModel.state.collectAsState()
-    val keyboardManager = LocalSoftwareKeyboardController.current
-    val focusManager = LocalFocusManager.current
-
-    // Local UI state to hold per-player current round input
-    val points = remember { mutableStateMapOf<String, String>() }
-
-    val perPlayerRounds = state.perPlayerRounds
-    val totalPoints = state.totalPoints
-    val visibleRoundRows = state.visibleRoundRows
-
-    val allInputsFilled by remember {
-        derivedStateOf {
-            state.selectedPlayerIds
-                .filterNotNull()
-                .all { id -> !points[id].isNullOrEmpty() }
-        }
-    }
-
-    var keyboardExpanded by remember { mutableStateOf(false) }
-    var activePlayerId by remember { mutableStateOf<String?>(null) }
-
-    val playerListState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
-
     var showOnHomeDialog by remember { mutableStateOf(false) }
     if (showOnHomeDialog) {
         OnHomeDialog(
             onSave = {
-                viewModel.pauseCurrentGame()
-                navigateToMainMenu()
+                onAction(SkyjoAction.NavigateToMainMenu)
                 showOnHomeDialog = false
             },
-            saveEnabled = state.perPlayerRounds.values.any { it.isNotEmpty() },
+            saveEnabled = state.rounds.isNotEmpty(),
             onDiscard = {
-                viewModel.deleteGame(null)
-                navigateToMainMenu()
+                onAction(SkyjoAction.NavigateToMainMenu)
+                onAction(SkyjoAction.DeleteGame(state.currentGameId))
                 showOnHomeDialog = false
             },
             onDismissRequest = {
@@ -113,21 +134,27 @@ fun SkyjoGameScreen(
         )
     }
 
-    BackHandler {
-        showOnHomeDialog = true
-    }
-
-    LaunchedEffect(state.selectedPlayerIds) {
-        val selected = state.selectedPlayerIds.filterNotNull().toSet()
-        val stale = points.keys - selected
-        stale.forEach { points.remove(it) }
-        selected.forEach { id -> points.getOrPut(id) { "" } }
-    }
-
     LaunchedEffect(state.isGameEnded) {
         if (state.isGameEnded) {
-            viewModel.endGame()
-            navigateToEnd()
+            onAction(SkyjoAction.EndGame)
+        }
+    }
+
+    val keyboardManager = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+
+    var keyboardExpanded by remember { mutableStateOf(false) }
+    var activePlayerId by remember { mutableStateOf<String?>(null) }
+
+    val playerListState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+
+    BackHandler {
+        if (activePlayerId != null) {
+            keyboardExpanded = false
+            activePlayerId = null
+        } else {
+            showOnHomeDialog = true
         }
     }
 
@@ -136,13 +163,6 @@ fun SkyjoGameScreen(
             CustomTopBar(
                 title = "Skyjo",
                 navigationIcon = {
-                    var resetPressedDelete by remember { mutableStateOf(false) }
-                    LaunchedEffect(resetPressedDelete) {
-                        if (resetPressedDelete) {
-                            delay(2000)
-                            resetPressedDelete = false
-                        }
-                    }
                     IconButton(
                         onClick = {
                             showOnHomeDialog = true
@@ -155,15 +175,10 @@ fun SkyjoGameScreen(
                     }
                 },
                 actions = {
-                    val hasAtLeastOneRound = state.perPlayerRounds.values.any { it.isNotEmpty() }
-                    val scope = rememberCoroutineScope()
+                    val hasAtLeastOneRound = !state.rounds.firstOrNull()?.scores.isNullOrEmpty()
                     IconButton(
-                        onClick = {
-                            scope.launch {
-                                viewModel.undoLastRound()
-                            }
-                        },
-                        enabled = !state.isGameEnded && hasAtLeastOneRound
+                        onClick = { onAction(SkyjoAction.UndoLastRound) },
+                        enabled = hasAtLeastOneRound
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Undo,
@@ -193,18 +208,17 @@ fun SkyjoGameScreen(
                                 .weight(1f),
                             state = playerListState
                         ) {
-                            items(state.selectedPlayerIds.filterNotNull()) { playerId ->
-                                val isActivePlayer = playerId == activePlayerId
+                            items(state.selectedPlayers.filterNotNull()) { player ->
                                 SkyjoPlayerDisplayRow(
-                                    playerId = playerId,
-                                    state = state,
-                                    isActivePlayer = isActivePlayer,
-                                    points = points,
-                                    totalPoints = totalPoints,
+                                    player = player,
+                                    isDealer = state.currentDealerId == player.id,
+                                    roundScore = state.rounds.lastOrNull()?.scores?.get(player.id),
+                                    totalScore = state.totalPoints[player.id],
                                     onClick = {
-                                        activePlayerId = playerId
+                                        activePlayerId = player.id
                                         keyboardExpanded = true
-                                    }
+                                    },
+                                    isActivePlayer = activePlayerId == player.id,
                                 )
                             }
                         }
@@ -230,7 +244,7 @@ fun SkyjoGameScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Button(
-                                onClick = { viewModel.advanceDealer() },
+                                onClick = { onAction(SkyjoAction.AdvanceDealer) },
                                 modifier = Modifier.weight(1f)
                             ) { Text("Dealer") }
 
@@ -238,13 +252,13 @@ fun SkyjoGameScreen(
 
                             Button(
                                 onClick = {
-                                    viewModel.endRound(points)
-                                    points.keys.forEach { id -> points[id] = "" }
+                                    onAction(SkyjoAction.EndRound)
                                     focusManager.moveFocus(FocusDirection.Down)
                                     keyboardManager?.hide()
                                 },
                                 modifier = Modifier.weight(2f),
-                                enabled = allInputsFilled
+                                enabled = state.rounds.lastOrNull()?.scores?.size
+                                    == state.selectedPlayers.filterNotNull().size
                             ) { Text("Runde beenden") }
                         }
                     }
@@ -257,10 +271,11 @@ fun SkyjoGameScreen(
                     ) {
                         var header = getSortDirectionButtonComposableList(
                             currentDirection = state.sortDirection,
-                            onDirectionChange = { viewModel.setSortDirection(it) }
+                            onDirectionChange = { onAction(SkyjoAction.OnSortDirectionChange(it)) }
                         )
                         header = header.plus(state.selectedPlayerIds.filterNotNull().map { id ->
-                            val playerName = state.playerNames[id] ?: ""
+                            val playerName = state.selectedPlayers.filterNotNull().find { it.id == id }?.name
+                                ?: "?"
                             { Text(
                                 playerName.take(2),
                                 style = MaterialTheme.typography.labelLarge,
@@ -268,15 +283,17 @@ fun SkyjoGameScreen(
                             ) }
                         })
 
-                        val rows = (1..visibleRoundRows)
+                        val rows = (1..state.visibleRoundRows)
                             .let { if (state.sortDirection == SortDirection.ASCENDING) it else it.reversed() }
                             .map { roundIndex ->
                                 val row = mutableListOf<@Composable () -> Unit>()
                                 row.add { Text(roundIndex.toString()) }
                                 val players = state.selectedPlayerIds.filterNotNull()
                                 players.forEach { playerId ->
-                                    val list = perPlayerRounds[playerId]
-                                    val value = list?.getOrNull(roundIndex - 1)?.toString() ?: ""
+                                    val value = state.rounds
+                                        .getOrNull(roundIndex - 1)
+                                        ?.scores?.get(playerId)
+                                        ?.toString() ?: ""
                                     row.add { Text(value) }
                                 }
                                 row
@@ -325,21 +342,27 @@ fun SkyjoGameScreen(
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
             ) {
-                SkyjoKeyboardSwitcher(
-                    activePlayerId = activePlayerId,
-                    onActivePlayerChange = { newId ->
-                        activePlayerId = newId
-                        keyboardExpanded = newId != null
-                    },
-                    points = points,
-                    state = state,
-                    viewModel = viewModel,
-                    onClose = {
-                        activePlayerId = null
-                        keyboardExpanded = false
-                        scope.launch {
-                            playerListState.animateScrollToItem(0)
+                KeyboardSwitcher(
+                    keyboards = listOf(Keyboard.NUMBER_WITH_MINUS, Keyboard.SKYJO),
+                    onSubmit = { newScore ->
+                        activePlayerId?.let { id ->
+                            onAction(SkyjoAction.InputScore(id, newScore))
+                            // Increment playerId
+                            val currentIndex = state.selectedPlayerIds.indexOf(id)
+                            val nextId = state.selectedPlayerIds.getOrNull((currentIndex + 1) % state.selectedPlayerIds.size)
+                            if (nextId != null && state.rounds.lastOrNull()?.scores[nextId] == null) {
+                                activePlayerId = nextId
+                            } else {
+                                activePlayerId = null
+                                keyboardExpanded = false
+                            }
+                        } ?: run {
+                            keyboardExpanded = false
                         }
+                    },
+                    onHideKeyboard = {
+                        keyboardExpanded = false
+                        activePlayerId = null
                     }
                 )
             }

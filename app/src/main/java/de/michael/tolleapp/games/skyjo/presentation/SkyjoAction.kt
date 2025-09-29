@@ -7,12 +7,6 @@ sealed interface SkyjoAction {
     data object NavigateToMainMenu : SkyjoAction
 
 
-    // Saved games
-    data object DeleteAllSavedGames : SkyjoAction
-    data object PauseCurrentGame : SkyjoAction
-    data class ResumeGame(val gameId: String, val onResumed: (() -> Unit)? = null) : SkyjoAction
-
-
     // Game lifecycle
     data object ResetGame : SkyjoAction
     data class DeleteGame(val gameId: String) : SkyjoAction
@@ -24,8 +18,10 @@ sealed interface SkyjoAction {
 
 
     // Round management
-    data class UndoLastRound(val onResult: (Boolean) -> Unit) : SkyjoAction
-    data class EndRound(val points: Map<String, Int>) : SkyjoAction
+    data object UndoLastRound : SkyjoAction
+    data object EndRound : SkyjoAction
+
+    data class InputScore(val playerId: String, val newScore: Int) : SkyjoAction
 
 
     // UI state

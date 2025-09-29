@@ -21,6 +21,7 @@ import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameRepository
 import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStatsRepository
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenViewModel
 import de.michael.tolleapp.games.skyjo.data.SkyjoRepositoryImpl
+import de.michael.tolleapp.games.skyjo.domain.SkyjoRepository
 import de.michael.tolleapp.games.skyjo.presentation.SkyjoViewModel
 import de.michael.tolleapp.games.wizard.data.WizardRepository
 import de.michael.tolleapp.games.wizard.domain.WizardRepositoryImpl
@@ -45,8 +46,6 @@ val appModule = module {
     single { get<AppDatabase>().gamePresetDao() } // Presets
 
     single { get<AppDatabase>().skyjoGameDao() } // Skyjo
-    single { get<AppDatabase>().skyjoGameRoundDao() }
-    single { get<AppDatabase>().skyjoGameStatisticsDao() }
 
     single { get<AppDatabase>().schwimmenStatsDao() } // Schwimmen
     single { get<AppDatabase>().schwimmenGameDao() }
@@ -64,7 +63,7 @@ val appModule = module {
     single { PlayerRepository(get()) } // Player
     single { SettingsRepository(get()) } // Settings
 
-    single { SkyjoRepositoryImpl(get(), get(), get()) } // Skyjo
+    single<SkyjoRepository> { SkyjoRepositoryImpl(get()) } // Skyjo
 
     single { GamePresetRepository(get()) } // Presets
 

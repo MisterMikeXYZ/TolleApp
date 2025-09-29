@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SkyjoNormalKeyboard(
-    onSubmit: (total: String) -> Unit,
+    onSubmit: (total: Int) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -127,7 +127,7 @@ fun SkyjoNormalKeyboard(
             SkyjoKeyButton(
                 text = "Submit",
                 onClick = {
-                    onSubmit(inputString)
+                    onSubmit(inputString.toInt())
                     selectedValues = emptyList()
                 },
                 modifier = Modifier

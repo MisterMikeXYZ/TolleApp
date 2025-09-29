@@ -32,10 +32,10 @@ import de.michael.tolleapp.games.schwimmen.data.game.GameScreenType
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenGameScreen
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenStartScreen
 import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenViewModel
-import de.michael.tolleapp.games.skyjo.presentation.SkyjoEndScreen
+import de.michael.tolleapp.games.skyjo.presentation.SkyjoAction
 import de.michael.tolleapp.games.skyjo.presentation.SkyjoGameScreen
-import de.michael.tolleapp.games.skyjo.presentation.SkyjoStartScreen
 import de.michael.tolleapp.games.skyjo.presentation.SkyjoViewModel
+import de.michael.tolleapp.games.skyjo.presentation.toStartState
 import de.michael.tolleapp.games.util.endScreen.EndScreen
 import de.michael.tolleapp.games.util.startScreen.StartAction
 import de.michael.tolleapp.games.util.startScreen.StartScreen
@@ -154,34 +154,60 @@ fun NavGraph(
                 )
             }
         }
+
         navigation<Route.SkyjoNav>(
             startDestination = Route.Skyjo.Start
         ) {
             composableStartScreen<Route.Skyjo.Start> {
                 val viewModel = it.sharedViewModel<SkyjoViewModel>(navController)
-                SkyjoStartScreen(
-                    navigateToGame = { navController.navigate(Route.Skyjo.Game) },
-                    navigateBack = { navController.popBackStack() },
-                    viewModel = viewModel
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                StartScreen(
+                    minPlayers = 2,
+                    maxPlayers = 8,
+                    state = state.toStartState(),
+                    onAction = { action ->
+                        when (action) {
+                            StartAction.NavigateToMainMenu -> navController.popToRoute(Route.Before.StartScreen)
+                            StartAction.NavigateToGame -> navController.navigate(Route.Skyjo.Game)
+                            else -> viewModel.onStartAction(action)
+                        }
+                    }
                 )
             }
             composableGameScreen<Route.Skyjo.Game> {
                 val viewModel = it.sharedViewModel<SkyjoViewModel>(navController)
+                val state by viewModel.state.collectAsStateWithLifecycle()
                 SkyjoGameScreen(
-                    viewModel = viewModel,
-                    navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
-                    navigateToEnd = { navController.navigate(Route.Skyjo.End) },
+                    onAction = { action ->
+                        when (action) {
+                            SkyjoAction.NavigateToMainMenu -> navController.popToRoute(Route.Before.StartScreen)
+                            SkyjoAction.EndGame -> navController.navigate(Route.Skyjo.End)
+                            else -> viewModel.onAction(action)
+                        }
+                    },
+                    state = state,
                 )
             }
             composableGameScreen<Route.Skyjo.End> {
                 val viewModel = it.sharedViewModel<SkyjoViewModel>(navController)
-                SkyjoEndScreen(
-                    navigateToGameScreen = { navController.popToRoute(Route.Skyjo.Game) },
+                val state by viewModel.state.collectAsStateWithLifecycle()
+
+                val sortedPlayers = state.selectedPlayers.filterNotNull().sortedBy { player ->
+                    state.rounds.last().scores[player.id]
+                }
+                EndScreen(
+                    titleValue = "Skyjo",
+                    sortedPlayerNames = sortedPlayers.map { it.name },
+                    sortedScoreValues = state.rounds
+                        .map { roundData ->
+                            sortedPlayers.map { "${roundData.scores[it.id]}" }
+                        },
+                    sortedTotalValues = sortedPlayers.map { state.rounds.last().scores[it.id].toString() },
                     navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
-                    viewModel = viewModel,
                 )
             }
         }
+
         navigation<Route.SchwimmenNav>(
             startDestination = Route.Schwimmen.Start
         ) {
@@ -204,6 +230,7 @@ fun NavGraph(
                 )
             }
         }
+
         navigation<Route.DartNav>(
             startDestination = Route.Dart.Start
         ) {
@@ -223,6 +250,7 @@ fun NavGraph(
                 )
             }
         }
+
         navigation<Route.RandomizerNav>(
             startDestination = Route.Randomizer.Start,
         ) {
@@ -234,6 +262,7 @@ fun NavGraph(
                 )
             }
         }
+
         navigation<Route.WizardNav>(
             startDestination = Route.Wizard.Start
         ) {

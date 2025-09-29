@@ -11,5 +11,5 @@ data class SkyjoGameEntity(
     val endedAt: Long? = null,
     val isFinished: Boolean = false,
     val dealerId: String? = null,
-    val endPoints: Int? = null,
+    val endPoints: Int = 100,
 ): PausedGame(id, createdAt)

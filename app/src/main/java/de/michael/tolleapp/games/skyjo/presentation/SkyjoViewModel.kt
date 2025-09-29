@@ -2,16 +2,12 @@ package de.michael.tolleapp.games.skyjo.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.michael.tolleapp.games.skyjo.data.entities.SkyjoPlayerEntity
 import de.michael.tolleapp.games.skyjo.domain.SkyjoRepository
 import de.michael.tolleapp.games.skyjo.domain.SkyjoRoundData
 import de.michael.tolleapp.games.util.GameType
 import de.michael.tolleapp.games.util.player.PlayerRepository
 import de.michael.tolleapp.games.util.presets.GamePresetRepository
 import de.michael.tolleapp.games.util.startScreen.StartAction
-import de.michael.tolleapp.games.util.table.SortDirection
-import de.michael.tolleapp.games.wizard.domain.WizardRoundData
-import de.michael.tolleapp.games.wizard.presentation.SkyjoAction
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.combine
@@ -22,7 +18,6 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import kotlin.collections.first
 import kotlin.collections.set
-import kotlin.math.abs
 
 class SkyjoViewModel(
     private val gameRepo: SkyjoRepository,
@@ -48,7 +43,9 @@ class SkyjoViewModel(
             pausedGames = pausedGames,
             selectedPlayers = selectedPlayerIds.map { selectedPlayerId ->
                 players.find { it.id == selectedPlayerId }
-            }
+            },
+            selectedPlayerIds = selectedPlayerIds,
+
         )
     }.stateIn(
             scope = viewModelScope,
@@ -63,47 +60,56 @@ class SkyjoViewModel(
                 val player = playerRepo.addPlayer(action.name)
                 selectPlayer(action.index, player.id)
             }
+
             is StartAction.SelectPlayer -> selectPlayer(action.index, action.playerId)
+
             is StartAction.UnselectPlayer -> unselectPlayer(action.index)
-            StartAction.ResetSelectedPlayers -> _selectedPlayerIds.update { listOf(null, null, null) }
+
+            is StartAction.ResetSelectedPlayers -> _selectedPlayerIds.update { listOf(null, null) }
 
             is StartAction.CreatePreset -> viewModelScope.launch {
-                presetRepo.createPreset(GameType.WIZARD.toString(), action.presetName, action.playerIds)
+                presetRepo.createPreset(GameType.SKYJO, action.presetName, action.playerIds)
             }
+
             is StartAction.SelectPreset -> viewModelScope.launch {
                 val players = state.value.presets.first { it.preset.id == action.presetId }.players
-                _selectedPlayerIds.update { listOf(null, null, null) }
+                _selectedPlayerIds.update { listOf(null, null) }
                 players.map { it.playerId }.forEachIndexed { index, playerId ->
                     selectPlayer(index, playerId)
                 }
             }
+
             is StartAction.DeletePreset -> viewModelScope.launch {
                 presetRepo.deletePreset(action.presetId)
             }
 
-            StartAction.StartGame -> {
+            is StartAction.StartGame -> {
+                val selectedPlayers = state.value.selectedPlayers.filterNotNull()
+                if (selectedPlayers.isEmpty()) {
+                    return
+                }
+
                 val gameId = UUID.randomUUID().toString()
                 _selectedPlayerIds.update { it.filterNotNull() }
+
                 _state.update { state -> state.copy(
                     currentGameId = gameId,
                     rounds = listOf(
                         SkyjoRoundData(
                             roundNumber = 1,
-                            dealerId = this.state.value.selectedPlayers.first()!!.id
+                            dealerId = selectedPlayers.first().id
                         )
                     )
                 ) }
+
                 viewModelScope.launch {
                     gameRepo.createGame(gameId = gameId, endPoints = state.value.endPoints)
                     state.value.selectedPlayers.filterNotNull().forEach { player ->
                         gameRepo.addPlayerToGame(gameId = gameId, playerId = player.id)
                     }
-                    gameRepo.upsertRound(
-                        gameId,
-                        state.value.rounds.first()
-                    )
                 }
             }
+
             is StartAction.ResumeGame -> {
                 viewModelScope.launch {
                     val pausedGame = gameRepo.getGameById(action.gameId)
@@ -118,6 +124,7 @@ class SkyjoViewModel(
                     ) }
                 }
             }
+
             is StartAction.DeleteGame -> {
                 viewModelScope.launch {
                     gameRepo.deleteGame(action.gameId)
@@ -134,114 +141,102 @@ class SkyjoViewModel(
             if (index < updated.size) {
                 updated.removeAt(index)
             }
-            if (updated.last() != null) {
+            if (updated.size < 8 && updated.last() != null) {
                 updated.add(null)
             }
             return@update updated
         }
     }
 
-    fun selectPlayer(rowIndex: Int, playerId: String) {
-        _state.update { state ->
-            val updated = state.selectedPlayerIds.toMutableList()
-            // prevent duplicates
-            if (updated.contains(playerId)) return
-            // ensure list is big enough
-            while (updated.size <= rowIndex) {
-                updated.add(null)
+    private fun selectPlayer(index: Int, playerId: String) {
+        _selectedPlayerIds.update { selectedPlayerIds ->
+            val newValue = selectedPlayerIds.toMutableList().apply {
+                this[index] = playerId
+                if (index == this.lastIndex && this.size < 8) this.add(null) // auto add empty row if last row got a player
             }
-            updated[rowIndex] = playerId
-            // auto add empty row if last row got a player
-            if (rowIndex == updated.lastIndex) {
-                updated.add(null)
-            }
-            state.copy(selectedPlayerIds = updated)
+            return@update newValue
         }
     }
 
 
-
-
     fun onAction(action: SkyjoAction) {
         when (action) {
-            is SkyjoAction.OnSortDirectionChange -> _state.update { state ->
-                state.copy(sortDirection = action.newDirection)
-            }
             is SkyjoAction.UndoLastRound -> {
                 viewModelScope.launch{
                     undoLastRound()
                 }
             }
+
+            is SkyjoAction.EndRound -> {
+                val currentRound = _state.value.rounds.last()
+                val newRound = currentRound.copy(
+                    roundNumber = currentRound.roundNumber,
+                    dealerId = currentRound.dealerId,
+                )
+                val nextDealerId = advanceDealer()
+                val nextRound = SkyjoRoundData(
+                    roundNumber = currentRound.roundNumber + 1,
+                    dealerId = nextDealerId,
+                    scores = emptyMap()
+                )
+                _state.update { state ->
+                    state.copy(
+                        rounds = state.rounds.dropLast(1) + newRound + nextRound,
+                        totalPoints = state.totalPoints.toMutableMap().apply {
+                            newRound.scores.forEach { (playerId, points) ->
+                                val currentTotal = this[playerId] ?: 0
+                                this[playerId] = currentTotal + points
+                            }
+                        },
+                        visibleRoundRows =  if(state.visibleRoundRows > 5) state.visibleRoundRows + 1 else 5,
+                    )
+                }
+                viewModelScope.launch {
+                    gameRepo.upsertRound(_state.value.currentGameId, newRound)
+                }
+                checkEndCondition()
+            }
+
+            is SkyjoAction.AdvanceDealer -> { advanceDealer() }
+
             is SkyjoAction.DeleteGame -> {
                 viewModelScope.launch {
                     gameRepo.deleteGame(action.gameId)
                 }
             }
-            is SkyjoAction.EndRound -> {
-                endRound(action.points)
-            }
-            is SkyjoAction.AdvanceDealer -> { advanceDealer() }
-            is SkyjoAction.DeleteAllSavedGames -> {
-                viewModelScope.launch {
-                    _pausedGames.first().forEach { gameRepo.deleteGame(it.id) }
-                }
-            }
+
             is SkyjoAction.EndGame -> {
                 viewModelScope.launch {
                     val gameId = _state.value.currentGameId
                     gameRepo.finishGame(gameId)
                 }
             }
-            is SkyjoAction.ResetGame -> {_state.update { SkyjoState() }}
-            is SkyjoAction.ResumeGame -> {
-                resumeGame(action.gameId, action.onResumed)
+
+            is SkyjoAction.ResetGame -> {_state.update { SkyjoState() } }
+
+            is SkyjoAction.SetLastKeyboardPage -> {
+                _state.update { it.copy(lastKeyboardPage = action.page) }
             }
+
+            is SkyjoAction.OnSortDirectionChange -> _state.update { state ->
+                state.copy(sortDirection = action.newDirection)
+            }
+
+            is SkyjoAction.InputScore -> _state.update { state ->
+                val currentRound = state.rounds.last()
+                val newRound = currentRound.copy(
+                    scores = currentRound.scores.toMutableMap().apply {
+                        this[action.playerId] = action.newScore
+                    }
+                )
+                state.copy(rounds = state.rounds.dropLast(1) + newRound)
+            }
+
             else -> throw NotImplementedError("Action '$action' not implemented in WizardViewModel")
         }
     }
 
 
-
-
-    // Game logic
-    fun endRound(points: Map<String, Int>) {
-        viewModelScope.launch {
-            val stateValue = _state.value
-            val updatedRounds = stateValue.perPlayerRounds.toMutableMap()
-            val updatedTotals = stateValue.totalPoints.toMutableMap()
-
-            stateValue.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                val score = points[playerId] ?: 0
-                val currentPlayerRounds = updatedRounds[playerId]?.toMutableList() ?: mutableListOf()
-                currentPlayerRounds.add(score)
-                updatedRounds[playerId] = currentPlayerRounds
-                updatedTotals[playerId] = (updatedTotals[playerId] ?: 0) + score
-            }
-
-            _state.update {
-                it.copy(
-                    perPlayerRounds = updatedRounds,
-                    totalPoints = updatedTotals,
-                    visibleRoundRows = maxOf(it.visibleRoundRows, updatedRounds.values.maxOfOrNull { r -> r.size } ?: 5)
-                )
-            }
-
-            // save rounds
-            val nextRoundIndex = updatedRounds.values.maxOfOrNull { it.size } ?: 0
-            stateValue.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                val score = updatedRounds[playerId]?.lastOrNull() ?: 0
-                val roundData = SkyjoRoundData(
-                    roundNumber = nextRoundIndex,
-                    dealerId = stateValue.currentDealerId,
-                    scores = mapOf(playerId to score)
-                )
-                gameRepo.upsertRound(stateValue.currentGameId, roundData)
-            }
-
-            advanceDealer()
-            checkEndCondition()
-        }
-    }
 
     private fun checkEndCondition() {
         val totals = _state.value.totalPoints
@@ -271,36 +266,20 @@ class SkyjoViewModel(
         }
     }
 
-    fun removePlayer(rowIndex: Int) {
-        _state.update { state ->
-            val updated = state.selectedPlayerIds.toMutableList()
-            if (rowIndex < updated.size) {
-                updated.removeAt(rowIndex)
-            }
-            // keep at least 2 slots
-            while (updated.size < 2) {
-                updated.add(null)
-            }
-            state.copy(selectedPlayerIds = updated)
-        }
-    }
-
-    fun resetGame() {
-
-    }
-
 
     // Dealer logic --------------------------------------------------------------
-    fun advanceDealer() {
+    private fun advanceDealer(): String {
         val currentDealerId = _state.value.currentDealerId
         val players = _state.value.selectedPlayerIds.filterNotNull()
+        var nextDealerId: String = currentDealerId ?: ""
         if (players.isNotEmpty()) {
             val currentIndex = players.indexOf(currentDealerId)
             val nextIndex =
                 if (currentIndex == -1 || currentIndex + 1 >= players.size) 0 else currentIndex + 1
-            val nextDealerId = players[nextIndex]
+            nextDealerId = players[nextIndex]
             setDealer(nextDealerId)
         }
+        return nextDealerId
     }
 
     private fun setDealer(dealerId: String) {
@@ -312,7 +291,7 @@ class SkyjoViewModel(
         }
     }
 
-    fun reverseDealer() {
+    private fun reverseDealer() {
         val currentDealerId = _state.value.currentDealerId
         val players = _state.value.selectedPlayerIds.filterNotNull()
         if (players.isNotEmpty()) {
@@ -326,27 +305,25 @@ class SkyjoViewModel(
 
 
     // Round logic ----------------------------------------------------------------
-    suspend fun undoLastRound(): Boolean {
+    private suspend fun undoLastRound(): Boolean {
         val stateValue = _state.value
         val playerIds = stateValue.selectedPlayerIds
-        if (stateValue.perPlayerRounds.isEmpty()) return false
+        if (stateValue.rounds.first().scores.isEmpty()) return false
 
         if (stateValue.isGameEnded) gameRepo.unfinishGame(stateValue.currentGameId)
 
-        val updatedRounds = stateValue.perPlayerRounds.toMutableMap()
-        val updatedTotals = stateValue.totalPoints.toMutableMap()
+        val updatedRounds = stateValue.rounds.toMutableList()
+        val lastRound = updatedRounds.last()
+        if (lastRound.scores.isNotEmpty()) {
 
-        val lastRoundIndex = updatedRounds.values.maxOfOrNull { it.size } ?: return false
-        if (lastRoundIndex == 0) return false
-
-        playerIds.filterNotNull().forEach { playerId ->
-            val currentRounds = updatedRounds[playerId]?.toMutableList() ?: return@forEach
-            if (currentRounds.isNotEmpty()) {
-                val removedScore = currentRounds.removeAt(currentRounds.lastIndex)
-                updatedRounds[playerId] = currentRounds
-                updatedTotals[playerId] = (updatedTotals[playerId] ?: 0) - removedScore
-            }
         }
+        updatedRounds.removeAt(updatedRounds.lastIndex)
+        val updatedTotals = stateValue.totalPoints.toMutableMap()
+        stateValue.rounds.last().scores.forEach { (playerId, points) ->
+            val currentTotal = updatedTotals[playerId] ?: 0
+            updatedTotals[playerId] = currentTotal - points
+        }
+
         gameRepo.clearWinnersAndLosers(stateValue.currentGameId, playerIds.filterNotNull())
         gameRepo.removeLastRound(stateValue.currentGameId)
 
@@ -354,156 +331,17 @@ class SkyjoViewModel(
 
         _state.update {
             it.copy(
-                perPlayerRounds = updatedRounds,
                 totalPoints = updatedTotals,
                 isGameEnded = false,
                 winnerId = listOf(null),
                 loserId = listOf(null),
-                visibleRoundRows = visibleRoundRows
+                visibleRoundRows = visibleRoundRows,
+                rounds = updatedRounds,
+                ranking = emptyList(),
+
             )
         }
         reverseDealer()
         return true
-    }
-
-
-
-    fun setLastKeyboardPage(page: Int) {
-        _state.update { it.copy(lastKeyboardPage = page) }
-    }
-
-    fun setSortDirection(newDirection: SortDirection) {
-        _state.update { it.copy(sortDirection = newDirection) }
-    }
-
-
-    fun pauseCurrentGame() {
-        val state = _state.value
-        if (state.currentGameId.isNotEmpty()) {
-            viewModelScope.launch {
-                gameRepo.saveSnapshot(state.currentGameId, state.perPlayerRounds)
-            }
-        }
-    }
-
-    fun resumeGame(gameId: String, onResumed: (() -> Unit)? = null) {
-        viewModelScope.launch {
-            val pausedGame = gameRepo.getGameById(gameId)
-                .getOrThrow()
-                .first()
-                ?: throw IllegalStateException("Could not find game #${gameId}")
-
-            val rounds = pausedGame.rounds
-            //TODO reconstruction of state
-
-
-            val grouped = rounds.groupBy { it.playerId }
-                .mapValues { entry -> entry.value.sortedBy { it.roundIndex }.map { it.roundScore } }
-            val totals = grouped.mapValues { it.value.sum() }.toMutableMap()
-
-            val players = if (grouped.isNotEmpty()) grouped.keys.toMutableList() else _state.value.selectedPlayerIds.filterNotNull().toMutableList()
-
-            val maxRounds = maxOf(grouped.values.maxOfOrNull { it.size } ?: 0, 5)
-            val game = pausedGames.value.find { it.id == gameId }
-            val dealerId = game?.dealerId
-
-            _state.update {
-                it.copy(
-                    currentGameId = gameId,
-                    selectedPlayerIds = players,
-                    perPlayerRounds = grouped,
-                    totalPoints = totals,
-                    visibleRoundRows = maxRounds,
-                    isGameEnded = false,
-                    winnerId = listOf(null),
-                    loserId = listOf(null),
-                    ranking = emptyList(),
-                    currentDealerId = dealerId
-                )
-            }
-
-            gameRepo.continueGame(gameId)
-            onResumed?.invoke()
-        }
-    }
-
-    fun endRound(points: Map<String, String>) {
-        viewModelScope.launch {
-            val stateValue = _state.value
-            val updatedRounds = stateValue.perPlayerRounds.toMutableMap()
-            val updatedTotals = stateValue.totalPoints.toMutableMap()
-
-            stateValue.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                val score = points[playerId]?.toIntOrNull() ?: 0
-                val currentPlayerRounds = updatedRounds[playerId]?.toMutableList() ?: mutableListOf()
-                currentPlayerRounds.add(score)
-                updatedRounds[playerId] = currentPlayerRounds
-                updatedTotals[playerId] = (updatedTotals[playerId] ?: 0) + score
-            }
-
-            _state.update {
-                it.copy(
-                    perPlayerRounds = updatedRounds,
-                    totalPoints = updatedTotals,
-                    visibleRoundRows = maxOf(it.visibleRoundRows, updatedRounds.values.maxOfOrNull { r -> r.size } ?: 5)
-                )
-            }
-
-            // save rounds
-            val nextRoundIndex = updatedRounds.values.maxOfOrNull { it.size } ?: 0
-            stateValue.selectedPlayerIds.filterNotNull().forEach { playerId ->
-                val score = updatedRounds[playerId]?.lastOrNull() ?: 0
-                gameRepo.ensureSession(stateValue.currentGameId)
-                gameRepo.addRound(stateValue.currentGameId, playerId, nextRoundIndex, score)
-            }
-
-            advanceDealer()
-            checkEndCondition()
-        }
-    }
-
-
-
-    fun addPlayer(name: String, rowIndex: Int) = viewModelScope.launch {
-        val added = playerRepo.addPlayer(name)
-        selectPlayer(rowIndex, added.id)
-    }
-
-
-
-    fun resetSelectedPlayers() {
-        _state.update { state ->
-            state.copy(
-                selectedPlayerIds = listOf(null, null),
-            )
-        }
-    }
-
-    fun startGame(dealerId: String? = null) {
-        val newGameId = UUID.randomUUID().toString()
-        _state.update { state ->
-            state.copy(
-                currentGameId = newGameId,
-                selectedPlayerIds = state.selectedPlayerIds.filterNotNull(),
-                currentDealerId = dealerId,
-            )
-        }
-        viewModelScope.launch { gameRepo.startGame(newGameId, dealerId) }
-    }
-
-    fun deleteGame(gameId: String?) {
-        val newGameId = if (gameId.isNullOrEmpty()) _state.value.currentGameId else gameId
-        viewModelScope.launch { gameRepo.deleteGameCompletely(newGameId) }
-        resetGame()
-    }
-
-
-    fun setDealer(dealerId: String?) {
-        val gameId = _state.value.currentGameId
-        if (gameId.isEmpty()) return
-        viewModelScope.launch {
-            gameRepo.setDealer(gameId, dealerId)
-            _state.update { it.copy(currentDealerId = dealerId) }
-        }
     }
 }

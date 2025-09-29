@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SkyjoNeleKeyboard(
-    onSubmit: (total: String) -> Unit,
+    onSubmit: (total: Int) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -97,7 +97,7 @@ fun SkyjoNeleKeyboard(
                                     if (selectedValues.size < 12) selectedValues = selectedValues + it
                                 }
                             } else {
-                                onSubmit(total.toString())
+                                onSubmit(total)
                                 selectedValues = emptyList()
                             }
                         },
