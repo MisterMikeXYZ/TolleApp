@@ -19,8 +19,8 @@ fun ThrowData.calcScore(): Int? {
 
 fun ThrowData.displayValue(): String {
     return when {
-        isTriple -> (fieldValue * 3).toString()
-        isDouble -> (fieldValue * 2).toString()
+        isTriple -> "T$fieldValue"
+        isDouble -> "D$fieldValue"
         else -> fieldValue.toString()
     }
 }

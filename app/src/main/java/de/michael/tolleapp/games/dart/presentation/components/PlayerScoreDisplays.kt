@@ -12,7 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,7 +35,7 @@ private fun PlayerScoreDisplaysPrev() {
         Surface {
             PlayerScoreDisplays(
                 startValue = 50,
-                isActive = true,
+                isActive = false,
                 playerState = PlayerState(
                     playerId = "1",
                     playerName = "Nicolas",
@@ -80,28 +83,36 @@ fun PlayerScoreDisplays(
 
     val roundsPlayed = playerState.rounds.sumOf { it.size }
 
-    val displayRound: List<String> = if (lastRound.isNotEmpty()) {
-        List(3) { i ->
-            val throwData = lastRound.getOrNull(i)
-            when {
-                throwData == null -> "" // unused throw
-                throwData.isBust -> throwData.displayValue()
-                else -> throwData.calcScore()?.toString() ?: ""
+    var displayRound by remember { mutableStateOf(listOf("", "", "")) }
+    var lastRoundSum by remember { mutableStateOf("0") }
+
+    LaunchedEffect(playerState.rounds) {
+        displayRound = if (lastRound.isNotEmpty()) {
+            List(3) { i ->
+                val throwData = lastRound.getOrNull(i)
+                when {
+                    throwData == null -> "" // unused throw
+                    else -> throwData.displayValue()
+                }
             }
+        } else {
+            listOf("", "", "")
         }
-    } else {
-        listOf("", "", "")
-    }
-    val lastRoundSum = if (lastRound.any { it.isBust }) {
-        "Bust"
-    } else {
-        lastRound.sumOf { it.calcScore() ?: 0 }.toString()
+        lastRoundSum = if (lastRound.any { it.isBust }) {
+            "Bust"
+        } else if (lastRound.isEmpty()) {
+            "0"
+        } else {
+            lastRound.sumOf { it.calcScore() ?: 0 }.toString()
+        }
     }
 
     val animatable = remember { Animatable(initialValue = 24f) }
 
     LaunchedEffect(isActive) {
         if(isActive) {
+            displayRound = listOf("", "", "")
+            lastRoundSum = "0"
             animatable.animateTo(
                 targetValue = 32f,
             )
@@ -244,7 +255,7 @@ fun PlayerScoreDisplays(
             ) {
                 Text(
                     text = "∅ " + (totalRoundPoints / playerState.rounds.size.toFloat()).let {
-                        if (it.isNaN()) "0.0" else String.format("%.2f", it)
+                        if (it.isNaN()) "0.0" else String.format("%.1f", it)
                     },
                     textAlign = TextAlign.Center,
                     modifier = Modifier

@@ -114,7 +114,7 @@ class DartViewModel (
         val playerState = dartState.toPlayerState(playerId)
 
         PlayerScoreDisplays(
-            startValue = dartState.gameStyle, // 301, 501 etc.
+            startValue = dartState.gameStyle,
             isActive = dartState.selectedPlayerIds.getOrNull(dartState.activePlayerIndex) == playerId,
             playerState = playerState,
             modifier = modifier.height(60.dp)
