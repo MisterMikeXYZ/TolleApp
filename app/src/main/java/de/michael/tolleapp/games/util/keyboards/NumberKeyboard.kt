@@ -45,6 +45,7 @@ fun NumberKeyboard(
 
     val validInput by remember(currentInput) {
         derivedStateOf {
+            if (currentInput == "-") minusAllowed else
             currentInput.toIntOrNull()?.let { minusAllowed || it >= 0 } ?: false
         }
     }
@@ -113,8 +114,8 @@ fun NumberKeyboard(
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             KeyboardButton(
-                text = if (!withDoubleSubmit) "-" else "Submit x2",
-                enabled = if (!withDoubleSubmit) minusAllowed && validInput
+                text = if (!withDoubleSubmit) "—" else "Submit x2",
+                enabled = if (!withDoubleSubmit) minusAllowed //&& validInput
                     else validInput,
                 onClick = {
                     if (!withDoubleSubmit) currentInput += "-"

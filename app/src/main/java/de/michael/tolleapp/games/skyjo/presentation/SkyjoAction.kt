@@ -20,7 +20,6 @@ sealed interface SkyjoAction {
     // Round management
     data object UndoLastRound : SkyjoAction
     data object EndRound : SkyjoAction
-
     data class InputScore(val playerId: String, val newScore: Int) : SkyjoAction
 
 

@@ -1,10 +1,9 @@
-package de.michael.tolleapp.games.skyjo.presentation
+package de.michael.tolleapp.games.flip7.presentation
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.michael.tolleapp.games.skyjo.domain.SkyjoRepository
-import de.michael.tolleapp.games.skyjo.domain.SkyjoRoundData
+import de.michael.tolleapp.games.flip7.domain.Flip7Repository
+import de.michael.tolleapp.games.flip7.domain.Flip7RoundData
 import de.michael.tolleapp.games.util.GameType
 import de.michael.tolleapp.games.util.player.PlayerRepository
 import de.michael.tolleapp.games.util.presets.GamePresetRepository
@@ -12,25 +11,22 @@ import de.michael.tolleapp.games.util.startScreen.StartAction
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
-import kotlin.collections.first
-import kotlin.collections.set
 
-class SkyjoViewModel(
-    private val gameRepo: SkyjoRepository,
+class Flip7ViewModel(
+    private val gameRepo: Flip7Repository,
     private val playerRepo: PlayerRepository,
     private val presetRepo: GamePresetRepository
 ): ViewModel() {
     private val _allPlayers = playerRepo.getAllPlayers()
-    private val _presets = presetRepo.getPresets(GameType.SKYJO.toString())
+    private val _presets = presetRepo.getPresets(GameType.FLIP7.toString())
     private val _pausedGames = gameRepo.getPausedGames()
-    private val _selectedPlayerIds = MutableStateFlow<List<String?>>(listOf(null, null))
-    private val _state = MutableStateFlow(SkyjoState())
-
+    private val _selectedPlayerIds = MutableStateFlow<List<String?>>(listOf(null, null, null))
+    private val _state = MutableStateFlow(Flip7State())
+    
     val state = combine(
         _allPlayers,
         _presets,
@@ -47,13 +43,12 @@ class SkyjoViewModel(
             },
             selectedPlayerIds = selectedPlayerIds,
 
-        )
+            )
     }.stateIn(
-            scope = viewModelScope,
-            started = WhileSubscribed(5_000),
-            initialValue = SkyjoState()
+        scope = viewModelScope,
+        started = WhileSubscribed(5_000),
+        initialValue = Flip7State()
     )
-
 
     fun onStartAction(action: StartAction) {
         when (action) {
@@ -69,7 +64,7 @@ class SkyjoViewModel(
             is StartAction.ResetSelectedPlayers -> _selectedPlayerIds.update { listOf(null, null) }
 
             is StartAction.CreatePreset -> viewModelScope.launch {
-                presetRepo.createPreset(GameType.SKYJO, action.presetName, action.playerIds)
+                presetRepo.createPreset(GameType.FLIP7, action.presetName, action.playerIds)
             }
 
             is StartAction.SelectPreset -> viewModelScope.launch {
@@ -94,10 +89,10 @@ class SkyjoViewModel(
                 _selectedPlayerIds.update { it.filterNotNull() }
 
                 _state.update { state -> state.copy(
-                    currentGameId = gameId,
+                    gameId = gameId,
                     currentDealerId = selectedPlayers.first().id,
                     rounds = listOf(
-                        SkyjoRoundData(
+                        Flip7RoundData(
                             roundNumber = 1,
                             dealerId = selectedPlayers.first().id
                         )
@@ -120,10 +115,15 @@ class SkyjoViewModel(
                     _selectedPlayerIds.update { pausedGame.playerIds }
                     _state.update { state ->
                         state.copy(
-                        currentGameId = pausedGame.id,
-                        rounds = pausedGame.rounds,
-                        currentDealerId = pausedGame.rounds.last().dealerId,
-                    ) }
+                            gameId = pausedGame.gameId,
+                            rounds = pausedGame.rounds,
+                            currentDealerId = pausedGame.dealerId,
+                            totalPoints = pausedGame.rounds
+                                .flatMap { it.scores.entries }
+                                .groupBy({ it.key }, { it.value })
+                                .mapValues { (_, scores) -> scores.sum() }
+                        )
+                    }
                 }
             }
 
@@ -143,7 +143,7 @@ class SkyjoViewModel(
             if (index < updated.size) {
                 updated.removeAt(index)
             }
-            if (updated.size < 8 && updated.last() != null) {
+            if (updated.size < 18 && updated.last() != null) {
                 updated.add(null)
             }
             return@update updated
@@ -154,29 +154,28 @@ class SkyjoViewModel(
         _selectedPlayerIds.update { selectedPlayerIds ->
             val newValue = selectedPlayerIds.toMutableList().apply {
                 this[index] = playerId
-                if (index == this.lastIndex && this.size < 8) this.add(null) // auto add empty row if last row got a player
+                if (index == this.lastIndex && this.size < 18) this.add(null) // auto add empty row if last row got a player
             }
             return@update newValue
         }
     }
 
-
-    fun onAction(action: SkyjoAction) {
+    fun onAction(action: Flip7Action) {
         when (action) {
-            is SkyjoAction.UndoLastRound -> {
+            is Flip7Action.UndoLastRound -> {
                 viewModelScope.launch{
                     undoLastRound()
                 }
             }
 
-            is SkyjoAction.EndRound -> {
+            is Flip7Action.EndRound -> {
                 val currentRound = _state.value.rounds.last()
                 val newRound = currentRound.copy(
                     roundNumber = currentRound.roundNumber,
                     dealerId = currentRound.dealerId,
                 )
                 val nextDealerId = advanceDealer()
-                val nextRound = SkyjoRoundData(
+                val nextRound = Flip7RoundData(
                     roundNumber = currentRound.roundNumber + 1,
                     dealerId = nextDealerId,
                     scores = emptyMap()
@@ -194,39 +193,39 @@ class SkyjoViewModel(
                     )
                 }
                 viewModelScope.launch {
-                    gameRepo.upsertRound(_state.value.currentGameId, newRound)
-                    gameRepo.upsertRound(_state.value.currentGameId, nextRound)
+                    gameRepo.upsertRound(_state.value.gameId, newRound)
+                    gameRepo.upsertRound(_state.value.gameId, nextRound)
                 }
                 checkEndCondition()
             }
 
-            is SkyjoAction.AdvanceDealer -> { advanceDealer() }
+            is Flip7Action.AdvanceDealer -> { advanceDealer() }
 
-            is SkyjoAction.DeleteGame -> {
+            is Flip7Action.DeleteGame -> {
                 viewModelScope.launch {
                     gameRepo.deleteGame(action.gameId)
                 }
             }
 
-            is SkyjoAction.EndGame -> {
+            is Flip7Action.EndGame -> {
                 println("Test")
                 viewModelScope.launch {
-                    val gameId = _state.value.currentGameId
+                    val gameId = _state.value.gameId
                     gameRepo.finishGame(gameId)
                 }
             }
 
-            is SkyjoAction.ResetGame -> {_state.update { SkyjoState() } }
+            is Flip7Action.ResetGame -> {_state.update { Flip7State() } }
 
-            is SkyjoAction.SetLastKeyboardPage -> {
+            is Flip7Action.SetLastKeyboardPage -> {
                 _state.update { it.copy(lastKeyboardPage = action.page) }
             }
 
-            is SkyjoAction.OnSortDirectionChange -> _state.update { state ->
+            is Flip7Action.OnSortDirectionChange -> _state.update { state ->
                 state.copy(sortDirection = action.newDirection)
             }
 
-            is SkyjoAction.InputScore -> _state.update { state ->
+            is Flip7Action.InputScore -> _state.update { state ->
                 val currentRound = state.rounds.last()
                 val newRound = currentRound.copy(
                     scores = currentRound.scores.toMutableMap().apply {
@@ -242,31 +241,31 @@ class SkyjoViewModel(
 
     private fun checkEndCondition() {
         val totals = _state.value.totalPoints
-        val hasLoser = totals.values.any { it >= 100 }
+        val winnerCount = totals.values.count { it >= 200 }
+        val winners = totals.values.count { it >= 200 } // TODO get the players with over 200 points
 
-        if (hasLoser) {
+        if (winners == 1) {
             val sortedEntries = totals.entries.sortedBy { it.value }
             val lowestScore = sortedEntries.first().value
-            val winners = sortedEntries.filter { it.value == lowestScore && it.value <= 99 }.map { it.key }
+            val winners = sortedEntries.filter { it.value == lowestScore && it.value <= 199 }.map { it.key }
             val highestScore = sortedEntries.last().value
-            val losers = sortedEntries.filter { it.value == highestScore && it.value >= 100 }.map { it.key }
             val rounds = _state.value.rounds.dropLast(1)
 
             _state.update {
                 it.copy(
-                    isGameEnded = true,
-                    loserId = losers,
+                    isFinished = true,
                     rounds = rounds,
                 )
             }
 
-            // --- Persist winners and losers in DB ---
+            // --- Persist winner ---
             viewModelScope.launch {
-                gameRepo.setWinnerAndLoser(_state.value.currentGameId, winners, losers)
+                gameRepo.setWinner(_state.value.gameId, winners)
             }
         }
-    }
+        // If there are multiple winners, check if they have the same points. Only the one with the most points wins and if there are multiple with the same points, all players play another round
 
+    }
 
     // Dealer logic --------------------------------------------------------------
     private fun advanceDealer(): String {
@@ -284,7 +283,7 @@ class SkyjoViewModel(
     }
 
     private fun setDealer(dealerId: String) {
-        val gameId = _state.value.currentGameId
+        val gameId = _state.value.gameId
         if (gameId.isEmpty()) return
         viewModelScope.launch {
             gameRepo.setDealer(gameId, dealerId)
@@ -328,19 +327,19 @@ class SkyjoViewModel(
         if (lastCommittedScores.isEmpty()) return
 
         // 1) Persist side: if game was finished, unfinish it first
-        if (s.isGameEnded) {
-            gameRepo.unfinishGame(s.currentGameId)
+        if (s.isFinished) {
+            gameRepo.unfinishGame(s.gameId)
         }
 
         // We persisted two rounds in EndRound(): the committed (n) and the empty (n+1).
         // Remove the empty (if present) AND the committed.
         if (hasInProgressTail) {
-            gameRepo.removeLastRound(s.currentGameId) // removes empty (n+1)
+            gameRepo.removeLastRound(s.gameId) // removes empty (n+1)
         }
-        gameRepo.removeLastRound(s.currentGameId)     // removes committed (n)
+        gameRepo.removeLastRound(s.gameId)     // removes committed (n)
 
         // Also clear winners/losers since we're rolling back.
-        gameRepo.clearWinnersAndLosers(s.currentGameId, s.selectedPlayerIds.filterNotNull())
+        gameRepo.clearLosers(s.gameId, s.selectedPlayerIds.filterNotNull())
 
         // 2) In-memory totals: subtract the last committed scores
         val newTotals = s.totalPoints.toMutableMap().apply {
@@ -368,8 +367,7 @@ class SkyjoViewModel(
             it.copy(
                 rounds = newRounds,
                 totalPoints = newTotals,
-                isGameEnded = false,
-                loserId = listOf<String?>(null),
+                isFinished = false,
                 visibleRoundRows = newVisibleRows
             )
         }

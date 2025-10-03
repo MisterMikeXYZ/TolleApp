@@ -1,4 +1,4 @@
-package de.michael.tolleapp.games.skyjo.data.entities
+package de.michael.tolleapp.games.flip7.data.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -9,7 +9,7 @@ import de.michael.tolleapp.games.util.player.Player
     primaryKeys = ["gameId", "playerId"],
     foreignKeys = [
         ForeignKey(
-            entity = SkyjoGameEntity::class,
+            entity = Flip7GameEntity::class,
             parentColumns = ["id"],
             childColumns = ["gameId"],
             onDelete = ForeignKey.CASCADE
@@ -23,10 +23,8 @@ import de.michael.tolleapp.games.util.player.Player
     ],
     indices = [Index("gameId"), Index("playerId")]
 )
-data class SkyjoPlayerEntity(
+data class Flip7PlayerEntity(
     val gameId: String,
     val playerId: String,
     val index: Int,
-    val isWinner: Boolean = false,
-    val isLoser: Boolean = false,
 )

@@ -16,20 +16,24 @@ interface SkyjoDao {
     @Upsert
     suspend fun upsertGame(gameEntity: SkyjoGameEntity)
     @Query("SELECT * FROM SkyjoGameEntity WHERE id = :gameId LIMIT 1")
-    fun getGameById(gameId: String): Flow<SkyjoGameEntity?>
+    suspend fun getGameById(gameId: String): SkyjoGameEntity?
     @Query("SELECT * FROM SkyjoGameEntity WHERE isFinished = 0 ORDER BY createdAt DESC")
     fun getPausedGames(): Flow<List<SkyjoGameEntity>>
-    @Query("UPDATE SkyjoGameEntity SET isFinished = 1 WHERE id = :gameId")
-    suspend fun finishGame(gameId: String)
-    @Query("UPDATE SkyjoGameEntity SET isFinished = 0 WHERE id = :gameId")
+    @Query("UPDATE SkyjoGameEntity SET isFinished = 1, endedAt = :endedAt WHERE id = :gameId")
+    suspend fun finishGame(gameId: String, endedAt: Long = System.currentTimeMillis())
+
+    @Query("UPDATE SkyjoGameEntity SET isFinished = 0, endedAt = NULL WHERE id = :gameId")
     suspend fun unfinishGame(gameId: String)
     @Query("DELETE FROM SkyjoGameEntity WHERE id = :gameId")
     suspend fun deleteGameById(gameId: String)
 
+    @Query("UPDATE SkyjoGameEntity SET dealerId = :dealerId WHERE id = :gameId")
+    suspend fun setDealer(gameId: String, dealerId: String)
+
 
     // Round operations ---------------------------------------------------------------------------
     @Query("SELECT * FROM SkyjoRoundEntity WHERE gameId = :gameId ORDER BY roundNumber ASC")
-    fun getRoundsForGame(gameId: String): Flow<List<SkyjoRoundEntity>>
+    suspend fun getRoundsForGame(gameId: String): List<SkyjoRoundEntity>
     @Upsert
     suspend fun upsertRound(round: SkyjoRoundEntity)
     @Query("SELECT * FROM SkyjoRoundEntity WHERE gameId = :gameId ORDER BY roundNumber DESC LIMIT 1")
@@ -41,8 +45,8 @@ interface SkyjoDao {
     }
 
     // Player operations --------------------------------------------------------------------------
-    @Query("SELECT playerId FROM SkyjoPlayerEntity WHERE gameId = :gameId")
-    fun getPlayerIdsForGame(gameId: String): Flow<List<String>>
+    @Query("SELECT playerId FROM SkyjoPlayerEntity WHERE gameId = :gameId ORDER BY `index` ASC")
+    suspend fun getPlayerIdsForGame(gameId: String): List<String>
     @Upsert
     suspend fun upsertPlayerInGame(player: SkyjoPlayerEntity)
     @Query("UPDATE SkyjoPlayerEntity SET isWinner = 1 WHERE gameId = :gameId AND playerId = :playerId")

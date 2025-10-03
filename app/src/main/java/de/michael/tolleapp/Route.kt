@@ -87,4 +87,18 @@ sealed interface Route {
         @Serializable
         data object Start : Randomizer
     }
+
+    @Serializable
+    data object Flip7Nav: Route
+    @Serializable
+    sealed interface Flip7: Route {
+        @Serializable
+        data object Start : Flip7
+
+        @Serializable
+        data object Game : Flip7
+
+        @Serializable
+        data object End : Flip7
+    }
 }

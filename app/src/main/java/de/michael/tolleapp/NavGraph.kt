@@ -5,10 +5,28 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
@@ -23,6 +41,10 @@ import androidx.navigation.toRoute
 import de.michael.tolleapp.games.dart.presentation.DartGameScreen
 import de.michael.tolleapp.games.dart.presentation.DartStartScreen
 import de.michael.tolleapp.games.dart.presentation.DartViewModel
+import de.michael.tolleapp.games.flip7.presentation.Flip7Action
+import de.michael.tolleapp.games.flip7.presentation.Flip7GameScreen
+import de.michael.tolleapp.games.flip7.presentation.Flip7ViewModel
+import de.michael.tolleapp.games.flip7.presentation.toStartState
 import de.michael.tolleapp.games.randomizer.presentation.RandomizerScreen
 import de.michael.tolleapp.games.randomizer.presentation.RandomizerViewModel
 import de.michael.tolleapp.games.romme.presentation.RommeAction
@@ -202,7 +224,7 @@ fun NavGraph(
                         .map { roundData ->
                             sortedPlayers.map { "${roundData.scores[it.id]}" }
                         },
-                    sortedTotalValues = sortedPlayers.map { state.rounds.last().scores[it.id].toString() },
+                    sortedTotalValues = sortedPlayers.map { state.totalPoints[it.id].toString() },
                     navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
                 )
             }
@@ -368,6 +390,61 @@ fun NavGraph(
                             sortedPlayers.map { roundData.roundScores[it.id]?.toString() ?: "" }
                         },
                     sortedTotalValues = sortedPlayers.map { state.rounds.last().finalScores[it.id].toString() },
+                    navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
+                )
+            }
+        }
+
+        navigation<Route.Flip7Nav>(
+            startDestination = Route.Flip7.Start
+        ) {
+            composableStartScreen<Route.Flip7.Start>{
+                val viewModel = it.sharedViewModel<Flip7ViewModel>(navController)
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                StartScreen(
+                    minPlayers = 2,
+                    state = state.toStartState(),
+                    onAction = { action ->
+                        when (action) {
+                            StartAction.NavigateToMainMenu -> navController.popToRoute(Route.Before.StartScreen)
+                            StartAction.NavigateToGame -> navController.navigate(Route.Flip7.Game)
+                            else -> viewModel.onStartAction(action)
+                        }
+                    }
+                )
+            }
+            composableGameScreen<Route.Flip7.Game> {
+                val viewModel = it.sharedViewModel<Flip7ViewModel>(navController)
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                Flip7GameScreen(
+                    state = state,
+                    onAction = { action ->
+                        when (action) {
+                            Flip7Action.NavigateToMainMenu -> navController.popToRoute(Route.Before.StartScreen)
+                            Flip7Action.EndGame -> {
+                                navController.navigate(Route.Flip7.End)
+                                viewModel.onAction(action)
+                            }
+                            else -> viewModel.onAction(action)
+                        }
+                    }
+                )
+            }
+            composableGameScreen <Route.Flip7.End> {
+                val viewModel = it.sharedViewModel<Flip7ViewModel>(navController)
+                val state by viewModel.state.collectAsStateWithLifecycle()
+
+                val sortedPlayers = state.selectedPlayers.filterNotNull().sortedBy { player ->
+                    state.rounds.last().scores[player.id]
+                }
+                EndScreen(
+                    titleValue = "Flip7",
+                    sortedPlayerNames = sortedPlayers.map { it.name },
+                    sortedScoreValues = state.rounds
+                        .map { roundData ->
+                            sortedPlayers.map { "${roundData.scores[it.id]}" }
+                        },
+                    sortedTotalValues = sortedPlayers.map { state.totalPoints[it.id].toString() },
                     navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
                 )
             }

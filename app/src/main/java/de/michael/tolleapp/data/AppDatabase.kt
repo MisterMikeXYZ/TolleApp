@@ -7,6 +7,10 @@ import de.michael.tolleapp.games.dart.data.DartGameDao
 import de.michael.tolleapp.games.dart.data.DartGameRound
 import de.michael.tolleapp.games.dart.data.DartThrowDao
 import de.michael.tolleapp.games.dart.data.DartThrowData
+import de.michael.tolleapp.games.flip7.data.Flip7Dao
+import de.michael.tolleapp.games.flip7.data.entities.Flip7GameEntity
+import de.michael.tolleapp.games.flip7.data.entities.Flip7PlayerEntity
+import de.michael.tolleapp.games.flip7.data.entities.Flip7RoundEntity
 import de.michael.tolleapp.games.romme.data.RommeDao
 import de.michael.tolleapp.games.romme.data.entities.RommeGameEntity
 import de.michael.tolleapp.games.romme.data.entities.RommeGamePlayerEntity
@@ -65,8 +69,13 @@ import de.michael.tolleapp.settings.data.SettingsDao
         RommeGameEntity::class,
         RommeGamePlayerEntity::class,
         RommeRoundEntity::class,
+
+        // Flip7
+        Flip7GameEntity::class,
+        Flip7PlayerEntity::class,
+        Flip7RoundEntity::class,
     ],
-    version = 23,
+    version = 27,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -97,4 +106,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     // Rommé
     abstract fun rommeDao(): RommeDao
+
+    // Flip7
+    abstract fun flip7Dao(): Flip7Dao
 }

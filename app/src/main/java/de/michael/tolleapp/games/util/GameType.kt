@@ -6,4 +6,5 @@ enum class GameType {
     SCHWIMMEN,
     WIZARD,
     ROMME,
+    FLIP7
 }

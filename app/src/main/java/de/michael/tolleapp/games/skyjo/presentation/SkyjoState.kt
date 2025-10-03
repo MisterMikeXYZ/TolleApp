@@ -12,12 +12,9 @@ import de.michael.tolleapp.games.wizard.domain.WizardRoundData
 data class SkyjoState(
 
 
-    //val perPlayerRounds: Map<String, List<Int>> = emptyMap(),
     val totalPoints: Map<String, Int> = emptyMap(),
     val visibleRoundRows: Int = 5,
-    val winnerId: List<String?> = listOf(null),
     val loserId: List<String?> = listOf(null),
-    val ranking: List<String> = emptyList(),
     val currentDealerId: String? = null,
 
 
@@ -30,7 +27,6 @@ data class SkyjoState(
     val selectedPlayerIds: List<String?> = listOf(null, null),
 
     val rounds: List<SkyjoRoundData> = emptyList(),
-    val endPoints: Int = 100,
 
     val currentGameId: String = "",
     val isGameEnded: Boolean = false,
