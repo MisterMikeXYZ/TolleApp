@@ -1,4 +1,4 @@
-package de.michael.tolleapp.games.skyjo.presentation.components
+package de.michael.tolleapp.games.util
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,57 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.michael.tolleapp.games.skyjo.domain.SkyjoRoundData
-import de.michael.tolleapp.games.skyjo.presentation.SkyjoState
 import de.michael.tolleapp.games.util.player.Player
 
-@Preview
 @Composable
-fun SkyjoPlayerDisplayRowPreview() {
-    val round1 = SkyjoRoundData(
-        roundNumber = 1,
-        dealerId = "1",
-        scores = mapOf(
-            "1" to 10,
-            "2" to 20,
-        )
-    )
-    val round2 = SkyjoRoundData(
-        roundNumber = 2,
-        dealerId = "2",
-        scores = mapOf(
-            "1" to 30,
-            "2" to 40,
-        )
-    )
-    val rounds = listOf(round1, round2)
-    val state = SkyjoState(
-        currentDealerId = "1",
-        selectedPlayers = listOf(Player("1", "Anna"), Player("2", "Ben"), Player("3", "Clara")),
-        rounds = rounds,
-        //Sum of all scores in rounds for each player
-        totalPoints = mapOf(
-            "1" to rounds.sumOf { it.scores["1"] ?: 0 },
-            "2" to rounds.sumOf { it.scores["2"] ?: 0 },
-            "3" to rounds.sumOf { it.scores["3"] ?: 0 },
-        )
-    )
-    MaterialTheme {
-//        SkyjoPlayerDisplayRow(
-//            playerId = "1",
-//            state = state,
-//            onClick = {},
-//            isActivePlayer = true,
-//        )
-    }
-}
-
-
-@Composable
-fun SkyjoPlayerDisplayRow(
+fun PlayerDisplayRow(
     player: Player,
     isDealer: Boolean,
     roundScore: Int?,

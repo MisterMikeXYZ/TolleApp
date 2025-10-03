@@ -12,6 +12,9 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import de.michael.tolleapp.games.dart.presentation.DartViewModel
+import de.michael.tolleapp.games.flip7.data.Flip7RepositoryImpl
+import de.michael.tolleapp.games.flip7.domain.Flip7Repository
+import de.michael.tolleapp.games.flip7.presentation.Flip7ViewModel
 import de.michael.tolleapp.games.util.presets.GamePresetRepository
 import de.michael.tolleapp.games.randomizer.presentation.RandomizerViewModel
 import de.michael.tolleapp.games.romme.domain.RommeRepository
@@ -58,6 +61,8 @@ val appModule = module {
 
     single { get<AppDatabase>().rommeDao() } // Rommé
 
+    single { get<AppDatabase>().flip7Dao() } // Flip7
+
 
     // Repositories
     single { PlayerRepository(get()) } // Player
@@ -74,7 +79,9 @@ val appModule = module {
 
     single<WizardRepository> { WizardRepositoryImpl(get()) } // Wizard
 
-    single<RommeRepository> { RommeRepositoryImpl(get()) }
+    single<RommeRepository> { RommeRepositoryImpl(get()) } // Rommé
+
+    single<Flip7Repository> { Flip7RepositoryImpl(get()) } // Flip7
 
 
     // ViewModels
@@ -87,4 +94,5 @@ val appModule = module {
     viewModel { RandomizerViewModel(get(), get()) }
     viewModel { WizardViewModel(get(), get(), get()) }
     viewModel { RommeViewModel(get(), get(), get()) }
+    viewModel { Flip7ViewModel(get(), get(), get()) }
 }

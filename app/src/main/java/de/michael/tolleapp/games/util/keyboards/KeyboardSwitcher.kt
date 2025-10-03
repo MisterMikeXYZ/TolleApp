@@ -16,6 +16,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import de.michael.tolleapp.games.util.keyboards.components.ExtraButton
+import de.michael.tolleapp.games.util.keyboards.components.ExtraButtonType
 import de.michael.tolleapp.games.util.keyboards.util.Keyboard
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -44,17 +46,37 @@ fun KeyboardSwitcher(
             modifier = Modifier.fillMaxWidth()
         ) { page ->
             when (keyboards[page]) {
-                Keyboard.NUMBER,
+                Keyboard.NUMBER -> NumberKeyboard(
+                    onSubmit = onSubmit,
+                    hideKeyboard = onHideKeyboard,
+                    initialValue = initialValue,
+                    minusAllowed = false,
+                    withDoubleSubmit = keyboards[page] == Keyboard.NUMBER_WITH_2X,
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Keyboard.NUMBER_WITH_2X,
+                Keyboard.FLIP7 -> CustomSingleCardKeyboard(
+                    onSubmit = onSubmit,
+                    onBack = onHideKeyboard,
+                    lowestNumber = 0,
+                    highestNumber = 12,
+                    numberOfRows = 4,
+                    extraButtonTypes = listOf(ExtraButtonType.DOUBLE),
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Keyboard.NUMBER_WITH_MINUS -> NumberKeyboard(
                     onSubmit = onSubmit,
                     hideKeyboard = onHideKeyboard,
                     initialValue = initialValue,
-                    minusAllowed = keyboards[page] == Keyboard.NUMBER_WITH_MINUS,
+                    minusAllowed = true, //keyboards[page] == Keyboard.NUMBER_WITH_MINUS,
                     withDoubleSubmit = keyboards[page] == Keyboard.NUMBER_WITH_2X,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Keyboard.SKYJO -> TODO()
+                Keyboard.SKYJO -> SkyjoNeleKeyboard(
+                    onSubmit = onSubmit,
+                    onBack = onHideKeyboard,
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Keyboard.DART -> TODO()
                 Keyboard.ROMME -> RommeKeyboard(
                     onSubmit = onSubmit,

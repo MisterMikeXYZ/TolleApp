@@ -7,5 +7,4 @@ data class SkyjoGame (
     val rounds: List<SkyjoRoundData> = emptyList(),
     val finished: Boolean = false,
     val dealerId: String? = null,
-    val endPoints: Int = 100,
 )

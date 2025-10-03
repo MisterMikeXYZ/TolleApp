@@ -21,6 +21,10 @@ val gameNavigationDataList = listOf(
         gameRoute = Route.SchwimmenNav
     ),
     GameNavigationData(
+        name = "Flip7",
+        gameRoute = Route.Flip7Nav
+    ),
+    GameNavigationData(
         name = "Wizard",
         gameRoute = Route.WizardNav
     ),

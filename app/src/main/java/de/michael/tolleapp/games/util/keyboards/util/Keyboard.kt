@@ -4,6 +4,7 @@ enum class Keyboard {
     NUMBER,
     NUMBER_WITH_MINUS,
     NUMBER_WITH_2X,
+    FLIP7,
     SKYJO,
     DART,
     ROMME,

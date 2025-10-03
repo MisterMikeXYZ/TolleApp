@@ -2,6 +2,7 @@ package de.michael.tolleapp.settings.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import de.michael.tolleapp.games.util.GameType
 import de.michael.tolleapp.games.util.player.Player
 import de.michael.tolleapp.games.util.player.PlayerRepository
 import de.michael.tolleapp.games.util.presets.GamePresetRepository
@@ -90,7 +91,7 @@ class SettingsViewModel (
                 "Viebegs" to listOf("Michi", "Papa", "Mama", "Raphi")
             )
 
-            val games = listOf("skyjo", "schwimmen", "randomizer", "dart")
+            val games = listOf(GameType.SKYJO, GameType.SCHWIMMEN, GameType.DART, GameType.ROMME, GameType.WIZARD, GameType.FLIP7 )
 
             games.forEach { gameType ->
                 presets.forEach { (presetName, playerNames) ->

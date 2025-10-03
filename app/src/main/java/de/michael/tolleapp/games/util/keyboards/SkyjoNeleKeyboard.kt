@@ -1,4 +1,4 @@
-package de.michael.tolleapp.games.skyjo.presentation.components.keyboards
+package de.michael.tolleapp.games.util.keyboards
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import de.michael.tolleapp.games.util.keyboards.components.KeyboardButton
 
 @Composable
 fun SkyjoNeleKeyboard(
@@ -84,7 +85,7 @@ fun SkyjoNeleKeyboard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 row.forEach { value ->
-                    SkyjoKeyButton(
+                    KeyboardButton(
                         text = value,
                         enabled = if(value != "Submit") {
                             selectedValues.size < 12

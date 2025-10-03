@@ -1,4 +1,4 @@
-package de.michael.tolleapp.games.skyjo.presentation.components
+package de.michael.tolleapp.games.util
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column

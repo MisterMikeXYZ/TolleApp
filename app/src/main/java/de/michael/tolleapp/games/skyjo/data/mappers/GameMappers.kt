@@ -15,6 +15,5 @@ fun SkyjoGameEntity.toDomain(
         rounds = rounds,
         finished = this.isFinished,
         dealerId = this.dealerId,
-        endPoints = this.endPoints,
     )
 }
