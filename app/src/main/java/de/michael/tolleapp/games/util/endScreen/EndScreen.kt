@@ -1,12 +1,16 @@
 package de.michael.tolleapp.games.util.endScreen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,16 +38,29 @@ fun EndScreen(
     sortedScoreValues: List<List<String>>,
     sortedTotalValues: List<String>? = null,
     navigateToMainMenu: () -> Unit,
+    undoLastRound: () -> Unit = { },
+    playAgain: () -> Unit = { },
+    showWinner: Boolean = false,
 ) {
     Scaffold (
         topBar = {
             CustomTopBar(
-                title = titleValue,
+                title = "$titleValue - Endstand",
                 navigationIcon = {
                     IconButton(navigateToMainMenu) {
                         Icon(
                             imageVector = Icons.Default.Home,
                             contentDescription = "Zum Hauptmenü"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = { undoLastRound() }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Undo,
+                            contentDescription = "Undo",
                         )
                     }
                 }
@@ -56,6 +73,14 @@ fun EndScreen(
                 .padding(16.dp)
                 .padding(pad)
         ) {
+            if (showWinner) {
+                val winner = sortedPlayerNames.first()
+                Text(
+                    text = "\uD83C\uDFC6 $winner \uD83C\uDFC6",
+                    style = MaterialTheme.typography.headlineMedium
+                )
+                Spacer(Modifier.height(12.dp))
+            }
             Table(
                 headers = (listOf("") + sortedPlayerNames.mapIndexed { i, name -> "${i + 1}. $name" }).map { it.toTableHeader() },
                 rows = sortedScoreValues.mapIndexed { index, rowValues ->
@@ -82,8 +107,16 @@ fun EndScreen(
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
             )
             Spacer(Modifier.height(12.dp))
-            OutlinedButton(navigateToMainMenu) {
-                Text("Zum Hauptmenü")
+            Row (
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(navigateToMainMenu) {
+                    Text("Zum Hauptmenü")
+                }
+                Spacer(Modifier.size(16.dp))
+                OutlinedButton(playAgain) {
+                    Text("Nochmal spielen")
+                }
             }
         }
     }

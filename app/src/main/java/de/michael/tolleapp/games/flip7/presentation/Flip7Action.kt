@@ -1,5 +1,7 @@
 package de.michael.tolleapp.games.flip7.presentation
 
+import de.michael.tolleapp.games.util.player.Player
+
 sealed interface Flip7Action {
     // Navigation
     data object NavigateToMainMenu : Flip7Action
@@ -8,6 +10,7 @@ sealed interface Flip7Action {
     data object ResetGame : Flip7Action
     data class DeleteGame(val gameId: String) : Flip7Action
     data object EndGame : Flip7Action
+    data class PlayAgain(val players: List<Player>) : Flip7Action
 
     // Dealer management
     data object AdvanceDealer : Flip7Action

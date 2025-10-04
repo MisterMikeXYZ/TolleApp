@@ -1,5 +1,6 @@
 package de.michael.tolleapp.games.skyjo.presentation
 
+import de.michael.tolleapp.games.util.player.Player
 import de.michael.tolleapp.games.util.table.SortDirection
 
 sealed interface SkyjoAction {
@@ -11,6 +12,7 @@ sealed interface SkyjoAction {
     data object ResetGame : SkyjoAction
     data class DeleteGame(val gameId: String) : SkyjoAction
     data object EndGame : SkyjoAction
+    data class PlayAgain(val players: List<Player>) : SkyjoAction
 
 
     // Dealer management

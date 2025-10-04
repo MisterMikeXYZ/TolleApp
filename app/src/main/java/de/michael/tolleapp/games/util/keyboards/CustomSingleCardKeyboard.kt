@@ -1,6 +1,5 @@
 package de.michael.tolleapp.games.util.keyboards
 
-import android.R.attr.enabled
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -15,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.games.util.keyboards.components.ExtraButton
 import de.michael.tolleapp.games.util.keyboards.components.ExtraButtonType
 import de.michael.tolleapp.games.util.keyboards.components.KeyboardButton
 import de.michael.tolleapp.games.util.keyboards.components.createExtraButton
@@ -27,13 +25,14 @@ fun CustomSingleCardKeyboard(
     onBack: () -> Unit,
     lowestNumber: Int,
     highestNumber: Int,
+    higherNumbers: List<Int?> = emptyList(),
     numberOfRows: Int,
     maxNumbers: Int = 100,
     extraButtonTypes: List<ExtraButtonType> = emptyList(),
     modifier: Modifier = Modifier,
 ) {
     val extraButtons = extraButtonTypes.map { createExtraButton(it) }
-    val allButtons = (lowestNumber..highestNumber).map { it.toString() } + extraButtons.map { it.label } +  "Submit"
+    val allButtons = (lowestNumber..highestNumber).map { it.toString() } + higherNumbers.filterNotNull().map { it.toString() } + extraButtons.map { it.label } +  "Submit"
 
     val totalItems = allButtons.size
     val itemsPerRow = ceil(totalItems / numberOfRows.toDouble()).toInt()

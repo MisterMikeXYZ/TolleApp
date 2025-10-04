@@ -1,6 +1,5 @@
 package de.michael.tolleapp.games.skyjo.presentation
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.michael.tolleapp.games.skyjo.domain.SkyjoRepository
@@ -12,7 +11,6 @@ import de.michael.tolleapp.games.util.startScreen.StartAction
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -161,11 +159,12 @@ class SkyjoViewModel(
     }
 
 
-    fun onAction(action: SkyjoAction) {
+    fun onAction(action: SkyjoAction, onFinished: (() -> Unit)? = null) {
         when (action) {
             is SkyjoAction.UndoLastRound -> {
-                viewModelScope.launch{
+                viewModelScope.launch {
                     undoLastRound()
+                    onFinished?.invoke()
                 }
             }
 
@@ -209,10 +208,41 @@ class SkyjoViewModel(
             }
 
             is SkyjoAction.EndGame -> {
-                println("Test")
                 viewModelScope.launch {
                     val gameId = _state.value.currentGameId
                     gameRepo.finishGame(gameId)
+                }
+            }
+
+            is SkyjoAction.PlayAgain -> {
+                val players = action.players
+                if (players.isEmpty()) {
+                    return
+                }
+
+                val gameId = UUID.randomUUID().toString()
+                _selectedPlayerIds.update { players.map { it.id } }
+
+                _state.update { state -> state.copy(
+                    currentGameId = gameId,
+                    currentDealerId = players.first().id,
+                    rounds = listOf(
+                        SkyjoRoundData(
+                            roundNumber = 1,
+                            dealerId = players.first().id
+                        )
+                    ),
+                    isGameEnded = false,
+                    loserId = listOf(null),
+                    totalPoints = emptyMap(),
+                    visibleRoundRows = 5,
+                ) }
+
+                viewModelScope.launch {
+                    gameRepo.createGame(gameId = gameId)
+                    players.forEachIndexed { index, player ->
+                        gameRepo.addPlayerToGame(gameId = gameId, playerId = player.id, index = index)
+                    }
                 }
             }
 
@@ -311,12 +341,8 @@ class SkyjoViewModel(
         val s = _state.value
         val rounds = s.rounds
 
-        // No rounds at all? Nothing to undo.
         if (rounds.isEmpty()) return
 
-        // Our convention after EndRound():
-        //   [..., committedRound(n), emptyRound(n+1)]
-        // i.e., the last item is in-progress (empty scores), the one before it is the last committed.
         val hasInProgressTail = rounds.last().scores.isEmpty()
         val lastCommittedIndex = if (hasInProgressTail) rounds.lastIndex - 1 else rounds.lastIndex
         if (lastCommittedIndex < 0) return
@@ -324,46 +350,32 @@ class SkyjoViewModel(
         val lastCommitted = rounds[lastCommittedIndex]
         val lastCommittedScores = lastCommitted.scores
 
-        // If the "last committed" round is actually empty, there's nothing to undo.
         if (lastCommittedScores.isEmpty()) return
 
-        // 1) Persist side: if game was finished, unfinish it first
         if (s.isGameEnded) {
             gameRepo.unfinishGame(s.currentGameId)
         }
 
-        // We persisted two rounds in EndRound(): the committed (n) and the empty (n+1).
-        // Remove the empty (if present) AND the committed.
         if (hasInProgressTail) {
-            gameRepo.removeLastRound(s.currentGameId) // removes empty (n+1)
+            gameRepo.removeLastRound(s.currentGameId)
         }
-        gameRepo.removeLastRound(s.currentGameId)     // removes committed (n)
+        gameRepo.removeLastRound(s.currentGameId)
 
-        // Also clear winners/losers since we're rolling back.
         gameRepo.clearWinnersAndLosers(s.currentGameId, s.selectedPlayerIds.filterNotNull())
 
-        // 2) In-memory totals: subtract the last committed scores
         val newTotals = s.totalPoints.toMutableMap().apply {
             lastCommittedScores.forEach { (playerId, points) ->
                 this[playerId] = (this[playerId] ?: 0) - points
             }
         }
 
-        // 3) In-memory rounds:
-        // We want to end up with an in-progress round that matches the undone round number & dealer.
         val newCurrentRound = lastCommitted.copy(scores = emptyMap())
         val newRounds = buildList {
-            // keep everything before the last committed
             addAll(rounds.take(lastCommittedIndex))
-            // and attach a fresh, empty round with the same number/dealer as the undone one
             add(newCurrentRound)
         }
-
-        // 4) Visible rows: reduce but not below 5
         val newVisibleRows =
             if (s.visibleRoundRows <= 5) 5 else s.visibleRoundRows - 1
-
-        // 5) Update state
         _state.update {
             it.copy(
                 rounds = newRounds,
@@ -373,8 +385,6 @@ class SkyjoViewModel(
                 visibleRoundRows = newVisibleRows
             )
         }
-
-        // 6) Dealer: we advanced dealer in EndRound(), so reverse here
         reverseDealer()
     }
 }
