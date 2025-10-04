@@ -5,28 +5,10 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
@@ -215,7 +197,7 @@ fun NavGraph(
                 val state by viewModel.state.collectAsStateWithLifecycle()
 
                 val sortedPlayers = state.selectedPlayers.filterNotNull().sortedBy { player ->
-                    state.rounds.last().scores[player.id]
+                    state.totalPoints[player.id]
                 }
                 EndScreen(
                     titleValue = "Skyjo",
@@ -226,6 +208,16 @@ fun NavGraph(
                         },
                     sortedTotalValues = sortedPlayers.map { state.totalPoints[it.id].toString() },
                     navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
+                    undoLastRound = {
+                        viewModel.onAction(SkyjoAction.UndoLastRound) {
+                            navController.popBackStack()
+                        }
+                    },
+                    playAgain = {
+                        viewModel.onAction(SkyjoAction.PlayAgain(sortedPlayers))
+                        navController.popToRoute(Route.Skyjo.Game)
+                    },
+                    showWinner = true,
                 )
             }
         }
@@ -435,8 +427,8 @@ fun NavGraph(
                 val state by viewModel.state.collectAsStateWithLifecycle()
 
                 val sortedPlayers = state.selectedPlayers.filterNotNull().sortedBy { player ->
-                    state.rounds.last().scores[player.id]
-                }
+                    state.totalPoints[player.id]
+                }.reversed()
                 EndScreen(
                     titleValue = "Flip7",
                     sortedPlayerNames = sortedPlayers.map { it.name },
@@ -446,6 +438,16 @@ fun NavGraph(
                         },
                     sortedTotalValues = sortedPlayers.map { state.totalPoints[it.id].toString() },
                     navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
+                    undoLastRound = {
+                        viewModel.onAction(Flip7Action.UndoLastRound) {
+                            navController.popBackStack()
+                        }
+                    },
+                    playAgain = {
+                        viewModel.onAction(Flip7Action.PlayAgain(state.selectedPlayers.filterNotNull()))
+                        navController.popToRoute(Route.Flip7.Game)
+                    },
+                    showWinner = true,
                 )
             }
         }

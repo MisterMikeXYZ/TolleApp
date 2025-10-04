@@ -22,7 +22,6 @@ data class Flip7State(
     val rounds: List<Flip7RoundData> = emptyList(),
     val totalPoints: Map<String, Int> = emptyMap(),
     val visibleRoundRows: Int = 5,
-    val winners: List<Player> = emptyList(),
 
     val lastKeyboardPage: Int = 0,
     val sortDirection: de.michael.tolleapp.games.util.table.SortDirection = de.michael.tolleapp.games.util.table.SortDirection.ASCENDING,

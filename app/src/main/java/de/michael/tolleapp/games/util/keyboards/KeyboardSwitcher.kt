@@ -16,7 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import de.michael.tolleapp.games.util.keyboards.components.ExtraButton
 import de.michael.tolleapp.games.util.keyboards.components.ExtraButtonType
 import de.michael.tolleapp.games.util.keyboards.util.Keyboard
 
@@ -54,12 +53,20 @@ fun KeyboardSwitcher(
                     withDoubleSubmit = keyboards[page] == Keyboard.NUMBER_WITH_2X,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Keyboard.NUMBER_WITH_2X,
+                Keyboard.NUMBER_WITH_2X -> NumberKeyboard(
+                    onSubmit = onSubmit,
+                    hideKeyboard = onHideKeyboard,
+                    initialValue = initialValue,
+                    minusAllowed = false, //keyboards[page] == Keyboard.NUMBER_WITH_MINUS,
+                    withDoubleSubmit = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Keyboard.FLIP7 -> CustomSingleCardKeyboard(
                     onSubmit = onSubmit,
                     onBack = onHideKeyboard,
                     lowestNumber = 0,
                     highestNumber = 12,
+                    higherNumbers = listOf(15),
                     numberOfRows = 4,
                     extraButtonTypes = listOf(ExtraButtonType.DOUBLE),
                     modifier = Modifier.fillMaxWidth()

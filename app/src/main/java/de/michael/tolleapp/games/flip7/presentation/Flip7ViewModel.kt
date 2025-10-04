@@ -160,11 +160,12 @@ class Flip7ViewModel(
         }
     }
 
-    fun onAction(action: Flip7Action) {
+    fun onAction(action: Flip7Action, onFinished: (() -> Unit)? = null) {
         when (action) {
             is Flip7Action.UndoLastRound -> {
-                viewModelScope.launch{
+                viewModelScope.launch {
                     undoLastRound()
+                    onFinished?.invoke()
                 }
             }
 
@@ -207,6 +208,37 @@ class Flip7ViewModel(
                 }
             }
 
+            is Flip7Action.PlayAgain -> {
+                val players = action.players
+                if (players.isEmpty()) {
+                    return
+                }
+
+                val gameId = UUID.randomUUID().toString()
+                _selectedPlayerIds.update { players.map { it.id } }
+
+                _state.update { state -> state.copy(
+                    gameId = gameId,
+                    currentDealerId = players.first().id,
+                    rounds = listOf(
+                        Flip7RoundData(
+                            roundNumber = 1,
+                            dealerId = players.first().id
+                        )
+                    ),
+                    isFinished = false,
+                    totalPoints = emptyMap(),
+                    visibleRoundRows = 5,
+                ) }
+
+                viewModelScope.launch {
+                    gameRepo.createGame(gameId = gameId)
+                    players.forEachIndexed { index, player ->
+                        gameRepo.addPlayerToGame(gameId = gameId, playerId = player.id, index = index)
+                    }
+                }
+            }
+
             is Flip7Action.EndGame -> {
                 println("Test")
                 viewModelScope.launch {
@@ -241,14 +273,14 @@ class Flip7ViewModel(
 
     private fun checkEndCondition() {
         val totals = _state.value.totalPoints
-        val winnerCount = totals.values.count { it >= 200 }
-        val winners = totals.values.count { it >= 200 } // TODO get the players with over 200 points
 
-        if (winners == 1) {
-            val sortedEntries = totals.entries.sortedBy { it.value }
-            val lowestScore = sortedEntries.first().value
-            val winners = sortedEntries.filter { it.value == lowestScore && it.value <= 199 }.map { it.key }
-            val highestScore = sortedEntries.last().value
+        val sortedEntries = totals.entries.sortedByDescending { it.value }
+        val highestScore = sortedEntries.first().value
+
+        val potentialWinners = sortedEntries.filter { it.value == highestScore && it.value >= 200 }
+
+        if (potentialWinners.size == 1) {
+            val winner = potentialWinners.first()
             val rounds = _state.value.rounds.dropLast(1)
 
             _state.update {
@@ -258,14 +290,12 @@ class Flip7ViewModel(
                 )
             }
 
-            // --- Persist winner ---
             viewModelScope.launch {
-                gameRepo.setWinner(_state.value.gameId, winners)
+                gameRepo.setWinner(_state.value.gameId, winner.key) // use player id instead of count
             }
-        }
-        // If there are multiple winners, check if they have the same points. Only the one with the most points wins and if there are multiple with the same points, all players play another round
-
+        } else { return }
     }
+
 
     // Dealer logic --------------------------------------------------------------
     private fun advanceDealer(): String {
@@ -305,17 +335,12 @@ class Flip7ViewModel(
 
 
     // Round logic ----------------------------------------------------------------
-    // TODO make it work
     private suspend fun undoLastRound() {
         val s = _state.value
         val rounds = s.rounds
 
-        // No rounds at all? Nothing to undo.
         if (rounds.isEmpty()) return
 
-        // Our convention after EndRound():
-        //   [..., committedRound(n), emptyRound(n+1)]
-        // i.e., the last item is in-progress (empty scores), the one before it is the last committed.
         val hasInProgressTail = rounds.last().scores.isEmpty()
         val lastCommittedIndex = if (hasInProgressTail) rounds.lastIndex - 1 else rounds.lastIndex
         if (lastCommittedIndex < 0) return
@@ -323,46 +348,34 @@ class Flip7ViewModel(
         val lastCommitted = rounds[lastCommittedIndex]
         val lastCommittedScores = lastCommitted.scores
 
-        // If the "last committed" round is actually empty, there's nothing to undo.
         if (lastCommittedScores.isEmpty()) return
 
-        // 1) Persist side: if game was finished, unfinish it first
         if (s.isFinished) {
             gameRepo.unfinishGame(s.gameId)
         }
 
-        // We persisted two rounds in EndRound(): the committed (n) and the empty (n+1).
-        // Remove the empty (if present) AND the committed.
         if (hasInProgressTail) {
             gameRepo.removeLastRound(s.gameId) // removes empty (n+1)
         }
         gameRepo.removeLastRound(s.gameId)     // removes committed (n)
 
-        // Also clear winners/losers since we're rolling back.
-        gameRepo.clearLosers(s.gameId, s.selectedPlayerIds.filterNotNull())
+        gameRepo.clearWinner(s.gameId)
 
-        // 2) In-memory totals: subtract the last committed scores
         val newTotals = s.totalPoints.toMutableMap().apply {
             lastCommittedScores.forEach { (playerId, points) ->
                 this[playerId] = (this[playerId] ?: 0) - points
             }
         }
 
-        // 3) In-memory rounds:
-        // We want to end up with an in-progress round that matches the undone round number & dealer.
         val newCurrentRound = lastCommitted.copy(scores = emptyMap())
         val newRounds = buildList {
-            // keep everything before the last committed
             addAll(rounds.take(lastCommittedIndex))
-            // and attach a fresh, empty round with the same number/dealer as the undone one
             add(newCurrentRound)
         }
 
-        // 4) Visible rows: reduce but not below 5
         val newVisibleRows =
             if (s.visibleRoundRows <= 5) 5 else s.visibleRoundRows - 1
 
-        // 5) Update state
         _state.update {
             it.copy(
                 rounds = newRounds,
@@ -372,7 +385,6 @@ class Flip7ViewModel(
             )
         }
 
-        // 6) Dealer: we advanced dealer in EndRound(), so reverse here
         reverseDealer()
     }
 }

@@ -75,7 +75,7 @@ import de.michael.tolleapp.settings.data.SettingsDao
         Flip7PlayerEntity::class,
         Flip7RoundEntity::class,
     ],
-    version = 27,
+    version = 28,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
