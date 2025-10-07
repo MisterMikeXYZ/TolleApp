@@ -52,6 +52,7 @@ import de.michael.tolleapp.main.MainScreen
 import de.michael.tolleapp.settings.presentation.SettingsScreen
 import de.michael.tolleapp.settings.presentation.SettingsViewModel
 import de.michael.tolleapp.settings.presentation.screens.PlayerDeleteScreen
+import de.michael.tolleapp.settings.presentation.screens.TestScreen
 import de.michael.tolleapp.statistics.StatScreen
 import de.michael.tolleapp.statistics.StatViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -154,6 +155,25 @@ fun NavGraph(
             ) {
                 PlayerDeleteScreen(
                     viewModel = settingsViewModel,
+                    navigateBack = { navController.popBackStack() },
+                )
+            }
+
+            composable<Route.Before.TestScreen>(
+                enterTransition = {
+                    slideIntoContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                        animationSpec = tween(400)
+                    )
+                },
+                popExitTransition = {
+                    slideOutOfContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                        animationSpec = tween(400)
+                    )
+                },
+            ) {
+                TestScreen(
                     navigateBack = { navController.popBackStack() },
                 )
             }

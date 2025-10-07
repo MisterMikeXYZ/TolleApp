@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.games.util.CustomTopBar
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.collections.emptyList
 import kotlin.math.PI
 import kotlin.math.atan2
 
@@ -115,7 +116,7 @@ fun RandomizerScreen(
     var newPlayerName by remember { mutableStateOf("") }
     var pendingRowIndex by remember { mutableStateOf<Int?>(null) }
 
-    val presets by viewModel.presets.collectAsState(initial = emptyList())
+    val presets = state.presets
     var presetExpanded by remember { mutableStateOf(false) }
     var showPresetDialog by remember { mutableStateOf(false) }
     var newPresetName by remember { mutableStateOf("") }
@@ -416,51 +417,51 @@ fun RandomizerScreen(
                                 .padding(vertical = 4.dp)
                         ) {
                             var expanded by remember { mutableStateOf(false) }
-                            val selectedPlayer = state.selectedPlayerIds[index]?.let { state.playerNames[it] } ?: "Spieler auswählen"
-
-                            ExposedDropdownMenuBox(
-                                expanded = expanded,
-                                onExpandedChange = {
-                                    if (index == 0 || state.selectedPlayerIds[index - 1] != null) {
-                                        expanded = !expanded
-                                    }
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                            ) {
-                                TextField(
-                                    value = selectedPlayer,
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    label = { Text("Spieler") },
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                    modifier = Modifier.menuAnchor().fillMaxWidth()
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = expanded,
-                                    onDismissRequest = { expanded = false }
-                                ) {
-                                    DropdownMenuItem(
-                                        text = { Text("Neuen Spieler erstellen…") },
-                                        onClick = {
-                                            expanded = false
-                                            pendingRowIndex = index
-                                            showCreatePlayerDialog = true
-                                        }
-                                    )
-                                    state.playerNames.toList().sortedBy{ it.second }.filter { (id, _) -> id !in state.selectedPlayerIds } //THIS
-                                        .forEach { (id, name) ->
-                                            DropdownMenuItem(
-                                                text = { Text(name) }, //THIS
-                                                onClick = {
-                                                    viewModel.selectPlayer(index, id) //THIS
-                                                    expanded = false
-                                                }
-                                            )
-                                        }
-
-                                }
-                            }
+//                            val selectedPlayer = state.selectedPlayerIds[index]?.let { state.selectedPlayers[it].name } ?: "Spieler auswählen"
+//
+//                            ExposedDropdownMenuBox(
+//                                expanded = expanded,
+//                                onExpandedChange = {
+//                                    if (index == 0 || state.selectedPlayerIds[index - 1] != null) {
+//                                        expanded = !expanded
+//                                    }
+//                                },
+//                                modifier = Modifier
+//                                    .weight(1f)
+//                            ) {
+//                                TextField(
+//                                    value = selectedPlayer,
+//                                    onValueChange = {},
+//                                    readOnly = true,
+//                                    label = { Text("Spieler") },
+//                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+//                                    modifier = Modifier.menuAnchor().fillMaxWidth()
+//                                )
+//                                ExposedDropdownMenu(
+//                                    expanded = expanded,
+//                                    onDismissRequest = { expanded = false }
+//                                ) {
+//                                    DropdownMenuItem(
+//                                        text = { Text("Neuen Spieler erstellen…") },
+//                                        onClick = {
+//                                            expanded = false
+//                                            pendingRowIndex = index
+//                                            showCreatePlayerDialog = true
+//                                        }
+//                                    )
+//                                    state.playerNames.toList().sortedBy{ it.second }.filter { (id, _) -> id !in state.selectedPlayerIds } //THIS
+//                                        .forEach { (id, name) ->
+//                                            DropdownMenuItem(
+//                                                text = { Text(name) }, //THIS
+//                                                onClick = {
+//                                                    viewModel.selectPlayer(index, id) //THIS
+//                                                    expanded = false
+//                                                }
+//                                            )
+//                                        }
+//
+//                                }
+//                            }
 
                             //X Button to remove player
                             if (index >= 2) {

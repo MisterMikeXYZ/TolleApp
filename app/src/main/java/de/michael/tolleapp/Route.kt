@@ -18,6 +18,9 @@ sealed interface Route {
 
         @Serializable
         data object PlayerDeleteScreen : Before
+
+        @Serializable
+        data object TestScreen : Before
     }
 
     @Serializable

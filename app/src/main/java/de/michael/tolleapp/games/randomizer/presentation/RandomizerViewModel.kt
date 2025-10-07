@@ -2,10 +2,13 @@ package de.michael.tolleapp.games.randomizer.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import de.michael.tolleapp.games.skyjo.presentation.SkyjoState
+import de.michael.tolleapp.games.util.GameType
 import de.michael.tolleapp.games.util.player.PlayerRepository
 import de.michael.tolleapp.games.util.presets.GamePresetRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -16,21 +19,33 @@ class RandomizerViewModel(
     private val presetRepo: GamePresetRepository,
     //private val randomizerRepo: RandomizerRepository,
 ) : ViewModel() {
+    private val _allPlayers = playerRepo.getAllPlayers()
+    private val _presets = presetRepo.getPresets(GameType.RANDOMIZER.toString())
+    private val _selectedPlayerIds = MutableStateFlow<List<String?>>(listOf(null, null))
     private val _state = MutableStateFlow(RandomizerState())
-    private val allPlayers = playerRepo.getAllPlayers()
+
     val state = combine(
-        allPlayers,
+        _allPlayers,
+        _presets,
+        _selectedPlayerIds,
         _state
-    ) { players, state ->
+    ) { players, presets, selectedPlayerIds, state ->
         state.copy(
-            playerNames = players.associate { it.id to it.name }
-        )
+            allPlayers = players,
+            presets = presets,
+            selectedPlayers = selectedPlayerIds.map { selectedPlayerId ->
+                players.find { it.id == selectedPlayerId }
+            },
+            selectedPlayerIds = selectedPlayerIds,
+
+            )
     }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5_000),
-        RandomizerState()
+        scope = viewModelScope,
+        started = WhileSubscribed(5_000),
+        initialValue = RandomizerState()
     )
-    val presets = presetRepo.getPresets("randomizer")
+
+
 
     fun addPlayer(name: String, rowIndex: Int) = viewModelScope.launch {
         val added = playerRepo.addPlayer(name)

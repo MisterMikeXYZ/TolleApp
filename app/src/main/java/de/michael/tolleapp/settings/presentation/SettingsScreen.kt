@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.GroupRemove
@@ -75,7 +76,7 @@ fun SettingsScreen (
                     onClick = { navigateTo(Route.Before.PlayerDeleteScreen) },
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ArrowForwardIos,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                         contentDescription = "Spieler löschen",
                     )
                 }
@@ -119,12 +120,20 @@ fun SettingsScreen (
 
             HorizontalDivider()
 
-            // Farbe einstellen
+            // Theme einsehen
             Row (
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-
+                Text("Theme", modifier = Modifier.weight(1f))
+                IconButton(
+                    onClick = { navigateTo(Route.Before.TestScreen) },
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                        contentDescription = null,
+                    )
+                }
             }
         }
     }
