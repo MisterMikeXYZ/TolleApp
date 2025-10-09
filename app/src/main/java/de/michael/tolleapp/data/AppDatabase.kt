@@ -2,12 +2,9 @@ package de.michael.tolleapp.data
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import de.michael.tolleapp.games.dart.data.DartGame
-import de.michael.tolleapp.games.dart.data.DartGameDao
-import de.michael.tolleapp.games.dart.data.DartGameRound
-import de.michael.tolleapp.games.dart.data.DartThrowDao
-import de.michael.tolleapp.games.dart.data.DartThrowData
+import de.michael.tolleapp.games.dart.data.*
 import de.michael.tolleapp.games.flip7.data.Flip7Dao
+import de.michael.tolleapp.games.flip7.data.Flip7StatisticsDao
 import de.michael.tolleapp.games.flip7.data.entities.Flip7GameEntity
 import de.michael.tolleapp.games.flip7.data.entities.Flip7PlayerEntity
 import de.michael.tolleapp.games.flip7.data.entities.Flip7RoundEntity
@@ -15,21 +12,22 @@ import de.michael.tolleapp.games.romme.data.RommeDao
 import de.michael.tolleapp.games.romme.data.entities.RommeGameEntity
 import de.michael.tolleapp.games.romme.data.entities.RommeGamePlayerEntity
 import de.michael.tolleapp.games.romme.data.entities.RommeRoundEntity
-import de.michael.tolleapp.games.util.player.Player
-import de.michael.tolleapp.games.util.player.PlayerDao
-import de.michael.tolleapp.games.util.presets.GamePreset
-import de.michael.tolleapp.games.util.presets.GamePresetDao
-import de.michael.tolleapp.games.util.presets.GamePresetPlayer
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGame
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameDao
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameRound
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameRoundDao
 import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStats
 import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStatsDao
-import de.michael.tolleapp.games.skyjo.data.entities.SkyjoGameEntity
 import de.michael.tolleapp.games.skyjo.data.SkyjoDao
-import de.michael.tolleapp.games.skyjo.data.entities.SkyjoRoundEntity
+import de.michael.tolleapp.games.skyjo.data.SkyjoGameStatisticsDao
+import de.michael.tolleapp.games.skyjo.data.entities.SkyjoGameEntity
 import de.michael.tolleapp.games.skyjo.data.entities.SkyjoPlayerEntity
+import de.michael.tolleapp.games.skyjo.data.entities.SkyjoRoundEntity
+import de.michael.tolleapp.games.util.player.Player
+import de.michael.tolleapp.games.util.player.PlayerDao
+import de.michael.tolleapp.games.util.presets.GamePreset
+import de.michael.tolleapp.games.util.presets.GamePresetDao
+import de.michael.tolleapp.games.util.presets.GamePresetPlayer
 import de.michael.tolleapp.games.wizard.data.WizardDao
 import de.michael.tolleapp.games.wizard.data.entities.WizardGameEntity
 import de.michael.tolleapp.games.wizard.data.entities.WizardGamePlayerEntity
@@ -91,6 +89,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     // Skyjo
     abstract fun skyjoGameDao(): SkyjoDao
+    abstract fun skyjoGameStatistics(): SkyjoGameStatisticsDao
 
     // Schwimmen
     abstract fun schwimmenStatsDao(): SchwimmenStatsDao
@@ -109,4 +108,5 @@ abstract class AppDatabase : RoomDatabase() {
 
     // Flip7
     abstract fun flip7Dao(): Flip7Dao
+    abstract fun flip7StatisticsDao(): Flip7StatisticsDao
 }

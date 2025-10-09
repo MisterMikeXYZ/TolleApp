@@ -9,15 +9,15 @@ import de.michael.tolleapp.games.skyjo.domain.SkyjoGame
 import de.michael.tolleapp.games.skyjo.domain.SkyjoRepository
 import de.michael.tolleapp.games.skyjo.domain.SkyjoRoundData
 import de.michael.tolleapp.games.util.PausedGame
+import de.michael.tolleapp.statistics.gameStats.SkyjoStats
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlin.collections.map
+import kotlinx.coroutines.withContext
 
 class SkyjoRepositoryImpl(
     private val skyjoDao: SkyjoDao,
-    //private val skyjoStatisticsDao: SkyjoGameStatisticsDao,
+    private val skyjoStatsDao: SkyjoGameStatisticsDao
 ): SkyjoRepository {
 
 
@@ -169,5 +169,52 @@ class SkyjoRepositoryImpl(
             return Result.failure(e)
         }
         return Result.success(Unit)
+    }
+
+    // Statistics ----------------------------------------------------------------------------------
+    override suspend fun getStatsForPlayer(playerId: String): SkyjoStats = withContext(Dispatchers.IO) {
+        val totalGames = skyjoStatsDao.getTotalGamesPlayed(playerId)
+        val gamesWon = skyjoStatsDao.getGamesWon(playerId)
+        val gamesLost = skyjoStatsDao.getGamesLost(playerId)
+        val roundsPlayed = skyjoStatsDao.getRoundsPlayed(playerId)
+
+        // Fetch all round entities for this player
+        val roundEntities = skyjoStatsDao.getRoundsForPlayer(playerId)
+
+        // Convert entities to domain models (via your mapper)
+        val roundData = roundEntities.map { it.toDomain() }
+
+        // Collect all per-round scores for the player
+        val playerRoundScores = roundData.mapNotNull { it.scores[playerId] }
+
+        // Calculate round-level stats
+        val bestRound = playerRoundScores.minOrNull()
+        val worstRound = playerRoundScores.maxOrNull()
+        val avgRound = playerRoundScores.takeIf { it.isNotEmpty() }?.average()
+
+        // Compute total scores per game (end scores)
+        val totalEndByGame = roundData
+            .groupBy { it.roundNumber } // each roundData belongs to one game
+            .mapValues { (_, roundsForGame) ->
+                roundsForGame.sumOf { round -> round.scores[playerId] ?: 0 }
+            }
+
+        val bestEnd = totalEndByGame.values.minOrNull()
+        val worstEnd = totalEndByGame.values.maxOrNull()
+        val totalEnd = totalEndByGame.values.sum().takeIf { it != 0 }
+
+        SkyjoStats(
+            playerId = playerId,
+            totalGames = totalGames,
+            gamesWon = gamesWon,
+            gamesLost = gamesLost,
+            roundsPlayed = roundsPlayed,
+            bestRound = bestRound,
+            worstRound = worstRound,
+            avgRound = avgRound,
+            bestEnd = bestEnd,
+            worstEnd = worstEnd,
+            totalEnd = totalEnd
+        )
     }
 }

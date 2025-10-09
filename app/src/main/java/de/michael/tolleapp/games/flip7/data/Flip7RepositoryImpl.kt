@@ -9,13 +9,15 @@ import de.michael.tolleapp.games.flip7.domain.Flip7Game
 import de.michael.tolleapp.games.flip7.domain.Flip7Repository
 import de.michael.tolleapp.games.flip7.domain.Flip7RoundData
 import de.michael.tolleapp.games.util.PausedGame
+import de.michael.tolleapp.statistics.gameStats.Flip7Stats
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlin.collections.forEach
-import kotlin.collections.map
+import kotlinx.coroutines.withContext
 
 class Flip7RepositoryImpl(
-    private val flip7Dao: Flip7Dao
+    private val flip7Dao: Flip7Dao,
+    private val flip7StatsDao: Flip7StatisticsDao,
 ): Flip7Repository {
     
     // Game operations ---------------------------------------------------------------------------
@@ -156,5 +158,53 @@ class Flip7RepositoryImpl(
             return Result.failure(e)
         }
         return Result.success(Unit)
+    }
+
+    override suspend fun getStatsForPlayer(playerId: String): Flip7Stats = withContext(Dispatchers.IO) {
+        val totalGames = flip7StatsDao.getTotalGamesPlayed(playerId)
+        val gamesWon = flip7StatsDao.getGamesWon(playerId)
+        val roundsPlayed = flip7StatsDao.getRoundsPlayed(playerId)
+
+        // Fetch all round entities for this player
+        val roundEntities = flip7StatsDao.getRoundsForPlayer(playerId)
+
+        // Convert entities to domain models (via your mapper)
+        val roundData = roundEntities.map { it.toDomain() }
+
+        // Collect all per-round scores for the player
+        val playerRoundScores = roundData.mapNotNull { it.scores[playerId] }
+
+        // Calculate round-level stats
+        val bestRound = playerRoundScores.maxOrNull()
+        val worstRound = playerRoundScores.minOrNull()
+        val avgRound = playerRoundScores.takeIf { it.isNotEmpty() }?.average()
+
+        // Compute total scores per game (end scores)
+        val totalEndByGame = roundData
+            .groupBy { it.roundNumber } // each roundData belongs to one game
+            .mapValues { (_, roundsForGame) ->
+                roundsForGame.sumOf { round -> round.scores[playerId] ?: 0 }
+            }
+
+        val bestEnd = totalEndByGame.values.maxOrNull()
+        val worstEnd = totalEndByGame.values.minOrNull()
+        val totalEnd = totalEndByGame.values.sum().takeIf { it != 0 }
+
+        Flip7Stats(
+            playerId = playerId,
+            totalGames = totalGames,
+            gamesWon = gamesWon,
+            roundsPlayed = roundsPlayed,
+            bestRound = bestRound,
+            worstRound = worstRound,
+            avgRound = avgRound,
+            bestEnd = bestEnd,
+            worstEnd = worstEnd,
+            totalEnd = totalEnd
+        )
+    }
+
+    override suspend fun resetAllGameStats() {
+        flip7StatsDao.deleteAllFinishedGames()
     }
 }

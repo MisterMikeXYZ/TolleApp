@@ -9,35 +9,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.michael.tolleapp.games.dart.data.DartGame
 import de.michael.tolleapp.games.dart.data.DartGameRound
 import de.michael.tolleapp.games.dart.data.DartThrowData
-import de.michael.tolleapp.games.dart.presentation.components.PlayerScoreDisplays
-import de.michael.tolleapp.games.dart.presentation.components.PlayerState
-import de.michael.tolleapp.games.dart.presentation.components.ThrowAction
-import de.michael.tolleapp.games.dart.presentation.components.ThrowData
-import de.michael.tolleapp.games.dart.presentation.components.calcScore
+import de.michael.tolleapp.games.dart.presentation.components.*
 import de.michael.tolleapp.games.util.player.Player
 import de.michael.tolleapp.games.util.player.PlayerRepository
 import de.michael.tolleapp.games.util.presets.GamePresetRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.update
-import kotlin.collections.emptyList
-import java.util.UUID
+import java.util.*
 
-class DartViewModel (
+class DartViewModel(
     private val playerRepo: PlayerRepository,
     private val gameRepo: DartGameRepository,
     private val presetRepo: GamePresetRepository,
 ) : ViewModel() {
+
     private val throwStack = mutableListOf<ThrowAction>()
     private val _state = MutableStateFlow(DartState())
     private val allPlayers = playerRepo.getAllPlayers()
+
     val state = combine(
         allPlayers,
         _state
@@ -51,14 +42,16 @@ class DartViewModel (
         DartState()
     )
 
-    val _playerState = MutableStateFlow(PlayerState())
+    private val _playerState = MutableStateFlow(PlayerState())
     val playerState: StateFlow<PlayerState> = _playerState
 
     val presets = presetRepo.getPresets("dart")
 
-    val pausedGames: StateFlow<List<DartGame>> =
+    val pausedGames: StateFlow<List<de.michael.tolleapp.games.dart.data.DartGame>> =
         gameRepo.getActiveGames()
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    // --- Presets & players ---
 
     fun createPreset(gameType: String, name: String, playerIds: List<String>) {
         viewModelScope.launch {
@@ -108,6 +101,8 @@ class DartViewModel (
         _state.update { it.copy(selectedPlayerIds = listOf(null)) }
     }
 
+    // --- UI composable ---
+
     @Composable
     fun PlayerScoreDisplayFor(playerId: String, modifier: Modifier = Modifier) {
         val dartState by state.collectAsState()
@@ -120,6 +115,76 @@ class DartViewModel (
             modifier = modifier.height(60.dp)
         )
     }
+
+    // --- Game lifecycle ---
+
+    fun startGame(gameStyle: Int) {
+        val players = _state.value.selectedPlayerIds.filterNotNull()
+        if (players.isEmpty()) return
+
+        val newGameId = UUID.randomUUID().toString()
+
+        // Reset in-memory state and set up new game
+        resetGame()
+        _state.update {
+            it.copy(
+                currentGameId = newGameId,
+                selectedPlayerIds = players,
+                gameStyle = gameStyle,
+            )
+        }
+
+        // Persist a fresh game row immediately so the game exists in the DB
+        viewModelScope.launch {
+            val game = de.michael.tolleapp.games.dart.data.DartGame(
+                id = newGameId,
+                isFinished = false,
+                winnerId = null,
+                gameStyle = gameStyle,
+                ranking = "",
+                activePlayerIndex = 0,
+                totalPlayers = players.size
+            )
+            gameRepo.insertGame(game)
+        }
+    }
+
+    fun endGame() = viewModelScope.launch {
+        val ranking = _state.value.ranking.toMutableList()
+        val loserId = ranking[ranking.size - 1]
+        _state.update {
+            it.copy(
+                isGameEnded = true,
+                loserId = loserId,
+            )
+        }
+        // Persist final snapshot
+        saveCurrentGame()
+    }
+
+    fun deleteGame(gameId: String? = null) {
+        val newGameId = if (gameId.isNullOrEmpty()) _state.value.currentGameId else gameId
+        viewModelScope.launch { gameRepo.deleteGameCompletely(newGameId) }
+        resetGame()
+    }
+
+    fun resetGame() {
+        _state.update {
+            DartState(
+                currentGameId = "",
+                selectedPlayerIds = listOf(null),
+                perPlayerRounds = emptyMap(),
+                winnerId = null,
+                loserId = null,
+                ranking = emptyList(),
+                isGameEnded = false,
+                activePlayerIndex = 0
+            )
+        }
+        throwStack.clear()
+    }
+
+    // --- Throws & rounds ---
 
     fun insertThrow(playerId: String, value: String, multiplier: String) {
         val fieldValue = value.toInt()
@@ -157,13 +222,23 @@ class DartViewModel (
                 this[playerId] = playerRounds
             }
         )
+
+        // Bust handling
         if (_state.value.gameStyle - totalRoundPoints < 0) {
             bust(playerId)
             advancePlayer()
+            // Persist after bust + turn advance
+            saveCurrentGame()
             return
         }
 
-        if (!checkEndConditionForPlayer(playerId) && throwIndex == 2) advancePlayer()
+        // If not finished and this was the 3rd dart, advance to next player
+        if (!checkEndConditionForPlayer(playerId) && throwIndex == 2) {
+            advancePlayer()
+        }
+
+        // Persist after a successful throw (or round end)
+        saveCurrentGame()
     }
 
     fun bust(playerId: String) {
@@ -172,12 +247,15 @@ class DartViewModel (
                 ?.map { it.toMutableList() }
                 ?.toMutableList()
                 ?: mutableListOf()
-        playerRounds.last().forEach { it.isBust = true }
-        _state.value = state.value.copy(
-            perPlayerRounds = state.value.perPlayerRounds.toMutableMap().apply {
-                this[playerId] = playerRounds
-            }
-        )
+
+        if (playerRounds.isNotEmpty()) {
+            playerRounds.last().forEach { it.isBust = true }
+            _state.value = state.value.copy(
+                perPlayerRounds = state.value.perPlayerRounds.toMutableMap().apply {
+                    this[playerId] = playerRounds
+                }
+            )
+        }
     }
 
     fun undoThrow() {
@@ -225,20 +303,9 @@ class DartViewModel (
                 ranking = newRanking
             )
         }
-    }
 
-    fun startGame(gameStyle: Int) {
-        val players = _state.value.selectedPlayerIds.filterNotNull()
-        if (players.isEmpty()) return
-        val newGameId = UUID.randomUUID().toString()
-        resetGame()
-        _state.update {
-            it.copy(
-                currentGameId = newGameId,
-                selectedPlayerIds = players,
-                gameStyle = gameStyle,
-            )
-        }
+        // Persist after undo to keep DB in sync
+        saveCurrentGame()
     }
 
     private fun checkEndConditionForPlayer(playerId: String): Boolean {
@@ -264,36 +331,20 @@ class DartViewModel (
         }
         advancePlayer()
 
-        if (_state.value.selectedPlayerIds.size == ranking.size) endGame()
-        return true
-    }
-
-    fun deleteGame(gameId: String? = null) {
-        val newGameId = if (gameId.isNullOrEmpty()) _state.value.currentGameId else gameId
-        viewModelScope.launch { gameRepo.deleteGameCompletely(newGameId) }
-        resetGame()
-    }
-
-    fun resetGame() {
-        _state.update {
-            DartState(
-                currentGameId = "",
-                selectedPlayerIds = listOf(null),
-                perPlayerRounds = emptyMap(),
-                winnerId = null,
-                loserId = null,
-                ranking = emptyList(),
-                isGameEnded = false,
-                activePlayerIndex = 0
-            )
+        if (_state.value.selectedPlayerIds.filterNotNull().size == ranking.size) {
+            // Everyone finished
+            viewModelScope.launch { endGame() }
         }
+        return true
     }
 
     fun advancePlayer() {
         val totalPlayers = _state.value.selectedPlayerIds.filterNotNull().size
         if (totalPlayers == 0) return
         var newIndex = (_state.value.activePlayerIndex + 1) % totalPlayers
-        while (_state.value.ranking.contains(_state.value.selectedPlayerIds.filterNotNull()[newIndex])) {
+        val finished = _state.value.ranking.toSet()
+        val activeIds = _state.value.selectedPlayerIds.filterNotNull()
+        while (finished.contains(activeIds[newIndex])) {
             newIndex = (newIndex + 1) % totalPlayers
             if (_state.value.ranking.size == totalPlayers) {
                 return
@@ -302,58 +353,36 @@ class DartViewModel (
         _state.update { it.copy(activePlayerIndex = newIndex) }
     }
 
-    fun endGame() = viewModelScope.launch {
-        val ranking = _state.value.ranking.toMutableList()
-        val loserId = ranking[ranking.size - 1]
-        _state.update {
-            it.copy(
-                isGameEnded = true,
-                loserId = loserId,
-            )
-        }
-    }
+    // --- Persistence ---
 
     fun saveCurrentGame() = viewModelScope.launch {
         val dartState = _state.value
         if (dartState.currentGameId.isEmpty()) return@launch
 
         val players = dartState.selectedPlayerIds.filterNotNull()
-        val game = DartGame(
+
+        // Upsert game row
+        val game = de.michael.tolleapp.games.dart.data.DartGame(
             id = dartState.currentGameId,
             isFinished = dartState.isGameEnded,
             winnerId = dartState.winnerId,
             gameStyle = dartState.gameStyle,
             ranking = dartState.ranking.joinToString(","),
             activePlayerIndex = dartState.activePlayerIndex,
-            totalPlayers = players.size
+            totalPlayers = players.size,
+            endedAt = if (dartState.isGameEnded) System.currentTimeMillis() else null
         )
         gameRepo.insertGame(game)
+
+        // Clear existing rounds (and cascaded throws) to avoid duplicates, then rewrite snapshot
+        val existingRounds = gameRepo.getRoundsForGame(dartState.currentGameId)
+        existingRounds.forEach { round -> gameRepo.deleteRound(round) }
 
         players.forEach { playerId ->
             val rounds = dartState.perPlayerRounds[playerId] ?: mutableListOf()
 
-            rounds.forEachIndexed { roundIndex, throwsList ->
-                val round = DartGameRound(
-                    gameId = dartState.currentGameId,
-                    playerId = playerId,
-                    roundIndex = roundIndex,
-                    isBust = throwsList.any { it.isBust }
-                )
-                val roundId = gameRepo.insertRound(round)
-
-                throwsList.forEachIndexed { throwIndex, throwData ->
-                    val dartThrow = DartThrowData(
-                        roundId = roundId,
-                        throwIndex = throwIndex,
-                        fieldValue = throwData.fieldValue,
-                        isDouble = throwData.isDouble,
-                        isTriple = throwData.isTriple
-                    )
-                    gameRepo.insertThrow(dartThrow)
-                }
-            }
-
             if (rounds.isEmpty()) {
+                // keep one empty round to indicate participation
                 val emptyRound = DartGameRound(
                     gameId = dartState.currentGameId,
                     playerId = playerId,
@@ -361,6 +390,27 @@ class DartViewModel (
                     isBust = false
                 )
                 gameRepo.insertRound(emptyRound)
+            } else {
+                rounds.forEachIndexed { roundIndex, throwsList ->
+                    val round = DartGameRound(
+                        gameId = dartState.currentGameId,
+                        playerId = playerId,
+                        roundIndex = roundIndex,
+                        isBust = throwsList.any { it.isBust }
+                    )
+                    val roundId = gameRepo.insertRound(round)
+
+                    throwsList.forEachIndexed { throwIndex, td ->
+                        val dartThrow = DartThrowData(
+                            roundId = roundId,
+                            throwIndex = throwIndex,
+                            fieldValue = td.fieldValue,
+                            isDouble = td.isDouble,
+                            isTriple = td.isTriple
+                        )
+                        gameRepo.insertThrow(dartThrow)
+                    }
+                }
             }
         }
     }
@@ -372,9 +422,9 @@ class DartViewModel (
         val playerIds = gameWithRounds.rounds.map { it.round.playerId }.distinct()
         val perPlayerRounds = mutableMapOf<String, MutableList<MutableList<ThrowData>>>()
 
-        playerIds.forEach { playerId ->
+        playerIds.forEach { pid ->
             val roundsForPlayer = gameWithRounds.rounds
-                .filter { it.round.playerId == playerId }
+                .filter { it.round.playerId == pid }
                 .sortedBy { it.round.roundIndex }
                 .map { roundWithThrows ->
                     roundWithThrows.throws
@@ -389,11 +439,11 @@ class DartViewModel (
                             )
                         }.toMutableList()
                 }.toMutableList()
-            perPlayerRounds[playerId] = roundsForPlayer
+            perPlayerRounds[pid] = roundsForPlayer
         }
 
         val totalPlayers = game.totalPlayers
-        val activePlayerIndex = game.activePlayerIndex.coerceIn(0, totalPlayers - 1)
+        val activePlayerIndex = game.activePlayerIndex.coerceIn(0, (totalPlayers - 1).coerceAtLeast(0))
         val ranking = game.ranking
             ?.split(",")
             ?.filter { finishedPlayerId ->

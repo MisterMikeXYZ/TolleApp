@@ -2,23 +2,14 @@ package de.michael.tolleapp.di
 
 import DartGameRepository
 import androidx.room.Room
-import de.michael.tolleapp.games.util.player.PlayerRepository
 import de.michael.tolleapp.data.AppDatabase
-import de.michael.tolleapp.settings.data.SettingsRepository
-import de.michael.tolleapp.main.MainViewModel
-import de.michael.tolleapp.settings.presentation.SettingsViewModel
-import de.michael.tolleapp.statistics.StatViewModel
-import org.koin.android.ext.koin.androidContext
-import org.koin.core.module.dsl.viewModel
-import org.koin.dsl.module
 import de.michael.tolleapp.games.dart.presentation.DartViewModel
 import de.michael.tolleapp.games.flip7.data.Flip7RepositoryImpl
 import de.michael.tolleapp.games.flip7.domain.Flip7Repository
 import de.michael.tolleapp.games.flip7.presentation.Flip7ViewModel
-import de.michael.tolleapp.games.util.presets.GamePresetRepository
 import de.michael.tolleapp.games.randomizer.presentation.RandomizerViewModel
-import de.michael.tolleapp.games.romme.domain.RommeRepository
 import de.michael.tolleapp.games.romme.data.RommeRepositoryImpl
+import de.michael.tolleapp.games.romme.domain.RommeRepository
 import de.michael.tolleapp.games.romme.presentation.RommeViewModel
 import de.michael.tolleapp.games.schwimmen.data.game.SchwimmenGameRepository
 import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStatsRepository
@@ -26,9 +17,18 @@ import de.michael.tolleapp.games.schwimmen.presentation.SchwimmenViewModel
 import de.michael.tolleapp.games.skyjo.data.SkyjoRepositoryImpl
 import de.michael.tolleapp.games.skyjo.domain.SkyjoRepository
 import de.michael.tolleapp.games.skyjo.presentation.SkyjoViewModel
+import de.michael.tolleapp.games.util.player.PlayerRepository
+import de.michael.tolleapp.games.util.presets.GamePresetRepository
 import de.michael.tolleapp.games.wizard.data.WizardRepository
 import de.michael.tolleapp.games.wizard.domain.WizardRepositoryImpl
 import de.michael.tolleapp.games.wizard.presentation.WizardViewModel
+import de.michael.tolleapp.main.MainViewModel
+import de.michael.tolleapp.settings.data.SettingsRepository
+import de.michael.tolleapp.settings.presentation.SettingsViewModel
+import de.michael.tolleapp.statistics.StatViewModel
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.module.dsl.viewModel
+import org.koin.dsl.module
 
 val appModule = module {
 
@@ -49,6 +49,7 @@ val appModule = module {
     single { get<AppDatabase>().gamePresetDao() } // Presets
 
     single { get<AppDatabase>().skyjoGameDao() } // Skyjo
+    single { get<AppDatabase>().skyjoGameStatistics() }
 
     single { get<AppDatabase>().schwimmenStatsDao() } // Schwimmen
     single { get<AppDatabase>().schwimmenGameDao() }
@@ -62,13 +63,14 @@ val appModule = module {
     single { get<AppDatabase>().rommeDao() } // Rommé
 
     single { get<AppDatabase>().flip7Dao() } // Flip7
+    single { get<AppDatabase>().flip7StatisticsDao() }
 
 
     // Repositories
     single { PlayerRepository(get()) } // Player
     single { SettingsRepository(get()) } // Settings
 
-    single<SkyjoRepository> { SkyjoRepositoryImpl(get()) } // Skyjo
+    single<SkyjoRepository> { SkyjoRepositoryImpl(get(), get()) } // Skyjo
 
     single { GamePresetRepository(get()) } // Presets
 
@@ -81,13 +83,13 @@ val appModule = module {
 
     single<RommeRepository> { RommeRepositoryImpl(get()) } // Rommé
 
-    single<Flip7Repository> { Flip7RepositoryImpl(get()) } // Flip7
+    single<Flip7Repository> { Flip7RepositoryImpl(get(), get()) } // Flip7
 
 
     // ViewModels
     viewModel { MainViewModel() }
     viewModel { SkyjoViewModel(get(), get(), get()) }
-    viewModel { StatViewModel(get(), get(), get()) }
+    viewModel { StatViewModel(get(), get(), get(), get(), get()) }
     viewModel { SchwimmenViewModel(get(), get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get(), get()) }
     viewModel { DartViewModel(get(), get(), get()) }

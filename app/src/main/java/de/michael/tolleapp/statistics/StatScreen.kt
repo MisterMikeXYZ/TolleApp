@@ -1,42 +1,26 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package de.michael.tolleapp.statistics
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.games.schwimmen.data.stats.SchwimmenStats
-import de.michael.tolleapp.statistics.gameStats.SkyjoStats
 import de.michael.tolleapp.games.util.CustomTopBar
-import de.michael.tolleapp.statistics.screens.SchwimmenStatsTable
-import de.michael.tolleapp.statistics.screens.SkyjoStatsTable
+import de.michael.tolleapp.games.util.GameType
+import de.michael.tolleapp.statistics.gameStats.DartStats
+import de.michael.tolleapp.statistics.gameStats.Flip7Stats
+import de.michael.tolleapp.statistics.gameStats.SkyjoStats
+import de.michael.tolleapp.statistics.screens.*
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -45,7 +29,6 @@ import org.koin.compose.viewmodel.koinViewModel
 fun StatScreen(
     viewModel: StatViewModel = koinViewModel(),
     navigateBack: () -> Unit,
-//    navigateTo: (Route) -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
     var expanded by remember { mutableStateOf(false) }
@@ -61,7 +44,17 @@ fun StatScreen(
                 ?: SchwimmenStats(playerId = playerId)
         }.sortedByDescending { it.roundsPlayedSchwimmen + it.totalGamesPlayedSchwimmen }
 
-        null -> emptyList()
+        GameType.FLIP7 -> state.playerNames.keys.map { playerId ->
+            state.playersFlip7.find { it.playerId == playerId }
+                ?: Flip7Stats(playerId = playerId)
+        }.sortedByDescending { it.roundsPlayed + it.totalGames }
+
+        GameType.DART -> state.playerNames.keys.map { playerId ->
+            state.playersDart.find { it.playerId == playerId }
+                ?: DartStats(playerId = playerId)
+        }.sortedByDescending { it.roundsPlayed + it.gamesPlayed }
+
+        else -> null
     }
 
     Scaffold(
@@ -110,16 +103,18 @@ fun StatScreen(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier
                 .padding(innerPadding)
-                .padding( 16.dp)
+                .padding(16.dp)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+            //.verticalScroll(rememberScrollState())
         ) {
             // --- Dropdown for game selection ---
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val str = when (state.selectedGame) {
                     GameType.SKYJO -> "Skyjo"
                     GameType.SCHWIMMEN -> "Schwimmen"
-                    null -> "Kein Spiel ausgewählt"
+                    GameType.FLIP7 -> "Flip7"
+                    GameType.DART -> "Dart"
+                    else -> "Kein Spiel ausgewählt"
                 }
                 Button(onClick = { expanded = true }) {
                     Text("Ausgewähltes Spiel: $str")
@@ -142,26 +137,83 @@ fun StatScreen(
                             expanded = false
                         }
                     )
+                    DropdownMenuItem(
+                        text = { Text("Flip7") },
+                        onClick = {
+                            viewModel.selectGame(GameType.FLIP7)
+                            expanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Dart") },
+                        onClick = {
+                            viewModel.selectGame(GameType.DART)
+                            expanded = false
+                        }
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (players.isEmpty()) {
+            if (players.isNullOrEmpty()) {
                 Text("Keine Spieler vorhanden")
             } else {
-                if (state.selectedGame == GameType.SKYJO) {
-                    @Suppress("UNCHECKED_CAST")
-                    (SkyjoStatsTable(
-                        players as List<SkyjoStats>,
-                        state.playerNames
-                    ))
-                } else {
-                    @Suppress("UNCHECKED_CAST")
-                    (SchwimmenStatsTable(
-                        players as List<SchwimmenStats>,
-                        state.playerNames
-                    ))
+                when (state.selectedGame) {
+                    GameType.SCHWIMMEN -> {
+                        // If these tables aren't lazy/scrollable themselves,
+                        // wrap them in a verticalScroll *here*, not at the root.
+                        Column(Modifier.verticalScroll(rememberScrollState())) {
+                            @Suppress("UNCHECKED_CAST")
+                            SchwimmenStatsTable(players as List<SchwimmenStats>, state.playerNames)
+                        }
+                    }
+
+                    GameType.SKYJO -> {
+                        Column(Modifier.verticalScroll(rememberScrollState())) {
+                            @Suppress("UNCHECKED_CAST")
+                            SkyjoStatsTable(players as List<SkyjoStats>, state.playerNames)
+                        }
+                    }
+
+                    GameType.FLIP7 -> {
+                        Column(Modifier.verticalScroll(rememberScrollState())) {
+                            @Suppress("UNCHECKED_CAST")
+                            Flip7StatsTable(players as List<Flip7Stats>, state.playerNames)
+                        }
+                    }
+
+                    GameType.DART -> {
+                        Column(Modifier.weight(1f).fillMaxWidth()) {
+                            var showCompare by remember { mutableStateOf(false) }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Button(onClick = { showCompare = false }, enabled = showCompare) {
+                                    Text("Übersicht")
+                                }
+                                Button(onClick = { showCompare = true }, enabled = !showCompare) {
+                                    Text("Vergleich")
+                                }
+                            }
+                            Spacer(Modifier.height(12.dp))
+                            if (showCompare) {
+                                DartCompareSection(
+                                    allPlayers = players as List<DartStats>,
+                                    playerNames = state.playerNames,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                PlayerStatsList(
+                                    players = players as List<DartStats>,
+                                    playerNames = state.playerNames,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
+                    }
+                    else -> Unit
                 }
             }
         }

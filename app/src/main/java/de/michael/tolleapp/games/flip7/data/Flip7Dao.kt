@@ -55,3 +55,40 @@ interface Flip7Dao {
     @Query("DELETE FROM Flip7PlayerEntity WHERE gameId = :gameId AND playerId = :playerId")
     suspend fun removePlayerFromGame(gameId: String, playerId: String)
 }
+
+@Dao
+interface Flip7StatisticsDao {
+    @Query(
+        """
+        SELECT COUNT(*) FROM Flip7PlayerEntity
+        WHERE playerId = :playerId
+    """
+    )
+    suspend fun getTotalGamesPlayed(playerId: String): Int
+
+    @Query("""SELECT COUNT(*) FROM Flip7GameEntity WHERE winnerId = :playerId""")
+    suspend fun getGamesWon(playerId: String): Int
+
+    @Query(
+        """SELECT COUNT(*) FROM Flip7RoundEntity WHERE gameId IN
+        (SELECT DISTINCT gameId FROM Flip7PlayerEntity WHERE playerId = :playerId)"""
+    )
+    suspend fun getRoundsPlayed(playerId: String): Int
+
+    @Query(
+        """
+        SELECT * 
+        FROM Flip7RoundEntity 
+        WHERE gameId IN (
+            SELECT DISTINCT gameId 
+            FROM Flip7PlayerEntity 
+            WHERE playerId = :playerId
+        )
+    """
+    )
+    suspend fun getRoundsForPlayer(playerId: String): List<Flip7RoundEntity>
+
+    // Delete all played games that are finished
+    @Query("DELETE FROM Flip7GameEntity WHERE isFinished = 1")
+    suspend fun deleteAllFinishedGames()
+}

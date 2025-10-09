@@ -1,6 +1,7 @@
 package de.michael.tolleapp.games.skyjo.domain
 
 import de.michael.tolleapp.games.util.PausedGame
+import de.michael.tolleapp.statistics.gameStats.SkyjoStats
 import kotlinx.coroutines.flow.Flow
 
 interface SkyjoRepository {
@@ -27,4 +28,7 @@ interface SkyjoRepository {
     suspend fun setWinnerAndLoser(gameId: String, winners: List<String>, losers: List<String>): Result<Unit>
     suspend fun clearWinnersAndLosers(gameId: String, playerIds: List<String>): Result<Unit>
     suspend fun setDealer(gameId: String, dealerId: String): Result<Unit>
+
+    // Statistics --------------------------------------------------------------------------------
+    suspend fun getStatsForPlayer(playerId: String): SkyjoStats
 }

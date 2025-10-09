@@ -1,8 +1,4 @@
-import de.michael.tolleapp.games.dart.data.DartGame
-import de.michael.tolleapp.games.dart.data.DartGameDao
-import de.michael.tolleapp.games.dart.data.DartGameRound
-import de.michael.tolleapp.games.dart.data.DartThrowDao
-import de.michael.tolleapp.games.dart.data.DartThrowData
+import de.michael.tolleapp.games.dart.data.*
 import de.michael.tolleapp.games.util.player.Player
 import kotlinx.coroutines.flow.Flow
 
@@ -59,13 +55,8 @@ class DartGameRepository(
 
     // --- Statistics ---
 
-    suspend fun getTotalGamesPlayed(playerId: String) = gameDao.getTotalGamesPlayed(playerId)
-
-    suspend fun getGamesWon(playerId: String) = gameDao.getGamesWon(playerId)
-
-    suspend fun getGamesLost(playerId: String) = gameDao.getGamesLost(playerId)
-
-    suspend fun getRoundsPlayed(playerId: String) = gameDao.getRoundsPlayed(playerId)
+    suspend fun getStatsForPlayer(playerId: String) = gameDao.getStatsForPlayer(playerId)
+    suspend fun resetAllGameStats() = gameDao.deleteAllFinishedGames()
 
     // --- Transactional ---
 

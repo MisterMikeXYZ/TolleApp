@@ -1,8 +1,7 @@
 package de.michael.tolleapp.games.flip7.domain
 
-import de.michael.tolleapp.games.skyjo.domain.SkyjoGame
-import de.michael.tolleapp.games.skyjo.domain.SkyjoRoundData
 import de.michael.tolleapp.games.util.PausedGame
+import de.michael.tolleapp.statistics.gameStats.Flip7Stats
 import kotlinx.coroutines.flow.Flow
 
 interface Flip7Repository {
@@ -25,4 +24,8 @@ interface Flip7Repository {
     suspend fun setWinner(gameId: String, winnerId: String): Result<Unit>
     suspend fun clearWinner(gameId: String): Result<Unit>
     suspend fun setDealer(gameId: String, dealerId: String): Result<Unit>
+
+    // Statistics -----------------------------------------------------------------------------------
+    suspend fun getStatsForPlayer(playerId: String): Flip7Stats
+    suspend fun resetAllGameStats()
 }

@@ -61,67 +61,38 @@ interface SkyjoDao {
 
 
 
+@Dao
+interface SkyjoGameStatisticsDao {
+    @Query(
+        """
+        SELECT COUNT(*) FROM SkyjoPlayerEntity
+        WHERE playerId = :playerId
+    """
+    )
+    suspend fun getTotalGamesPlayed(playerId: String): Int
 
+    @Query("""SELECT COUNT(*) FROM SkyjoPlayerEntity WHERE playerId = :playerId AND isWinner = 1""")
+    suspend fun getGamesWon(playerId: String): Int
 
+    @Query("""SELECT COUNT(*) FROM SkyjoPlayerEntity  WHERE playerId = :playerId AND isLoser = 1""")
+    suspend fun getGamesLost(playerId: String): Int
 
+    @Query(
+        """SELECT COUNT(*) FROM SkyjoRoundEntity WHERE gameId IN
+        (SELECT DISTINCT gameId FROM SkyjoPlayerEntity WHERE playerId = :playerId)"""
+    )
+    suspend fun getRoundsPlayed(playerId: String): Int
 
-
-
-
-
-//@Dao
-//interface SkyjoGameStatisticsDao {
-//    @Query("""
-//        SELECT COUNT(*) FROM SkyjoGameEntity
-//        WHERE id IN (SELECT id FROM SkyjoGameEntity WHERE playerId = :playerId)
-//    """)
-//    suspend fun getTotalGamesPlayed(playerId: String): Int
-//
-//    @Query("""SELECT COUNT(*) FROM skyjo_game_winners WHERE playerId = :playerId""")
-//    suspend fun getGamesWon(playerId: String): Int
-//
-//    @Query("""SELECT COUNT(*) FROM skyjo_game_losers  WHERE playerId = :playerId """)
-//    suspend fun getGamesLost(playerId: String): Int
-//
-//    @Query("SELECT COUNT(*) FROM skyjo_game_rounds WHERE playerId = :playerId")
-//    suspend fun getRoundsPlayed(playerId: String): Int
-//
-//    @Query("SELECT MIN(roundScore) FROM skyjo_game_rounds WHERE playerId = :playerId")
-//    suspend fun getBestRoundScore(playerId: String): Int?
-//
-//    @Query("SELECT MAX(roundScore) FROM skyjo_game_rounds WHERE playerId = :playerId")
-//    suspend fun getWorstRoundScore(playerId: String): Int?
-//
-//    @Query("SELECT AVG(roundScore) FROM skyjo_game_rounds WHERE playerId = :playerId")
-//    suspend fun getAverageRoundScore(playerId: String): Double?
-//
-//    @Query("""
-//        SELECT MIN(totalScore) FROM (
-//            SELECT gameId, SUM(roundScore) AS totalScore
-//            FROM skyjo_game_rounds
-//            WHERE playerId = :playerId
-//            GROUP BY gameId
-//        )
-//    """)
-//    suspend fun getBestEndScore(playerId: String): Int?
-//
-//    @Query("""
-//        SELECT MAX(totalScore) FROM (
-//            SELECT gameId, SUM(roundScore) AS totalScore
-//            FROM skyjo_game_rounds
-//            WHERE playerId = :playerId
-//            GROUP BY gameId
-//        )
-//    """)
-//    suspend fun getWorstEndScore(playerId: String): Int?
-//
-//    @Query("""
-//        SELECT SUM(totalScore) FROM (
-//            SELECT gameId, SUM(roundScore) AS totalScore
-//            FROM skyjo_game_rounds
-//            WHERE playerId = :playerId
-//            GROUP BY gameId
-//        )
-//    """)
-//    suspend fun getTotalEndScore(playerId: String): Int?
-//}
+    @Query(
+        """
+        SELECT * 
+        FROM SkyjoRoundEntity 
+        WHERE gameId IN (
+            SELECT DISTINCT gameId 
+            FROM SkyjoPlayerEntity 
+            WHERE playerId = :playerId
+        )
+    """
+    )
+    suspend fun getRoundsForPlayer(playerId: String): List<SkyjoRoundEntity>
+}
