@@ -3,7 +3,7 @@ package de.michael.tolleapp.statistics.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,7 +27,7 @@ fun PlayerStatsList(
     playerNames: Map<String, String>,
     modifier: Modifier = Modifier
 ) {
-    // remember which players are expanded (survives recomposition & config changes)
+    // remember which players are expanded (survives recomposition)
     val expandedIds = remember { mutableStateSetOf<String>() }
 
     LazyColumn(
@@ -70,8 +70,9 @@ private fun PlayerStatsCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = onToggle)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .combinedClickable(onClick = onToggle, onLongClick = onToggle),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -80,7 +81,7 @@ private fun PlayerStatsCard(
                     modifier = Modifier.weight(1f),
                     maxLines = 1
                 )
-                Icon(
+                androidx.compose.material3.Icon(
                     imageVector = Icons.Default.ExpandMore,
                     contentDescription = null,
                     modifier = Modifier.rotate(rotation)
@@ -91,7 +92,7 @@ private fun PlayerStatsCard(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Divider()
 
-                    // Sections (same as before)
+                    // Sections
                     StatSection(
                         title = "Allgemein",
                         rows = listOf(
@@ -184,7 +185,6 @@ private fun PlayerStatsCard(
         }
     }
 }
-
 
 @Composable
 private fun StatSection(
