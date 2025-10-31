@@ -14,9 +14,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
-import kotlin.collections.first
-import kotlin.collections.set
+import java.util.*
 
 class SkyjoViewModel(
     private val gameRepo: SkyjoRepository,
@@ -116,10 +114,17 @@ class SkyjoViewModel(
                         .getOrThrow()
                         ?: throw IllegalStateException("Could not find game #${action.gameId}")
                     _selectedPlayerIds.update { pausedGame.playerIds }
+                    val totalPoints: Map<String, Int> =
+                        pausedGame.rounds
+                            .flatMap { it.scores.entries }
+                            .groupBy({ it.key }, { it.value })
+                            .mapValues { (_, pts) -> pts.sum() }
+
                     _state.update { state ->
                         state.copy(
                         currentGameId = pausedGame.id,
                         rounds = pausedGame.rounds,
+                        totalPoints = totalPoints,
                         currentDealerId = pausedGame.rounds.last().dealerId,
                     ) }
                 }
@@ -293,6 +298,7 @@ class SkyjoViewModel(
             // --- Persist winners and losers in DB ---
             viewModelScope.launch {
                 gameRepo.setWinnerAndLoser(_state.value.currentGameId, winners, losers)
+                gameRepo.finishGame(_state.value.currentGameId)
             }
         }
     }

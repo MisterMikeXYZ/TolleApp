@@ -5,3 +5,7 @@ data class SkyjoRoundData (
     val dealerId: String?,
     val scores: Map<String, Int> = emptyMap(),
 )
+
+
+// List(Map<String, Int>) -> Map<String, Sum(List<Map.values>)>
+//

@@ -65,33 +65,35 @@ interface SkyjoDao {
 interface SkyjoGameStatisticsDao {
     @Query(
         """
-        SELECT COUNT(*) FROM SkyjoPlayerEntity
-        WHERE playerId = :playerId
+        SELECT COUNT(*) FROM SkyjoPlayerEntity, SkyjoGameEntity WHERE gameId = SkyjoGameEntity.id AND SkyjoGameEntity.isFinished = 1
+        AND playerId = :playerId 
     """
     )
     suspend fun getTotalGamesPlayed(playerId: String): Int
 
-    @Query("""SELECT COUNT(*) FROM SkyjoPlayerEntity WHERE playerId = :playerId AND isWinner = 1""")
+    @Query("""SELECT COUNT(*) FROM SkyjoPlayerEntity, SkyjoGameEntity 
+        WHERE gameId = SkyjoGameEntity.id AND SkyjoGameEntity.isFinished = 1 AND playerId = :playerId AND isWinner = 1""")
     suspend fun getGamesWon(playerId: String): Int
 
-    @Query("""SELECT COUNT(*) FROM SkyjoPlayerEntity  WHERE playerId = :playerId AND isLoser = 1""")
+    @Query("""SELECT COUNT(*) FROM SkyjoPlayerEntity, SkyjoGameEntity  WHERE 
+        gameId = SkyjoGameEntity.id AND SkyjoGameEntity.isFinished = 1 AND playerId = :playerId AND isLoser = 1""")
     suspend fun getGamesLost(playerId: String): Int
 
     @Query(
         """SELECT COUNT(*) FROM SkyjoRoundEntity WHERE gameId IN
-        (SELECT DISTINCT gameId FROM SkyjoPlayerEntity WHERE playerId = :playerId)"""
+        (SELECT DISTINCT gameId FROM SkyjoPlayerEntity, SkyjoGameEntity WHERE playerId = :playerId AND gameId = SkyjoGameEntity.id AND SkyjoGameEntity.isFinished = 1)"""
     )
     suspend fun getRoundsPlayed(playerId: String): Int
 
     @Query(
         """
         SELECT * 
-        FROM SkyjoRoundEntity 
+        FROM SkyjoRoundEntity, SkyjoGameEntity 
         WHERE gameId IN (
             SELECT DISTINCT gameId 
             FROM SkyjoPlayerEntity 
             WHERE playerId = :playerId
-        )
+        ) AND gameId = SkyjoGameEntity.id AND SkyjoGameEntity.isFinished = 1
     """
     )
     suspend fun getRoundsForPlayer(playerId: String): List<SkyjoRoundEntity>
