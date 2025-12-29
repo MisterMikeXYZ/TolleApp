@@ -531,9 +531,10 @@ private inline fun <reified T : Any> NavGraphBuilder.composableGameScreen(
 )
 
 fun NavController.popToRoute(route: Route) {
-    while (currentBackStackEntry?.destination?.route != route::class.qualifiedName) {
-        if (!popBackStack()) break
-    }
+//    while (currentBackStackEntry?.destination?.route != route::class.qualifiedName) {
+//        if (!popBackStack()) break
+//    }
+    this.popBackStack(route, false)
 }
 
 @Composable
