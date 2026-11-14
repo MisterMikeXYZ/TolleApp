@@ -7,14 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -22,20 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,18 +27,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.games.skyjo.domain.SkyjoRoundData
-import de.michael.tolleapp.games.util.PlayerDisplayRow
 import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.games.util.DividedScreen
 import de.michael.tolleapp.games.util.OnHomeDialog
+import de.michael.tolleapp.games.util.PlayerDisplayRow
 import de.michael.tolleapp.games.util.keyboards.KeyboardSwitcher
 import de.michael.tolleapp.games.util.keyboards.util.Keyboard
 import de.michael.tolleapp.games.util.player.Player
-import de.michael.tolleapp.games.util.table.SortDirection
-import de.michael.tolleapp.games.util.table.Table
-import de.michael.tolleapp.games.util.table.TableStrokeOptions
-import de.michael.tolleapp.games.util.table.TableStrokes
-import de.michael.tolleapp.games.util.table.getSortDirectionButtonComposableList
+import de.michael.tolleapp.games.util.table.*
 import kotlinx.coroutines.launch
 
 @Preview
@@ -102,7 +79,6 @@ fun SkyjoGameScreenPreview() {
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkyjoGameScreen(
     state: SkyjoState,
@@ -342,10 +318,14 @@ fun SkyjoGameScreen(
                     onSubmit = { newScore ->
                         activePlayerId?.let { id ->
                             onAction(SkyjoAction.InputScore(id, newScore))
-                            // Increment playerId
-                            val currentIndex = state.selectedPlayerIds.indexOf(id)
-                            val nextId = state.selectedPlayerIds.getOrNull((currentIndex + 1) % state.selectedPlayerIds.size)
-                            if (nextId != null && state.rounds.lastOrNull()?.scores[nextId] == null) {
+                            // Jump to the next player (cyclic) without a score yet
+                            val players = state.selectedPlayerIds
+                            val currentIndex = players.indexOf(id)
+                            val currentScores = state.rounds.lastOrNull()?.scores
+                            val nextId = (1 until players.size)
+                                .map { players[(currentIndex + it) % players.size] }
+                                .firstOrNull { currentScores?.get(it) == null }
+                            if (nextId != null) {
                                 activePlayerId = nextId
                             } else {
                                 activePlayerId = null
