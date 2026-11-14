@@ -45,32 +45,41 @@ enum class GameType {
 
 ### Step 3: Create Persistence Layer (`games/<game>/data/`)
 1. Room Entities in `entities/`:
-   - `<Game>GameEntity.kt` (game metadata, timestamp, isFinished, etc.)
-   - `<Game>RoundEntity.kt` (round index, scores mapping)
-   - `<Game>GamePlayerEntity.kt` (player associations)
+   - `<Game>GameEntity.kt`: must extend `PausedGame(id, createdAt)` so paused game queries map cleanly (`id`, `createdAt`, `endedAt`, `isFinished`, `dealerId`, `winnerId`, etc.).
+   - `<Game>PlayerEntity.kt`: junction entity (`primaryKeys = ["gameId", "playerId"]`) with `ForeignKey` `CASCADE` on both `<Game>GameEntity` and `Player`, plus `indices = [Index("gameId"), Index("playerId")]` and `index: Int` for seat order.
+   - `<Game>RoundEntity.kt`: (`primaryKeys = ["gameId", "roundNumber"]`) with `ForeignKey` `CASCADE` on `<Game>GameEntity` (and `SET_NULL` on `Player` for `dealerId`), plus `indices`. Store round score maps as JSON `String`.
 2. DAO in `<Game>Dao.kt`:
-   - `@Dao` with CRUD methods, queries for active/paused games and rounds.
+   - `@Dao` with CRUD methods, `getPausedGames(): Flow<List<<Game>GameEntity>>`, round upserts/deletes, and player/dealer/winner updates.
+   - Optional `<Game>StatisticsDao` in the same file if the game tracks statistics.
 3. Mappers in `mappers/`:
-   - `GameMappers.kt` and `RoundMappers.kt` converting between Room entities and domain models.
+   - `GameMappers.kt` and `RoundMappers.kt` converting between Room entities and domain models. Serialize/deserialize `Map` fields using `kotlinx.serialization.json.Json` (`Json.encodeToString` / `Json.decodeFromString`).
 4. Repository Implementation in `<Game>RepositoryImpl.kt`:
-   - Implements the domain repository interface.
+   - Implements the domain repository interface (wrap DB operations in `Result<T>` as in `Flip7RepositoryImpl` / `SkyjoRepositoryImpl`).
 
 ### Step 4: Register in Database (`data/AppDatabase.kt`)
-1. Add entity classes to `@Database(entities = [..., MyGameEntity::class, MyGameRoundEntity::class], version = <N+1>)`.
-2. Add abstract DAO method: `abstract fun myGameDao(): MyGameDao`.
-3. Note: If version was bumped, run `./gradlew compileDebugKotlin` to export the new schema JSON.
+1. Add all new entity classes (`MyGameEntity::class`, `MyGamePlayerEntity::class`, `MyGameRoundEntity::class`) to `@Database(entities = [...], version = <N+1>)`.
+2. Add abstract DAO getter(s): `abstract fun myGameDao(): MyGameDao` (and optional `myGameStatisticsDao()`).
+3. Run `./gradlew compileDebugKotlin` to export the new schema JSON to `app/schemas/de.michael.tolleapp.data.AppDatabase/<N+1>.json`.
 
 ### Step 5: Implement Presentation Layer (`games/<game>/presentation/`)
 1. **`<Game>Action.kt`**: Sealed interface for user intents:
    ```kotlin
    sealed interface MyGameAction {
+       data object NavigateToMainMenu : MyGameAction
+       data class DeleteGame(val gameId: String) : MyGameAction
+       data object EndGame : MyGameAction
+       data class PlayAgain(val players: List<Player>) : MyGameAction
+
+       data object AdvanceDealer : MyGameAction
        data object EndRound : MyGameAction
        data object UndoLastRound : MyGameAction
-       data object EndGame : MyGameAction
-       data class InputScore(val playerId: String, val score: Int) : MyGameAction
+       data class InputScore(val playerId: String, val newScore: Int) : MyGameAction
+
+       data class SetLastKeyboardPage(val page: Int) : MyGameAction
+       data class OnSortDirectionChange(val newDirection: SortDirection) : MyGameAction
    }
    ```
-2. **`<Game>State.kt`**: Immutable state data class:
+2. **`<Game>State.kt`**: Immutable state data class with `toStartState()`:
    ```kotlin
    data class MyGameState(
        val allPlayers: List<Player> = emptyList(),
@@ -78,9 +87,14 @@ enum class GameType {
        val pausedGames: List<PausedGame> = emptyList(),
        val selectedPlayers: List<Player?> = listOf(null, null),
        val selectedPlayerIds: List<String?> = listOf(null, null),
+       val gameId: String = "",
+       val currentDealerId: String? = null,
        val rounds: List<MyGameRoundData> = emptyList(),
-       val currentGameId: String = "",
-       val isGameEnded: Boolean = false,
+       val totalPoints: Map<String, Int> = emptyMap(),
+       val visibleRoundRows: Int = 5,
+       val isFinished: Boolean = false,
+       val lastKeyboardPage: Int = 0,
+       val sortDirection: SortDirection = SortDirection.ASCENDING,
    )
 
    fun MyGameState.toStartState(): StartState {
@@ -94,20 +108,21 @@ enum class GameType {
    }
    ```
 3. **`<Game>ViewModel.kt`**:
-   - Injects repository, playerRepo, presetRepo.
-   - Combines flows into `val state: StateFlow<MyGameState>`.
-   - Implements `fun onStartAction(action: StartAction)` for the shared start screen.
-   - Implements `fun onAction(action: MyGameAction)` for in-game actions.
+   - Injects `gameRepo`, `playerRepo`, `presetRepo`.
+   - Combines `_allPlayers`, `_presets`, `_selectedPlayerIds`, `_pausedGames`, `_state` into `val state: StateFlow<MyGameState>` using `WhileSubscribed(5_000)`.
+   - Implements `fun onStartAction(action: StartAction)` handling `CreatePlayer`, `SelectPlayer`, `UnselectPlayer`, `ResetSelectedPlayers`, `CreatePreset`, `SelectPreset`, `DeletePreset`, `StartGame`, `ResumeGame`, `DeleteGame`.
+     - **Important**: Always call `presetRepo.createPreset(GameType.MY_NEW_GAME, action.presetName, action.playerIds)` with the `GameType` enum — the `String` overload in `GamePresetRepository` is a commented-out no-op.
+   - Implements `fun onAction(action: MyGameAction, onFinished: (() -> Unit)? = null)` (use `onFinished` for async actions like `UndoLastRound` invoked from `EndScreen`).
 4. **`<Game>GameScreen.kt`**:
-   - Uses `DevidedScreen` or `CustomTopBar`.
-   - Uses `Table` for round display.
-   - Uses or extends keyboards in `games/util/keyboards/`.
-   - Handles `OnHomeDialog` when exiting active game.
+   - Uses `Scaffold` + `CustomTopBar` (home button opens `OnHomeDialog`, actions include Undo).
+   - Handles `BackHandler` (close in-app keyboard first if expanded, otherwise open `OnHomeDialog`).
+   - Uses `DividedScreen` (defined in `games/util/DevidedScreen.kt`) with `PlayerDisplayRow` + round controls in `topPart` and `Table` + `getSortDirectionButtonComposableList` in `bottomPart`.
+   - Uses `AnimatedVisibility` + `KeyboardSwitcher` (or custom keyboard in `games/util/keyboards/`) for score entry.
 
 ### Step 6: Register in DI (`di/Module.kt`)
 ```kotlin
 single { get<AppDatabase>().myGameDao() }
-single<MyGameRepository> { MyGameRepositoryImpl(get(), get()) }
+single<MyGameRepository> { MyGameRepositoryImpl(get(), get()) } // match constructor params
 viewModel { MyGameViewModel(get(), get(), get()) }
 ```
 
@@ -128,11 +143,44 @@ viewModel { MyGameViewModel(get(), get(), get()) }
    }
    ```
 2. In `NavGraph.kt`:
+   Use `composableStartScreen`, `composableGameScreen`, `it.sharedViewModel<MyGameViewModel>(navController)`, `collectAsStateWithLifecycle()`, `navController.popToRoute(Route.Before.StartScreen)`, and shared `EndScreen`:
    ```kotlin
    navigation<Route.MyGameNav>(startDestination = Route.MyGame.Start) {
-       composable<Route.MyGame.Start> { ... }
-       composable<Route.MyGame.Game> { ... }
-       composable<Route.MyGame.End> { ... }
+       composableStartScreen<Route.MyGame.Start> {
+           val viewModel = it.sharedViewModel<MyGameViewModel>(navController)
+           val state by viewModel.state.collectAsStateWithLifecycle()
+           StartScreen(
+               minPlayers = 2,
+               maxPlayers = 8,
+               state = state.toStartState(),
+               onAction = { action ->
+                   when (action) {
+                       StartAction.NavigateToMainMenu -> navController.popToRoute(Route.Before.StartScreen)
+                       StartAction.NavigateToGame -> navController.navigate(Route.MyGame.Game)
+                       else -> viewModel.onStartAction(action)
+                   }
+               }
+           )
+       }
+       composableGameScreen<Route.MyGame.Game> {
+           val viewModel = it.sharedViewModel<MyGameViewModel>(navController)
+           val state by viewModel.state.collectAsStateWithLifecycle()
+           MyGameGameScreen(
+               state = state,
+               onAction = { action ->
+                   when (action) {
+                       MyGameAction.NavigateToMainMenu -> navController.popToRoute(Route.Before.StartScreen)
+                       MyGameAction.EndGame -> navController.navigate(Route.MyGame.End)
+                       else -> viewModel.onAction(action)
+                   }
+               }
+           )
+       }
+       composableGameScreen<Route.MyGame.End> {
+           val viewModel = it.sharedViewModel<MyGameViewModel>(navController)
+           val state by viewModel.state.collectAsStateWithLifecycle()
+           // Sort players & render shared EndScreen(...)
+       }
    }
    ```
 
@@ -145,12 +193,20 @@ GameNavigationData(
 )
 ```
 
+### Step 9: Integrate Statistics (Optional)
+If the new game records player statistics:
+1. Add `<Game>StatisticsDao` in `<Game>Dao.kt`, `AppDatabase.kt`, and `di/Module.kt`.
+2. Add `<Game>Stats` data class in `statistics/gameStats/` and `<Game>StatsTable` composable in `statistics/screens/`.
+3. Wire into `StatState.kt`, `StatViewModel.kt`, and `StatScreen.kt` (`GameSelector`, `gameLabel`, and `when (state.selectedGame)`).
+
 ---
 
 ## 3. Key Conventions & Best Practices
 
 1. **Material 3 Dividers**: Never use `Divider()`. Always use `HorizontalDivider()` or `VerticalDivider()`.
-2. **Text Fields**: Use `BetterOutlinedTextField` from `games/util/BetterOutlinedTextField.kt` for player inputs.
-3. **Player Limits**: When configuring a game, pass `minPlayers` and `maxPlayers` to `StartScreen(minPlayers = X, maxPlayers = Y, ...)`.
-4. **Sorting Tables**: Use `SortDirectionButton` and `Table` from `games/util/table/`.
-5. **Localization**: UI text is German. Use clear German game terminology (e.g. "Geber", "Runde beenden", "Punkte eingeben", "Gewinner").
+2. **Filename Gotcha**: `DividedScreen` is defined in `games/util/DevidedScreen.kt` (note spelling).
+3. **Text Fields**: Use `BetterOutlinedTextField` (`games/util/BetterOutlinedTextField.kt`) and `PlayerDisplayRow` (`games/util/PlayerDisplayRow.kt`) for gameplay player score items.
+4. **Player Limits**: Pass `minPlayers` and `maxPlayers` to `StartScreen(minPlayers = X, maxPlayers = Y, ...)` and guard `StartAction.SelectPreset` in the ViewModel if `maxPlayers` is bounded.
+5. **Tables & Sorting**: Use `Table`, `getSortDirectionButtonComposableList` (`SortDirectionButton.kt`), and `toTableHeader` / `toTableRowCell` / `toTableTotalCell` (`StringMappers.kt`) from `games/util/table/`.
+6. **Localization**: UI text is German. Keep game strings consistent in German (e.g., `"Geber"`, `"Runde beenden"`, `"Punkte"`, `"Gesamt"`, `"Zum Hauptmenü"`, `"Nochmal spielen"`), and update both `res/values/strings.xml` and `res/values-de/strings.xml` when adding string resources.
+7. **Verification**: Always run `./gradlew compileDebugKotlin` and `./gradlew testDebugUnitTest` (plus `./gradlew lintDebug` for UI/manifest/resource changes) before finishing.
