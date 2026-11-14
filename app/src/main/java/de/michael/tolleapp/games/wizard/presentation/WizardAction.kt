@@ -18,4 +18,7 @@ sealed interface WizardAction {
     data object OnGameFinished : WizardAction
 
     data object DeleteGame : WizardAction
+
+    /** Debug only: fills in random valid bids/tricks for the current round and finishes it. */
+    data object DebugSimulateRound : WizardAction
 }

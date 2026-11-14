@@ -2,46 +2,26 @@ package de.michael.tolleapp.games.wizard.presentation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import de.michael.tolleapp.BuildConfig
 import de.michael.tolleapp.R
 import de.michael.tolleapp.games.util.CustomTopBar
 import de.michael.tolleapp.games.util.DividedScreen
 import de.michael.tolleapp.games.util.OnHomeDialog
-import de.michael.tolleapp.games.util.table.SortDirection
-import de.michael.tolleapp.games.util.table.Table
-import de.michael.tolleapp.games.util.table.TableStrokeOptions
-import de.michael.tolleapp.games.util.table.TableStrokes
-import de.michael.tolleapp.games.util.table.getSortDirectionButtonComposableList
-import de.michael.tolleapp.games.util.table.toTableHeader
-import de.michael.tolleapp.games.util.table.toTableRowCell
-import de.michael.tolleapp.games.util.table.toTableTotalCell
+import de.michael.tolleapp.games.util.table.*
 import de.michael.tolleapp.games.wizard.presentation.components.WizardPlayerItem
 
 @Composable
@@ -91,6 +71,17 @@ fun WizardGameScreen(
                     }
                 },
                 actions = {
+                    if (BuildConfig.DEBUG) {
+                        IconButton(
+                            onClick = { onAction(WizardAction.DebugSimulateRound) },
+                            enabled = !state.finished
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.BugReport,
+                                contentDescription = "Debug: simulate round",
+                            )
+                        }
+                    }
                     val canUndo = state.undoStack.isNotEmpty()
                     IconButton(
                         onClick = { onAction(WizardAction.UndoLastChange) },

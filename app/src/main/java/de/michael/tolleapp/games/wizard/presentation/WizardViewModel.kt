@@ -2,21 +2,21 @@ package de.michael.tolleapp.games.wizard.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import de.michael.tolleapp.BuildConfig
 import de.michael.tolleapp.games.util.GameType
 import de.michael.tolleapp.games.util.player.PlayerRepository
 import de.michael.tolleapp.games.util.presets.GamePresetRepository
 import de.michael.tolleapp.games.util.startScreen.StartAction
 import de.michael.tolleapp.games.wizard.data.WizardRepository
 import de.michael.tolleapp.games.wizard.domain.WizardRoundData
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
+import kotlinx.coroutines.withTimeoutOrNull
+import java.util.*
 import kotlin.math.abs
+import kotlin.random.Random
+import kotlin.time.Duration.Companion.seconds
 
 class WizardViewModel(
     private val playerRepo: PlayerRepository,
@@ -274,8 +274,51 @@ class WizardViewModel(
                     wizardRepo.deleteGame(state.value.currentGameId!!)
                 }
             }
+            is WizardAction.DebugSimulateRound -> {
+                if (BuildConfig.DEBUG) viewModelScope.launch { simulateRound() }
+            }
             else -> throw NotImplementedError("Action '$action' not implemented in WizardViewModel")
         }
+    }
+
+    /**
+     * Debug helper: fills the current round with random valid values and finishes it.
+     * Tricks won are randomly distributed (sum == round number), bids are tricks won +- 2.
+     * Uses the regular actions, so every step is persisted and undoable.
+     */
+    private suspend fun simulateRound() {
+        if (_state.value.finished) return
+        val round = _state.value.rounds.lastOrNull() ?: return
+        val players = state.value.selectedPlayers.filterNotNull()
+        if (players.isEmpty()) return
+
+        val tricks = players.associate { it.id to 0 }.toMutableMap()
+        repeat(round.roundNumber) {
+            val id = players.random().id
+            tricks[id] = tricks.getValue(id) + 1
+        }
+        val bids = tricks.mapValues { (_, won) ->
+            val roll = Random.nextInt(100)
+            val offset = when {
+                roll < 70 -> 0
+                roll < 90 -> 1
+                else -> 2
+            } * if (Random.nextBoolean()) 1 else -1
+            (won + offset).coerceIn(0, round.roundNumber)
+        }
+
+        suspend fun dispatch(action: WizardAction) {
+            onAction(action)
+            // wait until the derived public state caught up, as some handlers read state.value
+            withTimeoutOrNull(2.seconds) {
+                state.first { it.rounds == _state.value.rounds && it.finished == _state.value.finished }
+            }
+        }
+
+        players.forEach { dispatch(WizardAction.OnBidChange(it.id, bids.getValue(it.id))) }
+        if (!_state.value.rounds.last().bidsFinal) dispatch(WizardAction.FinishBidding)
+        players.forEach { dispatch(WizardAction.OnTricksWonChange(it.id, tricks.getValue(it.id))) }
+        dispatch(WizardAction.FinishRound)
     }
 
     private fun selectPlayer(index: Int, playerId: String) {
