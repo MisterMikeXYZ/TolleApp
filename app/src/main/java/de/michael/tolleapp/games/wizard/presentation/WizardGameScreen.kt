@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -86,6 +87,21 @@ fun WizardGameScreen(
                         Icon(
                             imageVector = Icons.Default.Home,
                             contentDescription = "Navigate to main menu",
+                        )
+                    }
+                },
+                actions = {
+                    val canUndo = state.undoStack.isNotEmpty()
+                    IconButton(
+                        onClick = { onAction(WizardAction.UndoLastChange) },
+                        enabled = canUndo
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Undo,
+                            contentDescription = "Undo",
+                            tint = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = if (canUndo) 1f else 0.3f
+                            )
                         )
                     }
                 }

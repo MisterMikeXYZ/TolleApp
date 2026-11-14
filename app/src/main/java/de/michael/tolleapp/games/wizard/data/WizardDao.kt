@@ -23,6 +23,9 @@ interface WizardDao {
     @Query("UPDATE WizardGameEntity SET finished = 1 WHERE id = :gameId")
     suspend fun finishGame(gameId: String)
 
+    @Query("UPDATE WizardGameEntity SET finished = 0 WHERE id = :gameId")
+    suspend fun unfinishGame(gameId: String)
+
     @Query("DELETE FROM WizardGameEntity WHERE id = :gameId")
     suspend fun deleteGame(gameId: String)
 
@@ -32,6 +35,9 @@ interface WizardDao {
 
     @Query("SELECT * FROM WizardRoundEntity WHERE gameId = :gameId ORDER BY roundNumber ASC")
     fun getRoundsForGame(gameId: String): Flow<List<WizardRoundEntity>>
+
+    @Query("DELETE FROM WizardRoundEntity WHERE gameId = :gameId AND roundNumber = :roundNumber")
+    suspend fun deleteRound(gameId: String, roundNumber: Int)
 
     // Player operations -------------------------------------------------------------
     @Query("INSERT INTO WizardGamePlayerEntity (gameId, playerId) VALUES (:gameId, :playerId)")

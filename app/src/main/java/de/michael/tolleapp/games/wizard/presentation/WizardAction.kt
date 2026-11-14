@@ -13,6 +13,8 @@ sealed interface WizardAction {
     data object FinishBidding : WizardAction
     data object FinishRound : WizardAction
 
+    data object UndoLastChange : WizardAction
+
     data object OnGameFinished : WizardAction
 
     data object DeleteGame : WizardAction

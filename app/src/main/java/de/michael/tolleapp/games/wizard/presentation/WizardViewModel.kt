@@ -90,7 +90,8 @@ class WizardViewModel(
                             roundNumber = 1,
                             dealerId = this.state.value.selectedPlayers.first()!!.id
                         )
-                    )
+                    ),
+                    undoStack = emptyList(),
                 ) }
                 viewModelScope.launch {
                     wizardRepo.createGame(
@@ -118,6 +119,7 @@ class WizardViewModel(
                         currentGameId = pausedGame.id,
                         roundsToPlay = pausedGame.roundsToPlay,
                         rounds = pausedGame.rounds,
+                        undoStack = emptyList(),
                     ) }
                 }
             }
@@ -135,22 +137,30 @@ class WizardViewModel(
         when (action) {
             is WizardAction.OnBidChange -> _state.update { state ->
                 val currentRound = state.rounds.last()
+                if (currentRound.bids[action.playerId] == action.newValue) return@update state
                 val newRound = currentRound.copy(
                     bids = currentRound.bids.toMutableMap().apply {
                         this[action.playerId] = action.newValue
                     }
                 )
-                state.copy(rounds = state.rounds.dropLast(1) + newRound)
+                state.copy(
+                    rounds = state.rounds.dropLast(1) + newRound,
+                    undoStack = state.undoStack + listOf(state.rounds),
+                )
             }
             is WizardAction.OnTricksWonChange -> {
                 val currentRound = state.value.rounds.last()
+                if (currentRound.tricksWon[action.playerId] == action.newValue) return
                 val newRound = currentRound.copy(
                     tricksWon = currentRound.tricksWon.toMutableMap().apply {
                         this[action.playerId] = action.newValue
                     }
                 )
                 _state.update { state ->
-                    state.copy(rounds = state.rounds.dropLast(1) + newRound)
+                    state.copy(
+                        rounds = state.rounds.dropLast(1) + newRound,
+                        undoStack = state.undoStack + listOf(state.rounds),
+                    )
                 }
                 viewModelScope.launch {
                     wizardRepo.upsertRound(
@@ -168,7 +178,10 @@ class WizardViewModel(
                     bidsFinal = true
                 )
                 _state.update { state ->
-                    state.copy(rounds = state.rounds.dropLast(1) + newRound)
+                    state.copy(
+                        rounds = state.rounds.dropLast(1) + newRound,
+                        undoStack = state.undoStack + listOf(state.rounds),
+                    )
                 }
                 viewModelScope.launch {
                     wizardRepo.upsertRound(
@@ -201,6 +214,7 @@ class WizardViewModel(
                     _state.update { state ->
                         state.copy(
                             rounds = state.rounds.dropLast(1) + updatedCurrentRound,
+                            undoStack = state.undoStack + listOf(state.rounds),
                             finished = true,
                         )
                     }
@@ -222,13 +236,37 @@ class WizardViewModel(
                     dealerId = selectedPlayers[nextDealerIndex]?.id ?: "",
                 )
                 _state.update { state ->
-                    state.copy(rounds = state.rounds.dropLast(1) + updatedCurrentRound + nextRound)
+                    state.copy(
+                        rounds = state.rounds.dropLast(1) + updatedCurrentRound + nextRound,
+                        undoStack = state.undoStack + listOf(state.rounds),
+                    )
                 }
                 viewModelScope.launch {
                     wizardRepo.upsertRound(
                         state.value.currentGameId!!,
                         listOf(updatedCurrentRound, nextRound)
                     )
+                }
+            }
+            is WizardAction.UndoLastChange -> {
+                val gameId = _state.value.currentGameId ?: return
+                val previousRounds = _state.value.undoStack.lastOrNull() ?: return
+                val currentRounds = _state.value.rounds
+                val wasFinished = _state.value.finished
+                _state.update { state ->
+                    state.copy(
+                        rounds = previousRounds,
+                        undoStack = state.undoStack.dropLast(1),
+                        finished = false,
+                    )
+                }
+                viewModelScope.launch {
+                    // rounds that only exist in the undone state (e.g. the round started after FinishRound)
+                    currentRounds
+                        .filter { round -> previousRounds.none { it.roundNumber == round.roundNumber } }
+                        .forEach { wizardRepo.deleteRound(gameId, it.roundNumber) }
+                    wizardRepo.upsertRound(gameId, previousRounds.filter { it !in currentRounds })
+                    if (wasFinished) wizardRepo.unfinishGame(gameId)
                 }
             }
             is WizardAction.DeleteGame -> {

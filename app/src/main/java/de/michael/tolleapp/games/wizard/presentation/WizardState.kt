@@ -21,6 +21,9 @@ data class WizardState(
     val finished: Boolean = false,
 
     val rounds: List<WizardRoundData> = emptyList(),
+
+    /** Snapshots of [rounds] before each undoable change; the last entry is the most recent. */
+    val undoStack: List<List<WizardRoundData>> = emptyList(),
 )
 
 fun WizardState.toStartState(): StartState {

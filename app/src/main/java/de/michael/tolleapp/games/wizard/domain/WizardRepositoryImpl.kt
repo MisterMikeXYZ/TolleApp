@@ -83,6 +83,15 @@ class WizardRepositoryImpl(
         return Result.success(Unit)
     }
 
+    override suspend fun unfinishGame(gameId: String): Result<Unit> {
+        try {
+            dao.unfinishGame(gameId)
+        } catch (e: Exception) {
+            return Result.failure(e)
+        }
+        return Result.success(Unit)
+    }
+
     override suspend fun deleteGame(gameId: String): Result<Unit> {
         try {
             dao.deleteGame(gameId)
@@ -112,6 +121,15 @@ class WizardRepositoryImpl(
             roundData.forEach { roundData ->
                 dao.upsertRound(roundData.toEntity(gameId))
             }
+        } catch (e: Exception) {
+            return Result.failure(e)
+        }
+        return Result.success(Unit)
+    }
+
+    override suspend fun deleteRound(gameId: String, roundNumber: Int): Result<Unit> {
+        try {
+            dao.deleteRound(gameId, roundNumber)
         } catch (e: Exception) {
             return Result.failure(e)
         }

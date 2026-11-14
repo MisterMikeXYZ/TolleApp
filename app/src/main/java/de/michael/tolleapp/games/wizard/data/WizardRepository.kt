@@ -16,11 +16,14 @@ interface WizardRepository {
 
     suspend fun finishGame(gameId: String): Result<Unit>
 
+    suspend fun unfinishGame(gameId: String): Result<Unit>
+
     suspend fun deleteGame(gameId: String): Result<Unit>
 
     // Round operations ---------------------------------------------------------------------------
     suspend fun upsertRound(gameId: String, roundData: WizardRoundData): Result<Unit>
     suspend fun upsertRound(gameId: String, roundData: List<WizardRoundData>): Result<Unit>
+    suspend fun deleteRound(gameId: String, roundNumber: Int): Result<Unit>
 
     // Player operations --------------------------------------------------------------------------
     suspend fun addPlayerToGame(gameId: String, playerId: String): Result<Unit>
