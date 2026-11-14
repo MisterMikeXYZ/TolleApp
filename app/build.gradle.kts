@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.jetbrains.kotlin.serialization)
     alias(libs.plugins.ksp)
@@ -13,6 +12,10 @@ kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_11
     }
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 android {
@@ -27,10 +30,6 @@ android {
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    room {
-        schemaDirectory("$projectDir/schemas")
     }
 
     buildTypes {
@@ -75,7 +74,6 @@ dependencies {
     // Koin
     api(libs.koin.core)
     implementation(libs.koin.compose)
-    implementation(libs.koin.compose.viewmodel)
     implementation(libs.koin.compose.viewmodel)
     implementation(libs.jetbrains.compose.navigation)
     implementation(libs.kotlinx.serialization.json)
