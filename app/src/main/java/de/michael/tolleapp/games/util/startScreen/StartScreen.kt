@@ -259,6 +259,7 @@ fun StartScreen(
                         state.presets.forEach { presetWithPlayers ->
                             DropdownMenuItem(
                                 text = { Text(presetWithPlayers.preset.name) },
+                                enabled = presetWithPlayers.players.size <= maxPlayers,
                                 onClick = {
                                     onAction(StartAction.SelectPreset(presetWithPlayers.preset.id))
                                     presetExpanded = false

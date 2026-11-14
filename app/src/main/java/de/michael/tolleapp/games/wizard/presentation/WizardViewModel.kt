@@ -71,6 +71,7 @@ class WizardViewModel(
             }
             is StartAction.SelectPreset -> viewModelScope.launch {
                 val players = state.value.presets.first { it.preset.id == action.presetId }.players
+                if (players.size > 6) return@launch // exceeds max players for Wizard
                 _selectedPlayerIds.update { listOf(null, null, null) }
                 players.map { it.playerId }.forEachIndexed { index, playerId ->
                     selectPlayer(index, playerId)
