@@ -336,8 +336,13 @@ fun NavGraph(
                 val viewModel = backStackEntry.sharedViewModel<WizardViewModel>(navController)
                 val state by viewModel.state.collectAsStateWithLifecycle()
 
-                val sortedPlayers = state.selectedPlayers.filterNotNull().sortedBy {
-                    state.rounds.last().scores[it.id]
+                val finalScores = state.rounds.last().scores
+                val sortedPlayers = state.selectedPlayers.filterNotNull().sortedByDescending {
+                    finalScores[it.id]
+                }
+                // Competition ranking: tied players share a rank (e.g. 1, 1, 3)
+                val ranks = sortedPlayers.map { player ->
+                    sortedPlayers.indexOfFirst { finalScores[it.id] == finalScores[player.id] } + 1
                 }
                 EndScreen(
                     titleValue = "Wizard",
@@ -346,8 +351,14 @@ fun NavGraph(
                         .map { roundData ->
                             sortedPlayers.map { "${roundData.scores[it.id]} | ${roundData.bids[it.id]}" }
                         },
-                    sortedTotalValues = sortedPlayers.map { state.rounds.last().scores[it.id].toString() },
+                    sortedTotalValues = sortedPlayers.map { finalScores[it.id].toString() },
                     navigateToMainMenu = { navController.popToRoute(Route.Before.StartScreen) },
+                    undoLastRound = {
+                        viewModel.onAction(WizardAction.UndoLastChange)
+                        navController.popBackStack()
+                    },
+                    showWinner = true,
+                    ranks = ranks,
                 )
             }
         }

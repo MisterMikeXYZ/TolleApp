@@ -41,6 +41,7 @@ fun EndScreen(
     undoLastRound: () -> Unit = { },
     playAgain: () -> Unit = { },
     showWinner: Boolean = false,
+    ranks: List<Int> = sortedPlayerNames.indices.map { it + 1 },
 ) {
     Scaffold (
         topBar = {
@@ -74,7 +75,9 @@ fun EndScreen(
                 .padding(pad)
         ) {
             if (showWinner) {
-                val winner = sortedPlayerNames.first()
+                val winner = sortedPlayerNames
+                    .filterIndexed { i, _ -> ranks.getOrNull(i) == 1 }
+                    .joinToString(", ")
                 Text(
                     text = "\uD83C\uDFC6 $winner \uD83C\uDFC6",
                     style = MaterialTheme.typography.headlineMedium
@@ -82,7 +85,7 @@ fun EndScreen(
                 Spacer(Modifier.height(12.dp))
             }
             Table(
-                headers = (listOf("") + sortedPlayerNames.mapIndexed { i, name -> "${i + 1}. $name" }).map { it.toTableHeader() },
+                headers = (listOf("") + sortedPlayerNames.mapIndexed { i, name -> "${ranks.getOrElse(i) { i + 1 }}. $name" }).map { it.toTableHeader() },
                 rows = sortedScoreValues.mapIndexed { index, rowValues ->
                     (listOf((index + 1).toString()) + rowValues).map { it.toTableRowCell() }
                 },

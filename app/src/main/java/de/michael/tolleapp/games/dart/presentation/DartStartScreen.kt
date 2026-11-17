@@ -1,62 +1,31 @@
 package de.michael.tolleapp.games.dart.presentation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import de.michael.tolleapp.games.dart.data.DartGame
 import de.michael.tolleapp.games.util.CustomTopBar
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.catch
 import org.koin.compose.viewmodel.koinViewModel
 import java.text.DateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,18 +40,18 @@ fun DartStartScreen(
 
     LaunchedEffect(viewModel) {
         viewModel.pausedGames
-            .catch { emit(emptyList()) }
             .collect { pausedGamesState.value = it }
     }
 
     val pausedGames = pausedGamesState.value
     var expanded by remember { mutableStateOf(false) }
     val formatter = DateFormat.getDateTimeInstance(
-        DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault()
+        DateFormat.SHORT, DateFormat.SHORT, LocalLocale.current.platformLocale
     )
     var showCreatePlayerDialog by remember { mutableStateOf(false) }
     var newPlayerName by remember { mutableStateOf("") }
     var pendingRowIndex by remember { mutableStateOf<Int?>(null) }
+    var focusIndex by remember { mutableStateOf<Int?>(null) }
 
     val presets by viewModel.presets.collectAsState(initial = emptyList())
     var presetExpanded by remember { mutableStateOf(false) }
@@ -170,6 +139,8 @@ fun DartStartScreen(
         )
     }
 
+    val focusManager = LocalFocusManager.current
+
     Scaffold(
         topBar = {
             CustomTopBar(
@@ -181,7 +152,11 @@ fun DartStartScreen(
                             contentDescription = "Back"
                         )
                     }
-                }
+                },
+                modifier = Modifier
+                    .pointerInput(Unit) {
+                        detectTapGestures { focusManager.clearFocus() }
+                    }
             )
         }
     ) { innerPadding ->
@@ -190,6 +165,9 @@ fun DartStartScreen(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier
                 .padding(innerPadding)
+                .pointerInput(Unit) {
+                    detectTapGestures { focusManager.clearFocus() }
+                }
                 .fillMaxSize()
                 .padding( horizontal = 8.dp, vertical = 3.dp)
         ) {
@@ -225,7 +203,7 @@ fun DartStartScreen(
                                 var resetPressedDelete by remember { mutableStateOf(false) }
                                 LaunchedEffect(resetPressedDelete) {
                                     if (resetPressedDelete) {
-                                        delay(2000)
+                                        delay(2.seconds)
                                         resetPressedDelete = false
                                     }
                                 }
@@ -300,7 +278,7 @@ fun DartStartScreen(
                                     var resetPressedDelete by remember { mutableStateOf(false) }
                                     LaunchedEffect(resetPressedDelete) {
                                         if (resetPressedDelete) {
-                                            delay(2000)
+                                            delay(2.seconds)
                                             resetPressedDelete = false
                                         }
                                     }
@@ -379,6 +357,18 @@ fun DartStartScreen(
                             .padding(vertical = 4.dp)
                     ) {
                         var playerExpanded by remember { mutableStateOf(false) }
+                        val focusRequester = remember { FocusRequester() }
+                        val canOpen = index == 0 || state.selectedPlayerIds[index - 1] != null
+                        LaunchedEffect(focusIndex, canOpen) {
+                            if (focusIndex == index && canOpen) {
+                                // wait for the previous dropdown popup to close before moving focus
+                                delay(150.milliseconds)
+                                focusRequester.requestFocus()
+                                playerExpanded = true
+                                focusIndex = null
+                            }
+                        }
+                        var searchQuery by remember { mutableStateOf("") }
                         val selectedPlayer =
                             state.selectedPlayerIds[index]?.let { state.playerNames[it] }
                                 ?: "Spieler auswählen"
@@ -388,42 +378,58 @@ fun DartStartScreen(
                             onExpandedChange = {
                                 if (index == 0 || state.selectedPlayerIds[index - 1] != null) {
                                     playerExpanded = !playerExpanded
+                                    searchQuery = ""
                                 }
                             },
                             modifier = Modifier.weight(1f)
                         ) {
                             TextField(
-                                value = selectedPlayer,
-                                onValueChange = {},
-                                readOnly = true,
+                                value = if (playerExpanded) searchQuery else selectedPlayer,
+                                onValueChange = {
+                                    searchQuery = it
+                                    playerExpanded = true
+                                },
+                                enabled = canOpen || state.selectedPlayerIds[index] != null,
+                                singleLine = true,
                                 label = { Text("Spieler") },
+                                placeholder = { Text("Suchen…") },
                                 trailingIcon = {
                                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = playerExpanded)
                                 },
                                 modifier = Modifier
-                                    .menuAnchor()
+                                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
+                                    .focusRequester(focusRequester)
                                     .fillMaxWidth()
                             )
                             ExposedDropdownMenu(
                                 expanded = playerExpanded,
-                                onDismissRequest = { playerExpanded = false }
+                                onDismissRequest = {
+                                    playerExpanded = false
+                                    searchQuery = ""
+                                    focusManager.clearFocus()
+                                }
                             ) {
                                 DropdownMenuItem(
                                     text = { Text("Neuen Spieler erstellen…") },
                                     onClick = {
                                         playerExpanded = false
+                                        searchQuery = ""
                                         pendingRowIndex = index
                                         showCreatePlayerDialog = true
                                     }
                                 )
                                 state.playerNames.toList().sortedBy{ it.second }.filter { (id, _) ->
                                     id !in state.selectedPlayerIds
+                                }.filter { (_, name) ->
+                                    name.contains(searchQuery.trim(), ignoreCase = true)
                                 }.forEach { (id, name) ->
                                     DropdownMenuItem(
                                         text = { Text(name) },
                                         onClick = {
                                             viewModel.selectPlayer(index, id)
+                                            if (state.selectedPlayerIds.getOrNull(index + 1) == null) focusIndex = index + 1
                                             playerExpanded = false
+                                            searchQuery = ""
                                         }
                                     )
                                 }
